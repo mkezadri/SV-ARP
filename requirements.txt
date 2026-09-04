@@ -1,0 +1,11 @@
+# SV-APR dependencies
+# Install with: pip install -r requirements.txt
+
+# Google Gemini SDK
+google-genai>=0.8.0
+
+# LangGraph orchestration
+langgraph>=0.2.0
+
+# Environment variable loading (optional)
+python-dotenv>=1.0.0
