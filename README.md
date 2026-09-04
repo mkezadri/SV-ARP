@@ -5,7 +5,7 @@
 
 SV-ARP is an agentic framework for automated program repair that integrates
 structured LLM-based code review directly into the repair loop. Two specialised
-agents — a **Repair Agent** and a **Judge Agent** — collaborate iteratively: the
+agents ( a **Repair Agent** and a **Judge Agent** ) collaborate iteratively: the
 Repair Agent generates candidate patches; the Judge Agent evaluates every
 candidate against test execution outcomes and returns line-level,
 action-oriented feedback. A patch is accepted only when it **both** passes the
@@ -130,7 +130,6 @@ SV-ARP/
 │   ├── check_env.sh            # environment verification (run this first)
 │   └── make_bug_list.sh        # regenerate versions.txt from your Defects4J
 │
-├── results/                    # run output (git-ignored)
 ├── replication/
 │   └── replication_guide.txt   # step-by-step replication instructions
 ├── .env.example
