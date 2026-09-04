@@ -230,28 +230,7 @@ Results are written as timestamped CSVs, one row per bug:
 | `history` | per-iteration JSON: patches, verdicts, metadata |
 | `total_tokens`, `estimated_usd`, `time_seconds` | cost accounting |
 
-`plausible` and `accepted` are distinct, and neither equals *correct*. The
-per-patch correctness classifications behind the 139 figure are in
-`verification/verification.csv`; run `verification/check_verification.py` to
-confirm they reproduce every figure in the paper.
-
----
-
-## Key parameters
-
-| Parameter | Value | Basis |
-|---|---|---|
-| Iteration budget | 4 | 100% of accepted fixes occur within 4 |
-| Initial temperature | 0.1 | deterministic default |
-| Cycle escalation | +0.15, cap 0.70 | a priori |
-| Surgical mode temperature | 0.85 | a priori |
-| Cycle similarity threshold | > 0.99 | a priori |
-| No-op similarity threshold | ≥ 0.992 | a priori |
-| Shrinkage / truncation thresholds | < 85% / < 70% lines | a priori |
-| Surgical trigger | no-op streak ≥ 3 | a priori |
-| Oscillation window | 3 iterations | a priori |
-
-None were tuned on held-out data.
+`plausible` and `accepted` are distinct, and neither equals *correct*.
 
 ---
 
