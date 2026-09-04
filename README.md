@@ -13,24 +13,6 @@ test suite **and** receives a `correct` verdict from the Judge.
 
 ---
 
-## Read this before running
-
-**The JVM takes its default locale from operating-system settings, not from
-`LANG`.** On a non-English system, Defects4J tests that assert on formatted
-compiler diagnostics fail on *pristine, unpatched* checkouts. We measured this
-on 25 Closure bugs: 18 (72%) showed spurious baseline failures, median 11,
-maximum 28. Under a zero-failure plausibility criterion those bugs are
-unrepairable regardless of patch quality.
-
-```bash
-export _JAVA_OPTIONS="-Duser.language=en -Duser.country=US"
-```
-
-Verify with `./scripts/check_env.sh`: a clean Closure 2b checkout must report
-exactly **one** failing test. Fourteen means the flag is not in effect.
-
----
-
 ## Key results
 
 Defects4J V1.2, all 388 active bugs, Gemini 3.1 Flash Lite, ≤4 iterations.
@@ -175,6 +157,23 @@ export APR_DAILY_QUOTA=200
 
 Optional overrides: `APR_RESULTS_DIR`, `APR_WORK_DIR`, `APR_BUG_LIST`,
 `APR_EDIT_MODE`, `APR_ABLATION`.
+
+---
+## Read this before running
+
+**The JVM takes its default locale from operating-system settings, not from
+`LANG`.** On a non-English system, Defects4J tests that assert on formatted
+compiler diagnostics fail on *pristine, unpatched* checkouts. We measured this
+on 25 Closure bugs: 18 (72%) showed spurious baseline failures, median 11,
+maximum 28. Under a zero-failure plausibility criterion those bugs are
+unrepairable regardless of patch quality.
+
+```bash
+export _JAVA_OPTIONS="-Duser.language=en -Duser.country=US"
+```
+
+Verify with `./scripts/check_env.sh`: a clean Closure 2b checkout must report
+exactly **one** failing test. Fourteen means the flag is not in effect.
 
 ---
 
