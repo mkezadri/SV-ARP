@@ -104,10 +104,6 @@ SV-ARP/
 │   ├── versions.txt            # 388 active Defects4J V1.2 bugs
 │   └── mapping.csv             # bug -> modified-class source path
 │
-├── verification/
-│   ├── verification.csv        # per-patch manual correctness classifications
-│   └── check_verification.py   # validates the CSV against the paper's figures
-│
 ├── scripts/
 │   ├── check_env.sh            # environment verification (run this first)
 │   └── make_bug_list.sh        # regenerate versions.txt from your Defects4J
