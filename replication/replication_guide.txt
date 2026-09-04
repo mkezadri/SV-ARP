@@ -1,0 +1,157 @@
+# Replication Guide
+
+This guide walks through reproducing the paper's main results from scratch.
+
+---
+
+## Prerequisites
+
+| Requirement | Version tested | Notes |
+|---|---|---|
+| Python | 3.10 – 3.12 | Earlier versions untested |
+| Java | 11 | Required; JAVA_HOME/bin must be on PATH |
+| Defects4J | 3.0.1 | See installation below |
+| Google Gemini API key | — | gemini-3.1-flash-lite used in the paper |
+| Disk space | ~25 GB | Checkout cache for 388 bugs |
+
+---
+
+## Step 1 — Install Defects4J
+
+```bash
+git clone https://github.com/rjust/defects4j.git
+cd defects4j
+cpanm --installdeps .
+./init.sh
+export D4J_HOME=$(pwd)
+export PATH=$PATH:$D4J_HOME/framework/bin
+```
+
+Verify: `defects4j info -p Lang` should print project metadata.
+
+---
+
+## Step 1b — Environment (REQUIRED, do not skip)
+
+The JVM takes its default locale from operating-system settings, not from
+`LANG`. On a non-English system, Defects4J tests that assert on formatted
+compiler diagnostics fail on pristine, unpatched checkouts. Measured on 25
+Closure bugs, 18 (72%) showed spurious baseline failures, median 11, maximum 28.
+Affected bugs are unrepairable under any zero-failure criterion.
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 11)   # macOS; adjust on Linux
+export PATH="$JAVA_HOME/bin:$PATH"                 # JAVA_HOME alone is not enough
+export TZ="America/Los_Angeles"
+export _JAVA_OPTIONS="-Duser.language=en -Duser.country=US"
+```
+
+Verify before proceeding:
+
+```bash
+./scripts/check_env.sh
+```
+
+A clean Closure 2b checkout must report exactly ONE failing test. Fourteen
+means the locale flag is not in effect, and every Closure result will be wrong.
+
+---
+
+## Step 2 — Install SV-ARP
+
+```bash
+git clone https://github.com/SV-ARP/SV-ARP.git
+cd SV-ARP
+
+python -m venv .venv
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+---
+
+## Step 3 — Configure environment
+
+```bash
+export GEMINI_API_KEY=<your-key>
+export D4J_HOME=/path/to/defects4j
+export WORK_DIR=/tmp/d4j_benchmark   # checkout cache
+export RESULTS_DIR=results_run1
+```
+
+---
+
+## Step 4 — Run the benchmark (388 active V1.2 bugs)
+
+```bash
+cd src
+python benchmark_runner.py --bug-list ../benchmark/versions.txt
+```
+
+Expected runtime: 1–2 days. Test execution, not API latency, is the bottleneck.
+The run consumes roughly 2,300 API requests.
+
+The runner writes results incrementally. If interrupted, resume with:
+
+```bash
+python benchmark_runner.py --bug-list ../benchmark/versions.txt --resume
+```
+
+---
+
+## Step 5 — Ablation configurations
+
+Four configurations separate the Judge Agent's gating role from its advisory
+role. Use a separate results directory per arm: `--resume` matches on bug ID
+alone, so a shared directory makes the second arm skip the first arm's work.
+
+```bash
+APR_ABLATION=no_semantic APR_RESULTS_DIR=../results/no_semantic \
+  python benchmark_runner.py --bug-list ../benchmark/versions.txt
+
+APR_ABLATION=binary_only APR_RESULTS_DIR=../results/binary_only \
+  python benchmark_runner.py --bug-list ../benchmark/versions.txt
+
+APR_ABLATION=no_judge    APR_RESULTS_DIR=../results/no_judge \
+  python benchmark_runner.py --bug-list ../benchmark/versions.txt
+```
+
+---
+
+## Step 6 — Check the verification data
+
+```bash
+python verification/check_verification.py verification/verification.csv
+```
+
+This confirms that the per-patch correctness classifications reproduce every
+figure reported in the paper: the per-project correct counts, the 139 total,
+73.8% acceptance precision, 96.3% rejection precision and 99.3% recall.
+
+---
+
+## Troubleshooting
+
+**`GEMINI_API_KEY` not set**
+Export the variable before running: `export GEMINI_API_KEY=<key>`.
+
+**`D4J_HOME not found`**
+Set `D4J_HOME` to the absolute path of the Defects4J installation.
+
+**Rate limit errors (429)**
+The runner has exponential backoff built in (up to 120 s). If errors persist, reduce parallelism or upgrade your API quota tier.
+
+**Checkout fails for Closure bugs**
+Closure bugs require the Closure Compiler build dependencies. See the [Defects4J Closure setup notes](https://github.com/rjust/defects4j#projects).
+
+**Closure results are far worse than reported**
+Almost certainly the locale setting. Run `./scripts/check_env.sh`: a clean
+Closure 2b checkout must report exactly one failing test. See Step 1b.
+
+**Results differ slightly from the paper**
+Gemini models are non-deterministic even at `temperature=0.1`. Across bugs
+executed more than once we observed roughly 15% changing outcome between runs,
+so per-project totals may vary by several bugs. This is why all ablation
+comparisons in the paper are paired on identical bug sets and evaluated with
+McNemar's exact test rather than by comparing point totals.
