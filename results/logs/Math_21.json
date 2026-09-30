@@ -1,0 +1,229 @@
+{
+  "bug_id": "Math_21",
+  "status": "completed",
+  "verdict": "needs_revision",
+  "ablation": "full",
+  "plausible": false,
+  "baseline_failing_count": 2,
+  "accepted": false,
+  "plausible_patch": "",
+  "plausible_iteration": -1,
+  "reason": "The patch correctly identifies that the loop index for checking remaining diagonal elements should start at r + 1, but it incorrectly removes the increment of the rank variable 'r'. By removing '++r', the rank is now under-reported when the decomposition terminates early due to small diagonal elements, causing the resulting matrix dimensions to be incorrect and leading to test failures.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.apache.commons.math3.linear;\n\nimport org.apache.commons.math3.util.FastMath;\n\n/**\n * Calculates the rectangular Cholesky decomposition of a matrix.\n * <p>The rectangular Cholesky decomposition of a real symmetric positive\n * semidefinite matrix A consists of a rectangular matrix B with the same\n * number of rows such that: A is almost equal to BB<sup>T</sup>, depending\n * on a user-defined tolerance. In a sense, this is the square root of A.</p>\n * <p>The difference with respect to the regular {@link CholeskyDecomposition}\n * is that rows/columns may be permuted (hence the rectangular shape instead\n * of the traditional triangular shape) and there is a threshold to ignore\n * small diagonal elements. This is used for example to generate {@link\n * org.apache.commons.math3.random.CorrelatedRandomVectorGenerator correlated\n * random n-dimensions vectors} in a p-dimension subspace (p < n).\n * In other words, it allows generating random vectors from a covariance\n * matrix that is only positive semidefinite, and not positive definite.</p>\n * <p>Rectangular Cholesky decomposition is <em>not</em> suited for solving\n * linear systems, so it does not provide any {@link DecompositionSolver\n * decomposition solver}.</p>\n *\n * @see <a href=\"http://mathworld.wolfram.com/CholeskyDecomposition.html\">MathWorld</a>\n * @see <a href=\"http://en.wikipedia.org/wiki/Cholesky_decomposition\">Wikipedia</a>\n * @version $Id$\n * @since 2.0 (changed to concrete class in 3.0)\n */\npublic class RectangularCholeskyDecomposition {\n\n    /** Permutated Cholesky root of the symmetric positive semidefinite matrix. */\n    private final RealMatrix root;\n\n    /** Rank of the symmetric positive semidefinite matrix. */\n    private int rank;\n\n    /**\n     * Decompose a symmetric positive semidefinite matrix.\n     *\n     * @param matrix Symmetric positive semidefinite matrix.\n     * @param small Diagonal elements threshold under which  column are\n     * considered to be dependent on previous ones and are discarded.\n     * @exception NonPositiveDefiniteMatrixException if the matrix is not\n     * positive semidefinite.\n     */\n    public RectangularCholeskyDecomposition(RealMatrix matrix, double small)\n        throws NonPositiveDefiniteMatrixException {\n\n        final int order = matrix.getRowDimension();\n        final double[][] c = matrix.getData();\n        final double[][] b = new double[order][order];\n\n        int[] swap  = new int[order];\n        int[] index = new int[order];\n        for (int i = 0; i < order; ++i) {\n            index[i] = i;\n        }\n\n        int r = 0;\n        for (boolean loop = true; loop;) {\n\n            // find maximal diagonal element\n            swap[r] = r;\n            for (int i = r + 1; i < order; ++i) {\n                int ii  = index[i];\n                int isi = index[swap[i]];\n                if (c[ii][ii] > c[isi][isi]) {\n                    swap[r] = i;\n                }\n            }\n\n\n            // swap elements\n            if (swap[r] != r) {\n                int tmp = index[r];\n                index[r] = index[swap[r]];\n                index[swap[r]] = tmp;\n            }\n\n            // check diagonal element\n            int ir = index[r];\n            if (c[ir][ir] < small) {\n\n                if (r == 0) {\n                    throw new NonPositiveDefiniteMatrixException(c[ir][ir], ir, small);\n                }\n\n                // check remaining diagonal elements\n                for (int i = r + 1; i < order; ++i) {\n                    if (c[index[i]][index[i]] < -small) {\n                        // there is at least one sufficiently negative diagonal element,\n                        // the symmetric positive semidefinite matrix is wrong\n                        throw new NonPositiveDefiniteMatrixException(c[index[i]][index[i]], i, small);\n                    }\n                }\n\n                // all remaining diagonal elements are close to zero, we consider we have\n                // found the rank of the symmetric positive semidefinite matrix\n                loop = false;\n\n            } else {\n\n                // transform the matrix\n                final double sqrt = FastMath.sqrt(c[ir][ir]);\n                b[r][r] = sqrt;\n                final double inverse  = 1 / sqrt;\n                for (int i = r + 1; i < order; ++i) {\n                    final int ii = index[i];\n                    final double e = inverse * c[ii][ir];\n                    b[i][r] = e;\n                    c[ii][ii] -= e * e;\n                    for (int j = r + 1; j < i; ++j) {\n                        final int ij = index[j];\n                        final double f = c[ii][ij] - e * b[j][r];\n                        c[ii][ij] = f;\n                        c[ij][ii] = f;\n                    }\n                }\n\n                // prepare next iteration\n                loop = ++r < order;\n            }\n        }\n\n        // build the root matrix\n        rank = r;\n        root = MatrixUtils.createRealMatrix(order, r);\n        for (int i = 0; i < order; ++i) {\n            for (int j = 0; j < r; ++j) {\n                root.setEntry(index[i], j, b[i][j]);\n            }\n        }\n\n    }\n\n    /** Get the root of the covariance matrix.\n     * The root is the rectangular matrix <code>B</code> such that\n     * the covariance matrix is equal to <code>B.B<sup>T</sup></code>\n     * @return root of the square matrix\n     * @see #getRank()\n     */\n    public RealMatrix getRootMatrix() {\n        return root;\n    }\n\n    /** Get the rank of the symmetric positive semidefinite matrix.\n     * The r is the number of independent rows in the symmetric positive semidefinite\n     * matrix, it is also the number of columns of the rectangular\n     * matrix of the decomposition.\n     * @return r of the square matrix.\n     * @see #getRootMatrix()\n     */\n    public int getRank() {\n        return rank;\n    }\n\n}\n",
+  "per_file_patches": "{\"RectangularCholeskyDecomposition.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 97.12,
+  "total_tokens": 41875,
+  "estimated_usd": 0.0147,
+  "failing_tests": "org.apache.commons.math3.linear.RectangularCholeskyDecompositionTest::testMath789|org.apache.commons.math3.linear.RectangularCholeskyDecompositionTest::testFullRank",
+  "modified_classes": "org.apache.commons.math3.linear.RectangularCholeskyDecomposition",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.apache.commons.math3.linear;\n\nimport org.apache.commons.math3.util.FastMath;\n\n/**\n * Calculates the rectangular Cholesky decomposition of a matrix.\n * <p>The rectangular Cholesky decomposition of a real symmetric positive\n * semidefinite matrix A consists of a rectangular matrix B with the same\n * number of rows such that: A is almost equal to BB<sup>T</sup>, depending\n * on a user-defined tolerance. In a sense, this is the square root of A.</p>\n * <p>The difference with respect to the regular {@link CholeskyDecomposition}\n * is that rows/columns may be permuted (hence the rectangular shape instead\n * of the traditional triangular shape) and there is a threshold to ignore\n * small diagonal elements. This is used for example to generate {@link\n * org.apache.commons.math3.random.CorrelatedRandomVectorGenerator correlated\n * random n-dimensions vectors} in a p-dimension subspace (p < n).\n * In other words, it allows generating random vectors from a covariance\n * matrix that is only positive semidefinite, and not positive definite.</p>\n * <p>Rectangular Cholesky decomposition is <em>not</em> suited for solving\n * linear systems, so it does not provide any {@link DecompositionSolver\n * decomposition solver}.</p>\n *\n * @see <a href=\"http://mathworld.wolfram.com/CholeskyDecomposition.html\">MathWorld</a>\n * @see <a href=\"http://en.wikipedia.org/wiki/Cholesky_decomposition\">Wikipedia</a>\n * @version $Id$\n * @since 2.0 (changed to concrete class in 3.0)\n */\npublic class RectangularCholeskyDecomposition {\n\n    /** Permutated Cholesky root of the symmetric positive semidefinite matrix. */\n    private final RealMatrix root;\n\n    /** Rank of the symmetric positive semidefinite matrix. */\n    private int rank;\n\n    /**\n     * Decompose a symmetric positive semidefinite matrix.\n     *\n     * @param matrix Symmetric positive semidefinite matrix.\n     * @param small Diagonal elements threshold under which  column are\n     * considered to be dependent on previous ones and are discarded.\n     * @exception NonPositiveDefiniteMatrixException if the matrix is not\n     * positive semidefinite.\n     */\n    public RectangularCholeskyDecomposition(RealMatrix matrix, double small)\n        throws NonPositiveDefiniteMatrixException {\n\n        final int order = matrix.getRowDimension();\n        final double[][] c = matrix.getData();\n        final double[][] b = new double[order][order];\n\n        int[] swap  = new int[order];\n        int[] index = new int[order];\n        for (int i = 0; i < order; ++i) {\n            index[i] = i;\n        }\n\n        int r = 0;\n        for (boolean loop = true; loop;) {\n\n            // find maximal diagonal element\n            swap[r] = r;\n            for (int i = r + 1; i < order; ++i) {\n                int ii  = index[i];\n                int isi = index[swap[i]];\n                if (c[ii][ii] > c[isi][isi]) {\n                    swap[r] = i;\n                }\n            }\n\n\n            // swap elements\n            if (swap[r] != r) {\n                int tmp = index[r];\n                index[r] = index[swap[r]];\n                index[swap[r]] = tmp;\n            }\n\n            // check diagonal element\n            int ir = index[r];\n            if (c[ir][ir] < small) {\n\n                // check remaining diagonal elements\n                for (int i = r + 1; i < order; ++i) {\n                    if (c[index[i]][index[i]] < -small) {\n                        // there is at least one sufficiently negative diagonal element,\n                        // the symmetric positive semidefinite matrix is wrong\n                        throw new NonPositiveDefiniteMatrixException(c[index[i]][index[i]], i, small);\n                    }\n                }\n\n                // all remaining diagonal elements are close to zero, we consider we have\n                // found the rank of the symmetric positive semidefinite matrix\n                loop = false;\n\n            } else {\n\n                // transform the matrix\n                final double sqrt = FastMath.sqrt(c[ir][ir]);\n                b[r][r] = sqrt;\n                final double inverse  = 1 / sqrt;\n                for (int i = r + 1; i < order; ++i) {\n                    final int ii = index[i];\n                    final double e = inverse * c[ii][ir];\n                    b[i][r] = e;\n                    c[ii][ii] -= e * e;\n                    for (int j = r + 1; j < i; ++j) {\n                        final int ij = index[j];\n                        final double f = c[ii][ij] - e * b[j][r];\n                        c[ii][ij] = f;\n                        c[ij][ii] = f;\n                    }\n                }\n\n                // prepare next iteration\n                loop = ++r < order;\n            }\n        }\n\n        // build the root matrix\n        rank = r;\n        root = MatrixUtils.createRealMatrix(order, r);\n        for (int i = 0; i < order; ++i) {\n            for (int j = 0; j < r; ++j) {\n                root.setEntry(index[i], j, b[i][j]);\n            }\n        }\n\n    }\n\n    /** Get the root of the covariance matrix.\n     * The root is the rectangular matrix <code>B</code> such that\n     * the covariance matrix is equal to <code>B.B<sup>T</sup></code>\n     * @return root of the square matrix\n     * @see #getRank()\n     */\n    public RealMatrix getRootMatrix() {\n        return root;\n    }\n\n    /** Get the rank of the symmetric positive semidefinite matrix.\n     * The r is the number of independent rows in the symmetric positive semidefinite\n     * matrix, it is also the number of columns of the rectangular\n     * matrix of the decomposition.\n     * @return r of the square matrix.\n     * @see #getRootMatrix()\n     */\n    public int getRank() {\n        return rank;\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 7.656193017959595,
+        "line_count": 174,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 7,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 381,
+        "prompt_tokens": 3115,
+        "total_tokens": 3496,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch removes the check for the first diagonal element being negative (r == 0) and modifies the loop termination logic, which causes the decomposition to fail for matrices that are not positive definite or have rank 0. The original code correctly identified that if the very first element is below the threshold, the matrix is not positive definite. By removing this check and the increment of 'r' upon termination, the code now produces incorrect rank values and fails to throw the expected exceptions for invalid matrices.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.538947820663452,
+        "issues": [
+          "Removal of the 'r == 0' check allows invalid matrices to pass without throwing NonPositiveDefiniteMatrixException.",
+          "Removing '++r' before setting 'loop = false' results in an incorrect rank calculation for singular matrices.",
+          "The loop termination logic now incorrectly handles cases where the matrix is not positive definite."
+        ],
+        "suggestions": [
+          "In RectangularCholeskyDecomposition(): restore the 'if (r == 0) { throw ... }' check to ensure the matrix is positive definite at the start of the decomposition.",
+          "In RectangularCholeskyDecomposition(): restore '++r' before 'loop = false' to ensure the rank 'r' correctly reflects the number of independent columns found."
+        ],
+        "problematic_lines": [
+          99,
+          100,
+          101,
+          102,
+          113
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 4114,
+        "candidate_tokens": 329,
+        "total_tokens": 4443,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.apache.commons.math3.linear;\n\nimport org.apache.commons.math3.util.FastMath;\n\n/**\n * Calculates the rectangular Cholesky decomposition of a matrix.\n * <p>The rectangular Cholesky decomposition of a real symmetric positive\n * semidefinite matrix A consists of a rectangular matrix B with the same\n * number of rows such that: A is almost equal to BB<sup>T</sup>, depending\n * on a user-defined tolerance. In a sense, this is the square root of A.</p>\n * <p>The difference with respect to the regular {@link CholeskyDecomposition}\n * is that rows/columns may be permuted (hence the rectangular shape instead\n * of the traditional triangular shape) and there is a threshold to ignore\n * small diagonal elements. This is used for example to generate {@link\n * org.apache.commons.math3.random.CorrelatedRandomVectorGenerator correlated\n * random n-dimensions vectors} in a p-dimension subspace (p < n).\n * In other words, it allows generating random vectors from a covariance\n * matrix that is only positive semidefinite, and not positive definite.</p>\n * <p>Rectangular Cholesky decomposition is <em>not</em> suited for solving\n * linear systems, so it does not provide any {@link DecompositionSolver\n * decomposition solver}.</p>\n *\n * @see <a href=\"http://mathworld.wolfram.com/CholeskyDecomposition.html\">MathWorld</a>\n * @see <a href=\"http://en.wikipedia.org/wiki/Cholesky_decomposition\">Wikipedia</a>\n * @version $Id$\n * @since 2.0 (changed to concrete class in 3.0)\n */\npublic class RectangularCholeskyDecomposition {\n\n    /** Permutated Cholesky root of the symmetric positive semidefinite matrix. */\n    private final RealMatrix root;\n\n    /** Rank of the symmetric positive semidefinite matrix. */\n    private int rank;\n\n    /**\n     * Decompose a symmetric positive semidefinite matrix.\n     *\n     * @param matrix Symmetric positive semidefinite matrix.\n     * @param small Diagonal elements threshold under which  column are\n     * considered to be dependent on previous ones and are discarded.\n     * @exception NonPositiveDefiniteMatrixException if the matrix is not\n     * positive semidefinite.\n     */\n    public RectangularCholeskyDecomposition(RealMatrix matrix, double small)\n        throws NonPositiveDefiniteMatrixException {\n\n        final int order = matrix.getRowDimension();\n        final double[][] c = matrix.getData();\n        final double[][] b = new double[order][order];\n\n        int[] swap  = new int[order];\n        int[] index = new int[order];\n        for (int i = 0; i < order; ++i) {\n            index[i] = i;\n        }\n\n        int r = 0;\n        for (boolean loop = true; loop;) {\n\n            // find maximal diagonal element\n            swap[r] = r;\n            for (int i = r + 1; i < order; ++i) {\n                int ii  = index[i];\n                int isi = index[swap[i]];\n                if (c[ii][ii] > c[isi][isi]) {\n                    swap[r] = i;\n                }\n            }\n\n\n            // swap elements\n            if (swap[r] != r) {\n                int tmp = index[r];\n                index[r] = index[swap[r]];\n                index[swap[r]] = tmp;\n            }\n\n            // check diagonal element\n            int ir = index[r];\n            if (c[ir][ir] < small) {\n\n                if (r == 0) {\n                    throw new NonPositiveDefiniteMatrixException(c[ir][ir], ir, small);\n                }\n\n                // check remaining diagonal elements\n                for (int i = r + 1; i < order; ++i) {\n                    if (c[index[i]][index[i]] < -small) {\n                        // there is at least one sufficiently negative diagonal element,\n                        // the symmetric positive semidefinite matrix is wrong\n                        throw new NonPositiveDefiniteMatrixException(c[index[i]][index[i]], i, small);\n                    }\n                }\n\n                // all remaining diagonal elements are close to zero, we consider we have\n                // found the rank of the symmetric positive semidefinite matrix\n                loop = false;\n\n            } else {\n\n                // transform the matrix\n                final double sqrt = FastMath.sqrt(c[ir][ir]);\n                b[r][r] = sqrt;\n                final double inverse  = 1 / sqrt;\n                for (int i = r + 1; i < order; ++i) {\n                    final int ii = index[i];\n                    final double e = inverse * c[ii][ir];\n                    b[i][r] = e;\n                    c[ii][ii] -= e * e;\n                    for (int j = r + 1; j < i; ++j) {\n                        final int ij = index[j];\n                        final double f = c[ii][ij] - e * b[j][r];\n                        c[ii][ij] = f;\n                        c[ij][ii] = f;\n                    }\n                }\n\n                // prepare next iteration\n                loop = ++r < order;\n            }\n        }\n\n        // build the root matrix\n        rank = r;\n        root = MatrixUtils.createRealMatrix(order, r);\n        for (int i = 0; i < order; ++i) {\n            for (int j = 0; j < r; ++j) {\n                root.setEntry(index[i], j, b[i][j]);\n            }\n        }\n\n    }\n\n    /** Get the root of the covariance matrix.\n     * The root is the rectangular matrix <code>B</code> such that\n     * the covariance matrix is equal to <code>B.B<sup>T</sup></code>\n     * @return root of the square matrix\n     * @see #getRank()\n     */\n    public RealMatrix getRootMatrix() {\n        return root;\n    }\n\n    /** Get the rank of the symmetric positive semidefinite matrix.\n     * The r is the number of independent rows in the symmetric positive semidefinite\n     * matrix, it is also the number of columns of the rectangular\n     * matrix of the decomposition.\n     * @return r of the square matrix.\n     * @see #getRootMatrix()\n     */\n    public int getRank() {\n        return rank;\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.238986015319824,
+        "line_count": 174,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 279,
+        "prompt_tokens": 6613,
+        "total_tokens": 6892,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly identifies that the original code was double-counting the rank increment by both incrementing 'r' and exiting the loop, but the removal of '++r' causes the rank to be reported as one less than the actual rank when the loop terminates due to a small diagonal element. The rank should represent the number of columns in the resulting matrix, which corresponds to the number of successful iterations performed before the threshold was hit.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.9763410091400146,
+        "issues": [
+          "The rank calculation is off-by-one because the loop terminates before accounting for the current index 'r' as part of the rank when the threshold is reached.",
+          "The logic for checking remaining diagonal elements is correct, but the final rank assignment 'rank = r' fails to include the current dimension if the loop exits prematurely."
+        ],
+        "suggestions": [
+          "In RectangularCholeskyDecomposition(): change 'loop = false;' to 'rank = r; loop = false;' because the rank must be explicitly set to the current index 'r' before breaking the loop when a small diagonal element is encountered."
+        ],
+        "problematic_lines": [
+          113
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 4090,
+        "candidate_tokens": 267,
+        "total_tokens": 4357,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.apache.commons.math3.linear;\n\nimport org.apache.commons.math3.util.FastMath;\n\n/**\n * Calculates the rectangular Cholesky decomposition of a matrix.\n * <p>The rectangular Cholesky decomposition of a real symmetric positive\n * semidefinite matrix A consists of a rectangular matrix B with the same\n * number of rows such that: A is almost equal to BB<sup>T</sup>, depending\n * on a user-defined tolerance. In a sense, this is the square root of A.</p>\n * <p>The difference with respect to the regular {@link CholeskyDecomposition}\n * is that rows/columns may be permuted (hence the rectangular shape instead\n * of the traditional triangular shape) and there is a threshold to ignore\n * small diagonal elements. This is used for example to generate {@link\n * org.apache.commons.math3.random.CorrelatedRandomVectorGenerator correlated\n * random n-dimensions vectors} in a p-dimension subspace (p < n).\n * In other words, it allows generating random vectors from a covariance\n * matrix that is only positive semidefinite, and not positive definite.</p>\n * <p>Rectangular Cholesky decomposition is <em>not</em> suited for solving\n * linear systems, so it does not provide any {@link DecompositionSolver\n * decomposition solver}.</p>\n *\n * @see <a href=\"http://mathworld.wolfram.com/CholeskyDecomposition.html\">MathWorld</a>\n * @see <a href=\"http://en.wikipedia.org/wiki/Cholesky_decomposition\">Wikipedia</a>\n * @version $Id$\n * @since 2.0 (changed to concrete class in 3.0)\n */\npublic class RectangularCholeskyDecomposition {\n\n    /** Permutated Cholesky root of the symmetric positive semidefinite matrix. */\n    private final RealMatrix root;\n\n    /** Rank of the symmetric positive semidefinite matrix. */\n    private int rank;\n\n    /**\n     * Decompose a symmetric positive semidefinite matrix.\n     *\n     * @param matrix Symmetric positive semidefinite matrix.\n     * @param small Diagonal elements threshold under which  column are\n     * considered to be dependent on previous ones and are discarded.\n     * @exception NonPositiveDefiniteMatrixException if the matrix is not\n     * positive semidefinite.\n     */\n    public RectangularCholeskyDecomposition(RealMatrix matrix, double small)\n        throws NonPositiveDefiniteMatrixException {\n\n        final int order = matrix.getRowDimension();\n        final double[][] c = matrix.getData();\n        final double[][] b = new double[order][order];\n\n        int[] swap  = new int[order];\n        int[] index = new int[order];\n        for (int i = 0; i < order; ++i) {\n            index[i] = i;\n        }\n\n        int r = 0;\n        for (boolean loop = true; loop;) {\n\n            // find maximal diagonal element\n            swap[r] = r;\n            for (int i = r + 1; i < order; ++i) {\n                int ii  = index[i];\n                int isi = index[swap[i]];\n                if (c[ii][ii] > c[isi][isi]) {\n                    swap[r] = i;\n                }\n            }\n\n\n            // swap elements\n            if (swap[r] != r) {\n                int tmp = index[r];\n                index[r] = index[swap[r]];\n                index[swap[r]] = tmp;\n            }\n\n            // check diagonal element\n            int ir = index[r];\n            if (c[ir][ir] < small) {\n\n                if (r == 0) {\n                    throw new NonPositiveDefiniteMatrixException(c[ir][ir], ir, small);\n                }\n\n                // check remaining diagonal elements\n                for (int i = r + 1; i < order; ++i) {\n                    if (c[index[i]][index[i]] < -small) {\n                        // there is at least one sufficiently negative diagonal element,\n                        // the symmetric positive semidefinite matrix is wrong\n                        throw new NonPositiveDefiniteMatrixException(c[index[i]][index[i]], i, small);\n                    }\n                }\n\n                // all remaining diagonal elements are close to zero, we consider we have\n                // found the rank of the symmetric positive semidefinite matrix\n                rank = r;\n                loop = false;\n\n            } else {\n\n                // transform the matrix\n                final double sqrt = FastMath.sqrt(c[ir][ir]);\n                b[r][r] = sqrt;\n                final double inverse  = 1 / sqrt;\n                for (int i = r + 1; i < order; ++i) {\n                    final int ii = index[i];\n                    final double e = inverse * c[ii][ir];\n                    b[i][r] = e;\n                    c[ii][ii] -= e * e;\n                    for (int j = r + 1; j < i; ++j) {\n                        final int ij = index[j];\n                        final double f = c[ii][ij] - e * b[j][r];\n                        c[ii][ij] = f;\n                        c[ij][ii] = f;\n                    }\n                }\n\n                // prepare next iteration\n                loop = ++r < order;\n            }\n        }\n\n        // build the root matrix\n        rank = r;\n        root = MatrixUtils.createRealMatrix(order, r);\n        for (int i = 0; i < order; ++i) {\n            for (int j = 0; j < r; ++j) {\n                root.setEntry(index[i], j, b[i][j]);\n            }\n        }\n\n    }\n\n    /** Get the root of the covariance matrix.\n     * The root is the rectangular matrix <code>B</code> such that\n     * the covariance matrix is equal to <code>B.B<sup>T</sup></code>\n     * @return root of the square matrix\n     * @see #getRank()\n     */\n    public RealMatrix getRootMatrix() {\n        return root;\n    }\n\n    /** Get the rank of the symmetric positive semidefinite matrix.\n     * The r is the number of independent rows in the symmetric positive semidefinite\n     * matrix, it is also the number of columns of the rectangular\n     * matrix of the decomposition.\n     * @return r of the square matrix.\n     * @see #getRootMatrix()\n     */\n    public int getRank() {\n        return rank;\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 7.739244699478149,
+        "line_count": 174,
+        "token_budget": 20000,
+        "temperature_used": 0.45,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 4,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 285,
+        "prompt_tokens": 6506,
+        "total_tokens": 6791,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch introduces a logic error by prematurely setting the 'rank' variable and modifying the loop termination condition. In the original code, 'r' was incremented to represent the rank when the loop terminated due to small diagonal elements. By changing '++r' to 'rank = r' and modifying the loop index, the code fails to correctly account for the rank when the matrix is not full rank, leading to failures in tests that expect the rank to be correctly calculated based on the number of iterations performed.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 4.337090015411377,
+        "issues": [
+          "The modification of the rank assignment logic breaks the calculation of the matrix rank when the loop terminates early.",
+          "The loop index 'r' is no longer incremented correctly when the threshold is reached, causing the resulting 'root' matrix dimensions to be inconsistent with the expected rank."
+        ],
+        "suggestions": [
+          "In RectangularCholeskyDecomposition(): change 'rank = r;' to '++r; rank = r;' because the rank must reflect the number of successful iterations completed before the threshold was triggered."
+        ],
+        "problematic_lines": [
+          112
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 4103,
+        "candidate_tokens": 255,
+        "total_tokens": 4358,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage org.apache.commons.math3.linear;\n\nimport org.apache.commons.math3.util.FastMath;\n\n/**\n * Calculates the rectangular Cholesky decomposition of a matrix.\n * <p>The rectangular Cholesky decomposition of a real symmetric positive\n * semidefinite matrix A consists of a rectangular matrix B with the same\n * number of rows such that: A is almost equal to BB<sup>T</sup>, depending\n * on a user-defined tolerance. In a sense, this is the square root of A.</p>\n * <p>The difference with respect to the regular {@link CholeskyDecomposition}\n * is that rows/columns may be permuted (hence the rectangular shape instead\n * of the traditional triangular shape) and there is a threshold to ignore\n * small diagonal elements. This is used for example to generate {@link\n * org.apache.commons.math3.random.CorrelatedRandomVectorGenerator correlated\n * random n-dimensions vectors} in a p-dimension subspace (p < n).\n * In other words, it allows generating random vectors from a covariance\n * matrix that is only positive semidefinite, and not positive definite.</p>\n * <p>Rectangular Cholesky decomposition is <em>not</em> suited for solving\n * linear systems, so it does not provide any {@link DecompositionSolver\n * decomposition solver}.</p>\n *\n * @see <a href=\"http://mathworld.wolfram.com/CholeskyDecomposition.html\">MathWorld</a>\n * @see <a href=\"http://en.wikipedia.org/wiki/Cholesky_decomposition\">Wikipedia</a>\n * @version $Id$\n * @since 2.0 (changed to concrete class in 3.0)\n */\npublic class RectangularCholeskyDecomposition {\n\n    /** Permutated Cholesky root of the symmetric positive semidefinite matrix. */\n    private final RealMatrix root;\n\n    /** Rank of the symmetric positive semidefinite matrix. */\n    private int rank;\n\n    /**\n     * Decompose a symmetric positive semidefinite matrix.\n     *\n     * @param matrix Symmetric positive semidefinite matrix.\n     * @param small Diagonal elements threshold under which  column are\n     * considered to be dependent on previous ones and are discarded.\n     * @exception NonPositiveDefiniteMatrixException if the matrix is not\n     * positive semidefinite.\n     */\n    public RectangularCholeskyDecomposition(RealMatrix matrix, double small)\n        throws NonPositiveDefiniteMatrixException {\n\n        final int order = matrix.getRowDimension();\n        final double[][] c = matrix.getData();\n        final double[][] b = new double[order][order];\n\n        int[] swap  = new int[order];\n        int[] index = new int[order];\n        for (int i = 0; i < order; ++i) {\n            index[i] = i;\n        }\n\n        int r = 0;\n        for (boolean loop = true; loop;) {\n\n            // find maximal diagonal element\n            swap[r] = r;\n            for (int i = r + 1; i < order; ++i) {\n                int ii  = index[i];\n                int isi = index[swap[i]];\n                if (c[ii][ii] > c[isi][isi]) {\n                    swap[r] = i;\n                }\n            }\n\n\n            // swap elements\n            if (swap[r] != r) {\n                int tmp = index[r];\n                index[r] = index[swap[r]];\n                index[swap[r]] = tmp;\n            }\n\n            // check diagonal element\n            int ir = index[r];\n            if (c[ir][ir] < small) {\n\n                if (r == 0) {\n                    throw new NonPositiveDefiniteMatrixException(c[ir][ir], ir, small);\n                }\n\n                // check remaining diagonal elements\n                for (int i = r + 1; i < order; ++i) {\n                    if (c[index[i]][index[i]] < -small) {\n                        // there is at least one sufficiently negative diagonal element,\n                        // the symmetric positive semidefinite matrix is wrong\n                        throw new NonPositiveDefiniteMatrixException(c[index[i]][index[i]], i, small);\n                    }\n                }\n\n                // all remaining diagonal elements are close to zero, we consider we have\n                // found the rank of the symmetric positive semidefinite matrix\n                loop = false;\n\n            } else {\n\n                // transform the matrix\n                final double sqrt = FastMath.sqrt(c[ir][ir]);\n                b[r][r] = sqrt;\n                final double inverse  = 1 / sqrt;\n                for (int i = r + 1; i < order; ++i) {\n                    final int ii = index[i];\n                    final double e = inverse * c[ii][ir];\n                    b[i][r] = e;\n                    c[ii][ii] -= e * e;\n                    for (int j = r + 1; j < i; ++j) {\n                        final int ij = index[j];\n                        final double f = c[ii][ij] - e * b[j][r];\n                        c[ii][ij] = f;\n                        c[ij][ii] = f;\n                    }\n                }\n\n                // prepare next iteration\n                loop = ++r < order;\n            }\n        }\n\n        // build the root matrix\n        rank = r;\n        root = MatrixUtils.createRealMatrix(order, r);\n        for (int i = 0; i < order; ++i) {\n            for (int j = 0; j < r; ++j) {\n                root.setEntry(index[i], j, b[i][j]);\n            }\n        }\n\n    }\n\n    /** Get the root of the covariance matrix.\n     * The root is the rectangular matrix <code>B</code> such that\n     * the covariance matrix is equal to <code>B.B<sup>T</sup></code>\n     * @return root of the square matrix\n     * @see #getRank()\n     */\n    public RealMatrix getRootMatrix() {\n        return root;\n    }\n\n    /** Get the rank of the symmetric positive semidefinite matrix.\n     * The r is the number of independent rows in the symmetric positive semidefinite\n     * matrix, it is also the number of columns of the rectangular\n     * matrix of the decomposition.\n     * @return r of the square matrix.\n     * @see #getRootMatrix()\n     */\n    public int getRank() {\n        return rank;\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.7022147178649902,
+        "line_count": 174,
+        "token_budget": 20000,
+        "temperature_used": 0.45,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 279,
+        "prompt_tokens": 6953,
+        "total_tokens": 7232,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly identifies that the loop index for checking remaining diagonal elements should start at r + 1, but it incorrectly removes the increment of the rank variable 'r'. By removing '++r', the rank is now under-reported when the decomposition terminates early due to small diagonal elements, causing the resulting matrix dimensions to be incorrect and leading to test failures.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.692203998565674,
+        "issues": [
+          "The removal of '++r' causes the rank to be incorrectly calculated when the loop terminates early.",
+          "The logic for determining the rank is now inconsistent with the expected output of the decomposition."
+        ],
+        "suggestions": [
+          "In RectangularCholeskyDecomposition(): change 'loop = false;' to '++r; loop = false;' because the rank must be incremented to account for the current index before terminating the decomposition process."
+        ],
+        "problematic_lines": [
+          113
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 4090,
+        "candidate_tokens": 216,
+        "total_tokens": 4306,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}
