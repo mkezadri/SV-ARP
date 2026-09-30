@@ -1,0 +1,185 @@
+{
+  "bug_id": "Mockito_33",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 2,
+  "accepted": true,
+  "plausible_patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.LinkedList;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {        \n        Method m1 = invocation.getMethod();\n        Method m2 = candidate.getMethod();\n        \n        if (m1.getName() != null && m1.getName().equals(m2.getName())) {\n            Class[] params1 = m1.getParameterTypes();\n            Class[] params2 = m2.getParameterTypes();\n            if (params1.length == params2.length) {\n                for (int i = 0; i < params1.length; i++) {\n                    if (params1[i] != params2[i]) {\n                        return false;\n                    }\n                }\n                return true;\n            }\n        }\n        return false;\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments && i.getArguments().length > k) {\n                ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n            }\n            k++;\n        }\n    }\n\n    public static List<InvocationMatcher> createFrom(List<Invocation> invocations) {\n        LinkedList<InvocationMatcher> out = new LinkedList<InvocationMatcher>();\n\n        for (Invocation i : invocations) {\n            out.add(new InvocationMatcher(i));\n        }\n\n        return out;\n    }\n}",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly addresses the issue where Java's synthetic forwarding methods (often generated for generics) cause Method.equals() to return false for methods that are logically identical. By adding a fallback check that compares method names and parameter types, the code ensures that overloaded methods or bridge methods are correctly identified as the same, which is necessary for Mockito's internal invocation matching logic.",
+  "iterations": 3,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.LinkedList;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {\n        Method m1 = invocation.getMethod();\n        Method m2 = candidate.getMethod();\n\n        if (m1.equals(m2)) {\n            return true;\n        }\n\n        return m1.getName().equals(m2.getName())\n                && m1.getParameterTypes().length == m2.getParameterTypes().length\n                && java.util.Arrays.equals(m1.getParameterTypes(), m2.getParameterTypes());\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments && i.getArguments().length > k) {\n                ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n            }\n            k++;\n        }\n    }\n\n    public static List<InvocationMatcher> createFrom(List<Invocation> invocations) {\n        LinkedList<InvocationMatcher> out = new LinkedList<InvocationMatcher>();\n\n        for (Invocation i : invocations) {\n            out.add(new InvocationMatcher(i));\n        }\n\n        return out;\n    }\n}",
+  "per_file_patches": "{\"InvocationMatcher.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 420.12,
+  "total_tokens": 22465,
+  "estimated_usd": 0.0079,
+  "failing_tests": "org.mockitousage.bugs.InheritedGenericsPolimorphicCallTest::shouldStubbingWork|org.mockitousage.bugs.InheritedGenericsPolimorphicCallTest::shouldVerificationWorks",
+  "modified_classes": "org.mockito.internal.invocation.InvocationMatcher",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.LinkedList;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {        \n        Method m1 = invocation.getMethod();\n        Method m2 = candidate.getMethod();\n        \n        if (m1.getName() != null && m1.getName().equals(m2.getName())) {\n            Class[] params1 = m1.getParameterTypes();\n            Class[] params2 = m2.getParameterTypes();\n            if (params1.length == params2.length) {\n                for (int i = 0; i < params1.length; i++) {\n                    if (params1[i] != params2[i]) {\n                        return false;\n                    }\n                }\n                return true;\n            }\n        }\n        return false;\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments && i.getArguments().length > k) {\n                ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n            }\n            k++;\n        }\n    }\n\n    public static List<InvocationMatcher> createFrom(List<Invocation> invocations) {\n        LinkedList<InvocationMatcher> out = new LinkedList<InvocationMatcher>();\n\n        for (Invocation i : invocations) {\n            out.add(new InvocationMatcher(i));\n        }\n\n        return out;\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.319628953933716,
+        "line_count": 128,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 17,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 269,
+        "prompt_tokens": 1943,
+        "total_tokens": 2212,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch removes a critical comment explaining why Method.equals() is insufficient for Mockito's needs (handling Java generics forwarding methods) and replaces it with a manual parameter type comparison that is less robust than the original implementation. Specifically, the original code relied on Method.equals() which, despite the comment's warning, is often the standard way to compare methods in reflection; the new implementation fails to account for potential class loader differences or complex type hierarchies that Method.equals() might handle internally, and it removes the documentation regarding the 'JavaGenericsForwardingMethodsTest' edge case.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 15.5919771194458,
+        "issues": [
+          "Removed critical documentation regarding Java generics forwarding methods.",
+          "Manual parameter type comparison is more fragile than the standard Method.equals() implementation.",
+          "The new implementation does not account for potential nullability or edge cases in parameter type arrays that the original implementation handled via the JVM's native method equality."
+        ],
+        "suggestions": [
+          "In hasSameMethod(): change the entire body back to 'return m1.equals(m2);' while keeping the original comment explaining the rationale for why this is necessary for Java generics forwarding methods."
+        ],
+        "problematic_lines": [
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2854,
+        "candidate_tokens": 358,
+        "total_tokens": 3212,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.LinkedList;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {        \n        Method m1 = invocation.getMethod();\n        Method m2 = candidate.getMethod();\n        \n        return m1.getName().equals(m2.getName()) && \n               m1.getReturnType().equals(m2.getReturnType()) &&\n               java.util.Arrays.equals(m1.getParameterTypes(), m2.getParameterTypes());\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments && i.getArguments().length > k) {\n                ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n            }\n            k++;\n        }\n    }\n\n    public static List<InvocationMatcher> createFrom(List<Invocation> invocations) {\n        LinkedList<InvocationMatcher> out = new LinkedList<InvocationMatcher>();\n\n        for (Invocation i : invocations) {\n            out.add(new InvocationMatcher(i));\n        }\n\n        return out;\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 13.290334939956665,
+        "line_count": 128,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 7,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 196,
+        "prompt_tokens": 5768,
+        "total_tokens": 5964,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch attempts to replace a robust method equality check with a manual signature comparison that fails to account for bridge methods generated by the Java compiler when generics are involved. The original code correctly identified that Method.equals() is insufficient, but the new implementation is even more restrictive and breaks polymorphic calls where the return type or parameter types might appear different due to type erasure or bridge method generation, as evidenced by the failing tests in InheritedGenericsPolimorphicCallTest.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 6.253756761550903,
+        "issues": [
+          "The manual comparison of return types and parameter types does not handle bridge methods correctly.",
+          "The patch ignores the specific edge case documented in the original code regarding Java generics forwarding methods.",
+          "The implementation fails to account for potential differences in declaring classes for the same method signature."
+        ],
+        "suggestions": [
+          "In hasSameMethod(): change the implementation to use a combination of method name, parameter types, and a check for bridge methods or declaring class hierarchy to ensure compatibility with generic inheritance."
+        ],
+        "problematic_lines": [
+          94,
+          95,
+          96
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2831,
+        "candidate_tokens": 254,
+        "total_tokens": 3085,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.LinkedList;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {\n        Method m1 = invocation.getMethod();\n        Method m2 = candidate.getMethod();\n\n        if (m1.equals(m2)) {\n            return true;\n        }\n\n        return m1.getName().equals(m2.getName())\n                && m1.getParameterTypes().length == m2.getParameterTypes().length\n                && java.util.Arrays.equals(m1.getParameterTypes(), m2.getParameterTypes());\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments && i.getArguments().length > k) {\n                ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n            }\n            k++;\n        }\n    }\n\n    public static List<InvocationMatcher> createFrom(List<Invocation> invocations) {\n        LinkedList<InvocationMatcher> out = new LinkedList<InvocationMatcher>();\n\n        for (Invocation i : invocations) {\n            out.add(new InvocationMatcher(i));\n        }\n\n        return out;\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 10.343200922012329,
+        "line_count": 128,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 15,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 214,
+        "prompt_tokens": 4894,
+        "total_tokens": 5108,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly addresses the issue where Java's synthetic forwarding methods (often generated for generics) cause Method.equals() to return false for methods that are logically identical. By adding a fallback check that compares method names and parameter types, the code ensures that overloaded methods or bridge methods are correctly identified as the same, which is necessary for Mockito's internal invocation matching logic.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.3589422702789307,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2769,
+        "candidate_tokens": 115,
+        "total_tokens": 2884,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

@@ -1,0 +1,69 @@
+{
+  "bug_id": "Mockito_29",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 1,
+  "accepted": true,
+  "plausible_patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.matchers;\n\nimport org.hamcrest.Description;\nimport org.mockito.ArgumentMatcher;\n\nimport java.io.Serializable;\n\n\npublic class Same extends ArgumentMatcher<Object> implements Serializable {\n\n    private static final long serialVersionUID = -1226959355938572597L;\n    private final Object wanted;\n\n    public Same(Object wanted) {\n        this.wanted = wanted;\n    }\n\n    public boolean matches(Object actual) {\n        return wanted == actual;\n    }\n\n    public void describeTo(Description description) {\n        description.appendText(\"same(\");\n        appendQuoting(description);\n        description.appendText(wanted == null ? \"null\" : wanted.toString());\n        appendQuoting(description);\n        description.appendText(\")\");\n    }\n\n    private void appendQuoting(Description description) {\n        if (wanted instanceof String) {\n            description.appendText(\"\\\"\");\n        } else if (wanted instanceof Character) {\n            description.appendText(\"'\");\n        }\n    }\n}\n",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly addresses a potential NullPointerException in the describeTo method. Previously, calling wanted.toString() on a null object would throw an exception; the patch safely handles null values by explicitly appending the string 'null'.",
+  "iterations": 1,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.matchers;\n\nimport org.hamcrest.Description;\nimport org.mockito.ArgumentMatcher;\n\nimport java.io.Serializable;\n\n\npublic class Same extends ArgumentMatcher<Object> implements Serializable {\n\n    private static final long serialVersionUID = -1226959355938572597L;\n    private final Object wanted;\n\n    public Same(Object wanted) {\n        this.wanted = wanted;\n    }\n\n    public boolean matches(Object actual) {\n        return wanted == actual;\n    }\n\n    public void describeTo(Description description) {\n        description.appendText(\"same(\");\n        appendQuoting(description);\n        description.appendText(wanted == null ? \"null\" : wanted.toString());\n        appendQuoting(description);\n        description.appendText(\")\");\n    }\n\n    private void appendQuoting(Description description) {\n        if (wanted instanceof String) {\n            description.appendText(\"\\\"\");\n        } else if (wanted instanceof Character) {\n            description.appendText(\"'\");\n        }\n    }\n}\n",
+  "per_file_patches": "{\"Same.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 67.16,
+  "total_tokens": 2187,
+  "estimated_usd": 0.0008,
+  "failing_tests": "org.mockitousage.bugs.NPEWithCertainMatchersTest::shouldNotThrowNPEWhenNullPassedToSame",
+  "modified_classes": "org.mockito.internal.matchers.Same",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.matchers;\n\nimport org.hamcrest.Description;\nimport org.mockito.ArgumentMatcher;\n\nimport java.io.Serializable;\n\n\npublic class Same extends ArgumentMatcher<Object> implements Serializable {\n\n    private static final long serialVersionUID = -1226959355938572597L;\n    private final Object wanted;\n\n    public Same(Object wanted) {\n        this.wanted = wanted;\n    }\n\n    public boolean matches(Object actual) {\n        return wanted == actual;\n    }\n\n    public void describeTo(Description description) {\n        description.appendText(\"same(\");\n        appendQuoting(description);\n        description.appendText(wanted == null ? \"null\" : wanted.toString());\n        appendQuoting(description);\n        description.appendText(\")\");\n    }\n\n    private void appendQuoting(Description description) {\n        if (wanted instanceof String) {\n            description.appendText(\"\\\"\");\n        } else if (wanted instanceof Character) {\n            description.appendText(\"'\");\n        }\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.603502035140991,
+        "line_count": 41,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 129,
+        "prompt_tokens": 881,
+        "total_tokens": 1010,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly addresses a potential NullPointerException in the describeTo method. Previously, calling wanted.toString() on a null object would throw an exception; the patch safely handles null values by explicitly appending the string 'null'.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 8.299387216567993,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 1093,
+        "candidate_tokens": 84,
+        "total_tokens": 1177,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

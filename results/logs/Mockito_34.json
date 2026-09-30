@@ -1,0 +1,180 @@
+{
+  "bug_id": "Mockito_34",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 2,
+  "accepted": true,
+  "plausible_patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {\n        return invocation.getMethod().equals(candidate.getMethod());\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments) {\n                if (m instanceof org.mockito.internal.matchers.VarargMatcher) {\n                    Object[] varargs = java.util.Arrays.copyOfRange(i.getArguments(), k, i.getArguments().length);\n                    ((CapturesArguments) m).captureFrom(varargs);\n                    return;\n                }\n                if (k < i.getArguments().length) {\n                    ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n                }\n            }\n            k++;\n        }\n    }\n}",
+  "plausible_iteration": 2,
+  "reason": "The patch correctly addresses the handling of varargs in argument capturing. By checking for the VarargMatcher interface, the code now correctly slices the remaining arguments into an array for the matcher, preventing IndexOutOfBoundsExceptions and ensuring that varargs are captured as a single collection rather than individual elements.",
+  "iterations": 3,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {\n        return invocation.getMethod().equals(candidate.getMethod());\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments) {\n                if (m instanceof org.mockito.internal.matchers.VarargMatcher) {\n                    Object[] varargs = java.util.Arrays.copyOfRange(i.getArguments(), k, i.getArguments().length);\n                    ((CapturesArguments) m).captureFrom(varargs);\n                    return;\n                }\n                if (k < i.getArguments().length) {\n                    ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n                }\n            }\n            k++;\n        }\n    }\n}",
+  "per_file_patches": "{\"InvocationMatcher.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 295.72,
+  "total_tokens": 19250,
+  "estimated_usd": 0.0067,
+  "failing_tests": "org.mockito.internal.invocation.InvocationMatcherTest::shouldMatchCaptureArgumentsWhenArgsCountDoesNOTMatch|org.mockitousage.basicapi.UsingVarargsTest::shouldMatchEasilyEmptyVararg",
+  "modified_classes": "org.mockito.internal.invocation.InvocationMatcher",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {\n        return invocation.getMethod().equals(candidate.getMethod());\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments) {\n                ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n            }\n            k++;\n        }\n        for (int j = k; j < i.getArguments().length; j++) {\n            for (Matcher m : matchers) {\n                if (m instanceof CapturesArguments) {\n                    ((CapturesArguments) m).captureFrom(i.getArguments()[j]);\n                }\n            }\n        }\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 9.399149894714355,
+        "line_count": 111,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 7,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 228,
+        "prompt_tokens": 1785,
+        "total_tokens": 2013,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to handle varargs or mismatched argument counts by iterating through remaining arguments and applying all matchers to each, which is logically incorrect. This approach causes side effects by capturing multiple arguments into the same matcher repeatedly, leading to incorrect state in the ArgumentCaptor and failing the specified tests.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.3828892707824707,
+        "issues": [
+          "The nested loop logic in captureArgumentsFrom() incorrectly applies all matchers to every remaining argument.",
+          "The logic does not account for the specific behavior of varargs or how matchers should map to arguments when counts differ.",
+          "The patch introduces redundant and potentially destructive capture operations."
+        ],
+        "suggestions": [
+          "In captureArgumentsFrom(): change the entire added loop block to a logic that correctly identifies if the last matcher is a varargs matcher and handles the remaining arguments accordingly because the current implementation causes multiple captures into the same matcher instance."
+        ],
+        "problematic_lines": [
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2521,
+        "candidate_tokens": 250,
+        "total_tokens": 2771,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {\n        return invocation.getMethod().equals(candidate.getMethod());\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments) {\n                if (m instanceof org.mockito.internal.matchers.VarargMatcher) {\n                    Object[] varargs = new Object[i.getArguments().length - k];\n                    for (int j = 0; j < varargs.length; j++) {\n                        varargs[j] = i.getArguments()[k + j];\n                    }\n                    ((CapturesArguments) m).captureFrom(varargs);\n                    return;\n                }\n                ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n            }\n            k++;\n        }\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.832568883895874,
+        "line_count": 111,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 8,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 258,
+        "prompt_tokens": 3760,
+        "total_tokens": 4018,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly identifies the need to handle VarargMatchers by capturing the remaining arguments as an array, but it fails to account for cases where the vararg parameter might be empty or where the argument count mismatch occurs. Specifically, the logic assumes that if a VarargMatcher is encountered, it should consume all remaining arguments, but it does not handle the case where the index 'k' might exceed the bounds of the actual arguments array if the vararg is empty, leading to potential IndexOutOfBoundsException or incorrect capture behavior in the failing tests.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.5307366847991943,
+        "issues": [
+          "The patch does not handle the case where the number of arguments provided is less than the expected index 'k', leading to potential ArrayIndexOutOfBoundsException.",
+          "The logic for capturing varargs does not correctly handle empty vararg scenarios, causing regressions in tests expecting empty vararg matching.",
+          "The manual array copy loop is redundant and can be replaced with System.arraycopy for better performance and safety."
+        ],
+        "suggestions": [
+          "In captureArgumentsFrom(): change the manual loop to 'Object[] varargs = java.util.Arrays.copyOfRange(i.getArguments(), k, i.getArguments().length);' to safely handle empty arrays and simplify the implementation.",
+          "In captureArgumentsFrom(): change the logic to check if 'k' is within bounds of 'i.getArguments()' before attempting to create the varargs array to prevent IndexOutOfBoundsException."
+        ],
+        "problematic_lines": [
+          107,
+          108,
+          109,
+          110,
+          111
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2623,
+        "candidate_tokens": 358,
+        "total_tokens": 2981,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.invocation;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\nimport java.util.Collections;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.mockito.exceptions.PrintableInvocation;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.matchers.CapturesArguments;\nimport org.mockito.internal.reporting.PrintSettings;\nimport org.mockito.internal.reporting.PrintingFriendlyInvocation;\n\n@SuppressWarnings(\"unchecked\")\npublic class InvocationMatcher implements PrintableInvocation, PrintingFriendlyInvocation, CapturesArgumensFromInvocation, Serializable {\n\n    private static final long serialVersionUID = -3047126096857467610L;\n    private final Invocation invocation;\n    private final List<Matcher> matchers;\n\n    public InvocationMatcher(Invocation invocation, List<Matcher> matchers) {\n        this.invocation = invocation;\n        if (matchers.isEmpty()) {\n            this.matchers = invocation.argumentsToMatchers();\n        } else {\n            this.matchers = matchers;\n        }\n    }\n    \n    public InvocationMatcher(Invocation invocation) {\n        this(invocation, Collections.<Matcher>emptyList());\n    }\n\n    public Method getMethod() {\n        return invocation.getMethod();\n    }\n    \n    public Invocation getInvocation() {\n        return this.invocation;\n    }\n    \n    public List<Matcher> getMatchers() {\n        return this.matchers;\n    }\n    \n    public String toString() {\n        return invocation.toString(matchers, new PrintSettings());\n    }\n\n    public boolean matches(Invocation actual) {\n        return invocation.getMock().equals(actual.getMock())\n                && hasSameMethod(actual)\n                && new ArgumentsComparator().argumentsMatch(this, actual);\n    }\n\n    private boolean safelyArgumentsMatch(Object[] actualArgs) {\n        try {\n            return new ArgumentsComparator().argumentsMatch(this, actualArgs);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    /**\n     * similar means the same method name, same mock, unverified \n     * and: if arguments are the same cannot be overloaded\n     */\n    public boolean hasSimilarMethod(Invocation candidate) {\n        String wantedMethodName = getMethod().getName();\n        String currentMethodName = candidate.getMethod().getName();\n        \n        final boolean methodNameEquals = wantedMethodName.equals(currentMethodName);\n        final boolean isUnverified = !candidate.isVerified();\n        final boolean mockIsTheSame = getInvocation().getMock() == candidate.getMock();\n        final boolean methodEquals = hasSameMethod(candidate);\n\n        if (!methodNameEquals || !isUnverified || !mockIsTheSame) {\n            return false;\n        }\n\n        final boolean overloadedButSameArgs = !methodEquals && safelyArgumentsMatch(candidate.getArguments());\n\n        return !overloadedButSameArgs;\n    }\n\n    public boolean hasSameMethod(Invocation candidate) {\n        return invocation.getMethod().equals(candidate.getMethod());\n    }\n    \n    public Location getLocation() {\n        return invocation.getLocation();\n    }\n\n    public String toString(PrintSettings printSettings) {\n        return invocation.toString(matchers, printSettings);\n    }\n\n    public void captureArgumentsFrom(Invocation i) {\n        int k = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof CapturesArguments) {\n                if (m instanceof org.mockito.internal.matchers.VarargMatcher) {\n                    Object[] varargs = java.util.Arrays.copyOfRange(i.getArguments(), k, i.getArguments().length);\n                    ((CapturesArguments) m).captureFrom(varargs);\n                    return;\n                }\n                if (k < i.getArguments().length) {\n                    ((CapturesArguments) m).captureFrom(i.getArguments()[k]);\n                }\n            }\n            k++;\n        }\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 9.101416110992432,
+        "line_count": 111,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 9,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 246,
+        "prompt_tokens": 4635,
+        "total_tokens": 4881,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly addresses the handling of varargs in argument capturing. By checking for the VarargMatcher interface, the code now correctly slices the remaining arguments into an array for the matcher, preventing IndexOutOfBoundsExceptions and ensuring that varargs are captured as a single collection rather than individual elements.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.216942071914673,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2489,
+        "candidate_tokens": 97,
+        "total_tokens": 2586,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

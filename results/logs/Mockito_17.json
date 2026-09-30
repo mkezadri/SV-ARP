@@ -1,0 +1,373 @@
+{
+  "bug_id": "Mockito_17",
+  "status": "completed",
+  "verdict": "needs_revision",
+  "ablation": "full",
+  "plausible": false,
+  "baseline_failing_count": 1,
+  "accepted": false,
+  "plausible_patch": "",
+  "plausible_iteration": -1,
+  "reason": "The patch correctly adds return statements to the validation logic in extraInterfaces(), but the implementation of serializable() is flawed. By creating a new array and calling extraInterfaces(), it triggers the validation logic inside extraInterfaces() which throws exceptions (via Reporter) if the input is invalid. However, the original implementation of serializable() simply called extraInterfaces(Serializable.class), which would overwrite any existing interfaces rather than appending to them. The test failure suggests that the expectation is to maintain existing interfaces while adding Serializable, but the current implementation of serializable() is likely causing side effects or failing to handle the state correctly when called multiple times or in conjunction with other settings.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (isSerializable()) {\n            return this;\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces == null ? 1 : extraInterfaces.length + 1];\n        if (extraInterfaces != null) {\n            System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        }\n        newInterfaces[newInterfaces.length - 1] = java.io.Serializable.class;\n        return this.extraInterfaces(newInterfaces);\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n            return this;\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n                return this;\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n                return this;\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+  "per_file_patches": "{\"MockSettingsImpl.java\": \"patched\", \"MockUtil.java\": \"patched\"}",
+  "is_multi_file": true,
+  "strategy": "V6-multi-file",
+  "time_seconds": 591.93,
+  "total_tokens": 63388,
+  "estimated_usd": 0.0222,
+  "failing_tests": "org.mockitousage.basicapi.MocksSerializationTest::shouldBeSerializeAndHaveExtraInterfaces",
+  "modified_classes": "org.mockito.internal.creation.MockSettingsImpl|org.mockito.internal.util.MockUtil",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (extraInterfaces == null) {\n            return this.extraInterfaces(java.io.Serializable.class);\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces.length + 1];\n        System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        newInterfaces[extraInterfaces.length] = java.io.Serializable.class;\n        return this.extraInterfaces(newInterfaces);\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+      "per_file_patches": {
+        "/tmp/d4j_full_w0/Mockito_17/src/org/mockito/internal/creation/MockSettingsImpl.java": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (extraInterfaces == null) {\n            return this.extraInterfaces(java.io.Serializable.class);\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces.length + 1];\n        System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        newInterfaces[extraInterfaces.length] = java.io.Serializable.class;\n        return this.extraInterfaces(newInterfaces);\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+        "/tmp/d4j_full_w0/Mockito_17/src/org/mockito/internal/util/MockUtil.java": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport static org.mockito.Mockito.RETURNS_DEFAULTS;\nimport static org.mockito.Mockito.withSettings;\n\nimport org.mockito.cglib.proxy.*;\nimport org.mockito.exceptions.misusing.NotAMockException;\nimport org.mockito.internal.MockHandler;\nimport org.mockito.internal.MockHandlerInterface;\nimport org.mockito.internal.creation.MethodInterceptorFilter;\nimport org.mockito.internal.creation.MockSettingsImpl;\nimport org.mockito.internal.creation.jmock.ClassImposterizer;\nimport org.mockito.internal.util.reflection.LenientCopyTool;\n\n\n@SuppressWarnings(\"unchecked\")\npublic class MockUtil {\n    \n    private final CreationValidator creationValidator;\n\n    public MockUtil(CreationValidator creationValidator) {\n        this.creationValidator = creationValidator;\n    }\n    \n    public MockUtil() {\n        this(new CreationValidator());\n    }\n\n    public <T> T createMock(Class<T> classToMock, MockSettingsImpl settings) {\n        creationValidator.validateType(classToMock);\n        creationValidator.validateExtraInterfaces(classToMock, settings.getExtraInterfaces());\n        creationValidator.validateMockedType(classToMock, settings.getSpiedInstance());\n\n        settings.initiateMockName(classToMock);\n\n        MockHandler<T> mockHandler = new MockHandler<T>(settings);\n        MethodInterceptorFilter filter = new MethodInterceptorFilter(mockHandler, settings);\n        Class<?>[] interfaces = settings.getExtraInterfaces();\n\n        Class<?>[] ancillaryTypes = interfaces == null ? new Class<?>[0] : interfaces;\n        if (settings.isSerializable()) {\n            Class<?>[] newAncillaryTypes = new Class<?>[ancillaryTypes.length + 1];\n            System.arraycopy(ancillaryTypes, 0, newAncillaryTypes, 0, ancillaryTypes.length);\n            newAncillaryTypes[ancillaryTypes.length] = java.io.Serializable.class;\n            ancillaryTypes = newAncillaryTypes;\n        }\n\n        Object spiedInstance = settings.getSpiedInstance();\n        \n        T mock = ClassImposterizer.INSTANCE.imposterise(filter, classToMock, ancillaryTypes);\n        \n        if (spiedInstance != null) {\n            new LenientCopyTool().copyToMock(spiedInstance, mock);\n        }\n        \n        return mock;\n    }\n\n    public <T> void resetMock(T mock) {\n        MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);\n        MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);\n        MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, \n                        (MockSettingsImpl) withSettings().defaultAnswer(RETURNS_DEFAULTS));\n        ((Factory) mock).setCallback(0, newFilter);\n    }\n\n    public <T> MockHandlerInterface<T> getMockHandler(T mock) {\n        if (mock == null) {\n            throw new NotAMockException(\"Argument should be a mock, but is null!\");\n        }\n\n        if (isMockitoMock(mock)) {\n            return (MockHandlerInterface) getInterceptor(mock).getHandler();\n        } else {\n            throw new NotAMockException(\"Argument should be a mock, but is: \" + mock.getClass());\n        }\n    }\n\n    private <T> boolean isMockitoMock(T mock) {\n        return Enhancer.isEnhanced(mock.getClass()) && getInterceptor(mock) != null;\n    }\n\n    public boolean isMock(Object mock) {\n        return mock != null && isMockitoMock(mock);\n    }\n\n    private <T> MethodInterceptorFilter getInterceptor(T mock) {\n        Factory factory = (Factory) mock;\n        Callback callback = factory.getCallback(0);\n        if (callback instanceof MethodInterceptorFilter) {\n            return (MethodInterceptorFilter) callback;\n        }\n        return null;\n    }\n\n    public MockName getMockName(Object mock) {\n        return getMockHandler(mock).getMockSettings().getMockName();\n    }\n}"
+      },
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 9.979921102523804,
+        "total_tokens": 3490,
+        "files": [
+          {
+            "file": "MockSettingsImpl.java",
+            "ablation": "full",
+            "model": "gemini-3.1-flash-lite",
+            "time_seconds": 8.450650930404663,
+            "line_count": 79,
+            "token_budget": 20000,
+            "temperature_used": 0.1,
+            "edit_mode": "search_replace",
+            "generation_attempts": 1,
+            "blocks_applied": 2,
+            "changed_lines": 8,
+            "drift_suspected": false,
+            "noop_detected": false,
+            "generation_rejected": "",
+            "candidate_tokens": 432,
+            "prompt_tokens": 1256,
+            "total_tokens": 1688
+          },
+          {
+            "file": "MockUtil.java",
+            "ablation": "full",
+            "model": "gemini-3.1-flash-lite",
+            "time_seconds": 1.5292701721191406,
+            "line_count": 97,
+            "token_budget": 20000,
+            "temperature_used": 0.1,
+            "edit_mode": "search_replace",
+            "generation_attempts": 1,
+            "blocks_applied": 1,
+            "changed_lines": 9,
+            "drift_suspected": false,
+            "noop_detected": false,
+            "generation_rejected": "",
+            "candidate_tokens": 239,
+            "prompt_tokens": 1563,
+            "total_tokens": 1802
+          }
+        ],
+        "is_multi_file": true
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to preserve existing extra interfaces when calling serializable(), but it fails to account for the fact that the original implementation of extraInterfaces() throws an exception if the input array is null or empty. Furthermore, the logic in serializable() creates a new array and calls extraInterfaces(), which triggers the validation logic inside extraInterfaces() again, potentially causing redundant checks or side effects. The regressions suggest that the state management of extraInterfaces is being corrupted or that the validation logic is interfering with the intended behavior of the fluent API.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 8.03384804725647,
+        "issues": [
+          "The patch triggers the validation logic inside extraInterfaces() repeatedly, which may be causing unexpected behavior when serializable() is called.",
+          "The implementation does not handle the case where Serializable might already be present in the extraInterfaces array, leading to duplicate entries.",
+          "The logic fails to maintain the internal state correctly across multiple calls to the fluent API, causing regressions in serialization tests."
+        ],
+        "suggestions": [
+          "In serializable(): change the implementation to check if java.io.Serializable.class is already present in extraInterfaces before appending it, to avoid duplicates and unnecessary array allocations.",
+          "In serializable(): change the implementation to use a Set or a more robust collection approach to manage extra interfaces, ensuring that the validation logic in extraInterfaces() is respected without causing regressions."
+        ],
+        "problematic_lines": [
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2160,
+        "candidate_tokens": 339,
+        "total_tokens": 2499,
+        "is_multi_file": true
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (isSerializable()) {\n            return this;\n        }\n        if (extraInterfaces == null) {\n            return this.extraInterfaces(java.io.Serializable.class);\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces.length + 1];\n        System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        newInterfaces[extraInterfaces.length] = java.io.Serializable.class;\n        this.extraInterfaces = newInterfaces;\n        return this;\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+      "per_file_patches": {
+        "/tmp/d4j_full_w0/Mockito_17/src/org/mockito/internal/creation/MockSettingsImpl.java": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (isSerializable()) {\n            return this;\n        }\n        if (extraInterfaces == null) {\n            return this.extraInterfaces(java.io.Serializable.class);\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces.length + 1];\n        System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        newInterfaces[extraInterfaces.length] = java.io.Serializable.class;\n        this.extraInterfaces = newInterfaces;\n        return this;\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+        "/tmp/d4j_full_w0/Mockito_17/src/org/mockito/internal/util/MockUtil.java": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport static org.mockito.Mockito.RETURNS_DEFAULTS;\nimport static org.mockito.Mockito.withSettings;\n\nimport org.mockito.cglib.proxy.*;\nimport org.mockito.exceptions.misusing.NotAMockException;\nimport org.mockito.internal.MockHandler;\nimport org.mockito.internal.MockHandlerInterface;\nimport org.mockito.internal.creation.MethodInterceptorFilter;\nimport org.mockito.internal.creation.MockSettingsImpl;\nimport org.mockito.internal.creation.jmock.ClassImposterizer;\nimport org.mockito.internal.util.reflection.LenientCopyTool;\n\n\n@SuppressWarnings(\"unchecked\")\npublic class MockUtil {\n    \n    private final CreationValidator creationValidator;\n\n    public MockUtil(CreationValidator creationValidator) {\n        this.creationValidator = creationValidator;\n    }\n    \n    public MockUtil() {\n        this(new CreationValidator());\n    }\n\n    public <T> T createMock(Class<T> classToMock, MockSettingsImpl settings) {\n        creationValidator.validateType(classToMock);\n        creationValidator.validateExtraInterfaces(classToMock, settings.getExtraInterfaces());\n        creationValidator.validateMockedType(classToMock, settings.getSpiedInstance());\n\n        settings.initiateMockName(classToMock);\n\n        MockHandler<T> mockHandler = new MockHandler<T>(settings);\n        MethodInterceptorFilter filter = new MethodInterceptorFilter(mockHandler, settings);\n        Class<?>[] interfaces = settings.getExtraInterfaces();\n\n        Class<?>[] ancillaryTypes;\n            ancillaryTypes = interfaces == null ? new Class<?>[0] : interfaces;\n\n        Object spiedInstance = settings.getSpiedInstance();\n        \n        T mock = ClassImposterizer.INSTANCE.imposterise(filter, classToMock, ancillaryTypes);\n        \n        if (spiedInstance != null) {\n            new LenientCopyTool().copyToMock(spiedInstance, mock);\n        }\n        \n        return mock;\n    }\n\n    public <T> void resetMock(T mock) {\n        MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);\n        MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);\n        MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, \n                        (MockSettingsImpl) withSettings().defaultAnswer(RETURNS_DEFAULTS));\n        ((Factory) mock).setCallback(0, newFilter);\n    }\n\n    public <T> MockHandlerInterface<T> getMockHandler(T mock) {\n        if (mock == null) {\n            throw new NotAMockException(\"Argument should be a mock, but is null!\");\n        }\n\n        if (isMockitoMock(mock)) {\n            return (MockHandlerInterface) getInterceptor(mock).getHandler();\n        } else {\n            throw new NotAMockException(\"Argument should be a mock, but is: \" + mock.getClass());\n        }\n    }\n\n    private <T> boolean isMockitoMock(T mock) {\n        return Enhancer.isEnhanced(mock.getClass()) && getInterceptor(mock) != null;\n    }\n\n    public boolean isMock(Object mock) {\n        return mock != null && isMockitoMock(mock);\n    }\n\n    private <T> MethodInterceptorFilter getInterceptor(T mock) {\n        Factory factory = (Factory) mock;\n        Callback callback = factory.getCallback(0);\n        if (callback instanceof MethodInterceptorFilter) {\n            return (MethodInterceptorFilter) callback;\n        }\n        return null;\n    }\n\n    public MockName getMockName(Object mock) {\n        return getMockHandler(mock).getMockSettings().getMockName();\n    }\n}"
+      },
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 9.823599815368652,
+        "total_tokens": 15583,
+        "files": [
+          {
+            "file": "MockSettingsImpl.java",
+            "ablation": "full",
+            "model": "gemini-3.1-flash-lite",
+            "time_seconds": 1.8362908363342285,
+            "line_count": 79,
+            "token_budget": 20000,
+            "temperature_used": 0.1,
+            "edit_mode": "search_replace",
+            "generation_attempts": 1,
+            "blocks_applied": 1,
+            "changed_lines": 12,
+            "drift_suspected": false,
+            "noop_detected": false,
+            "generation_rejected": "",
+            "candidate_tokens": 172,
+            "prompt_tokens": 3209,
+            "total_tokens": 3381
+          },
+          {
+            "file": "MockUtil.java",
+            "ablation": "full",
+            "model": "gemini-3.1-flash-lite",
+            "time_seconds": 7.987308979034424,
+            "line_count": 97,
+            "token_budget": 20000,
+            "temperature_used": 0.1,
+            "edit_mode": "search_replace",
+            "generation_attempts": 3,
+            "blocks_applied": 0,
+            "changed_lines": 0,
+            "drift_suspected": false,
+            "noop_detected": false,
+            "generation_rejected": "block 1: SEARCH text not found in source",
+            "candidate_tokens": 615,
+            "total_tokens": 12202,
+            "prompt_tokens": 11587
+          }
+        ],
+        "is_multi_file": true
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to manually append Serializable to the extraInterfaces array to avoid overwriting existing interfaces, but it bypasses the validation logic present in the extraInterfaces() method. Specifically, the manual array manipulation does not check if the class is an interface or handle potential nulls, and it fails to maintain the internal state consistency expected by the Mockito framework, leading to the test failure.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.6214802265167236,
+        "issues": [
+          "Manual array manipulation bypasses the validation logic in extraInterfaces()",
+          "The implementation of serializable() is overly complex compared to simply aggregating the array and calling the existing validation method"
+        ],
+        "suggestions": [
+          "In serializable(): change the entire method body to 'if (isSerializable()) return this; Class<?>[] newInterfaces = new Class<?>[extraInterfaces == null ? 1 : extraInterfaces.length + 1]; if (extraInterfaces != null) System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length); newInterfaces[newInterfaces.length - 1] = java.io.Serializable.class; return this.extraInterfaces(newInterfaces);' because it ensures that the validation logic inside extraInterfaces() is consistently applied to the combined array."
+        ],
+        "problematic_lines": [
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2019,
+        "candidate_tokens": 326,
+        "total_tokens": 2345,
+        "is_multi_file": true
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (isSerializable()) {\n            return this;\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces == null ? 1 : extraInterfaces.length + 1];\n        if (extraInterfaces != null) {\n            System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        }\n        newInterfaces[newInterfaces.length - 1] = java.io.Serializable.class;\n        return this.extraInterfaces(newInterfaces);\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+      "per_file_patches": {
+        "/tmp/d4j_full_w0/Mockito_17/src/org/mockito/internal/creation/MockSettingsImpl.java": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (isSerializable()) {\n            return this;\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces == null ? 1 : extraInterfaces.length + 1];\n        if (extraInterfaces != null) {\n            System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        }\n        newInterfaces[newInterfaces.length - 1] = java.io.Serializable.class;\n        return this.extraInterfaces(newInterfaces);\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+        "/tmp/d4j_full_w0/Mockito_17/src/org/mockito/internal/util/MockUtil.java": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport static org.mockito.Mockito.RETURNS_DEFAULTS;\nimport static org.mockito.Mockito.withSettings;\n\nimport org.mockito.cglib.proxy.*;\nimport org.mockito.exceptions.misusing.NotAMockException;\nimport org.mockito.internal.MockHandler;\nimport org.mockito.internal.MockHandlerInterface;\nimport org.mockito.internal.creation.MethodInterceptorFilter;\nimport org.mockito.internal.creation.MockSettingsImpl;\nimport org.mockito.internal.creation.jmock.ClassImposterizer;\nimport org.mockito.internal.util.reflection.LenientCopyTool;\n\n\n@SuppressWarnings(\"unchecked\")\npublic class MockUtil {\n    \n    private final CreationValidator creationValidator;\n\n    public MockUtil(CreationValidator creationValidator) {\n        this.creationValidator = creationValidator;\n    }\n    \n    public MockUtil() {\n        this(new CreationValidator());\n    }\n\n    public <T> T createMock(Class<T> classToMock, MockSettingsImpl settings) {\n        creationValidator.validateType(classToMock);\n        creationValidator.validateExtraInterfaces(classToMock, settings.getExtraInterfaces());\n        creationValidator.validateMockedType(classToMock, settings.getSpiedInstance());\n\n        settings.initiateMockName(classToMock);\n\n        MockHandler<T> mockHandler = new MockHandler<T>(settings);\n        MethodInterceptorFilter filter = new MethodInterceptorFilter(mockHandler, settings);\n        Class<?>[] interfaces = settings.getExtraInterfaces();\n\n        Class<?>[] ancillaryTypes;\n            ancillaryTypes = interfaces == null ? new Class<?>[0] : interfaces;\n\n        Object spiedInstance = settings.getSpiedInstance();\n        \n        T mock = ClassImposterizer.INSTANCE.imposterise(filter, classToMock, ancillaryTypes);\n        \n        if (spiedInstance != null) {\n            new LenientCopyTool().copyToMock(spiedInstance, mock);\n        }\n        \n        return mock;\n    }\n\n    public <T> void resetMock(T mock) {\n        MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);\n        MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);\n        MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, \n                        (MockSettingsImpl) withSettings().defaultAnswer(RETURNS_DEFAULTS));\n        ((Factory) mock).setCallback(0, newFilter);\n    }\n\n    public <T> MockHandlerInterface<T> getMockHandler(T mock) {\n        if (mock == null) {\n            throw new NotAMockException(\"Argument should be a mock, but is null!\");\n        }\n\n        if (isMockitoMock(mock)) {\n            return (MockHandlerInterface) getInterceptor(mock).getHandler();\n        } else {\n            throw new NotAMockException(\"Argument should be a mock, but is: \" + mock.getClass());\n        }\n    }\n\n    private <T> boolean isMockitoMock(T mock) {\n        return Enhancer.isEnhanced(mock.getClass()) && getInterceptor(mock) != null;\n    }\n\n    public boolean isMock(Object mock) {\n        return mock != null && isMockitoMock(mock);\n    }\n\n    private <T> MethodInterceptorFilter getInterceptor(T mock) {\n        Factory factory = (Factory) mock;\n        Callback callback = factory.getCallback(0);\n        if (callback instanceof MethodInterceptorFilter) {\n            return (MethodInterceptorFilter) callback;\n        }\n        return null;\n    }\n\n    public MockName getMockName(Object mock) {\n        return getMockHandler(mock).getMockSettings().getMockName();\n    }\n}"
+      },
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 5.597163677215576,
+        "total_tokens": 16615,
+        "files": [
+          {
+            "file": "MockSettingsImpl.java",
+            "ablation": "full",
+            "model": "gemini-3.1-flash-lite",
+            "time_seconds": 1.3737678527832031,
+            "line_count": 79,
+            "token_budget": 20000,
+            "temperature_used": 0.1,
+            "edit_mode": "search_replace",
+            "generation_attempts": 1,
+            "blocks_applied": 1,
+            "changed_lines": 10,
+            "drift_suspected": false,
+            "noop_detected": false,
+            "generation_rejected": "",
+            "candidate_tokens": 163,
+            "prompt_tokens": 3587,
+            "total_tokens": 3750
+          },
+          {
+            "file": "MockUtil.java",
+            "ablation": "full",
+            "model": "gemini-3.1-flash-lite",
+            "time_seconds": 4.223395824432373,
+            "line_count": 97,
+            "token_budget": 20000,
+            "temperature_used": 0.1,
+            "edit_mode": "search_replace",
+            "generation_attempts": 3,
+            "blocks_applied": 0,
+            "changed_lines": 0,
+            "drift_suspected": false,
+            "noop_detected": false,
+            "generation_rejected": "block 1: SEARCH text not found in source",
+            "candidate_tokens": 489,
+            "total_tokens": 12865,
+            "prompt_tokens": 12376
+          }
+        ],
+        "is_multi_file": true
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly attempts to preserve existing interfaces when adding Serializable, but it fails to account for the fact that the Reporter methods in extraInterfaces() throw exceptions rather than returning, causing the execution to continue and potentially overwrite the state or trigger side effects incorrectly if the validation fails.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 9.139770030975342,
+        "issues": [
+          "The Reporter methods in extraInterfaces() do not terminate execution, so the method continues to assign the invalid array to this.extraInterfaces.",
+          "The logic in serializable() relies on extraInterfaces() which is designed to throw exceptions on invalid input, making the flow brittle."
+        ],
+        "suggestions": [
+          "In extraInterfaces(): change 'new Reporter().extraInterfacesRequiresAtLeastOneInterface();' to 'throw new org.mockito.exceptions.base.MockitoException(\"...\");' (or equivalent) to ensure the method terminates immediately upon validation failure."
+        ],
+        "problematic_lines": [
+          28,
+          33,
+          35
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 1999,
+        "candidate_tokens": 225,
+        "total_tokens": 2224,
+        "is_multi_file": true
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (isSerializable()) {\n            return this;\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces == null ? 1 : extraInterfaces.length + 1];\n        if (extraInterfaces != null) {\n            System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        }\n        newInterfaces[newInterfaces.length - 1] = java.io.Serializable.class;\n        return this.extraInterfaces(newInterfaces);\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n            return this;\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n                return this;\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n                return this;\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+      "per_file_patches": {
+        "/tmp/d4j_full_w0/Mockito_17/src/org/mockito/internal/creation/MockSettingsImpl.java": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        if (isSerializable()) {\n            return this;\n        }\n        Class<?>[] newInterfaces = new Class<?>[extraInterfaces == null ? 1 : extraInterfaces.length + 1];\n        if (extraInterfaces != null) {\n            System.arraycopy(extraInterfaces, 0, newInterfaces, 0, extraInterfaces.length);\n        }\n        newInterfaces[newInterfaces.length - 1] = java.io.Serializable.class;\n        return this.extraInterfaces(newInterfaces);\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n            return this;\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n                return this;\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n                return this;\n            }\n        }\n        this.extraInterfaces = extraInterfaces;\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}",
+        "/tmp/d4j_full_w0/Mockito_17/src/org/mockito/internal/util/MockUtil.java": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport static org.mockito.Mockito.RETURNS_DEFAULTS;\nimport static org.mockito.Mockito.withSettings;\n\nimport org.mockito.cglib.proxy.*;\nimport org.mockito.exceptions.misusing.NotAMockException;\nimport org.mockito.internal.MockHandler;\nimport org.mockito.internal.MockHandlerInterface;\nimport org.mockito.internal.creation.MethodInterceptorFilter;\nimport org.mockito.internal.creation.MockSettingsImpl;\nimport org.mockito.internal.creation.jmock.ClassImposterizer;\nimport org.mockito.internal.util.reflection.LenientCopyTool;\n\n\n@SuppressWarnings(\"unchecked\")\npublic class MockUtil {\n    \n    private final CreationValidator creationValidator;\n\n    public MockUtil(CreationValidator creationValidator) {\n        this.creationValidator = creationValidator;\n    }\n    \n    public MockUtil() {\n        this(new CreationValidator());\n    }\n\n    public <T> T createMock(Class<T> classToMock, MockSettingsImpl settings) {\n        creationValidator.validateType(classToMock);\n        creationValidator.validateExtraInterfaces(classToMock, settings.getExtraInterfaces());\n        creationValidator.validateMockedType(classToMock, settings.getSpiedInstance());\n\n        settings.initiateMockName(classToMock);\n\n        MockHandler<T> mockHandler = new MockHandler<T>(settings);\n        MethodInterceptorFilter filter = new MethodInterceptorFilter(mockHandler, settings);\n        Class<?>[] interfaces = settings.getExtraInterfaces();\n\n        Class<?>[] ancillaryTypes;\n            ancillaryTypes = interfaces == null ? new Class<?>[0] : interfaces;\n\n        Object spiedInstance = settings.getSpiedInstance();\n        \n        T mock = ClassImposterizer.INSTANCE.imposterise(filter, classToMock, ancillaryTypes);\n        \n        if (spiedInstance != null) {\n            new LenientCopyTool().copyToMock(spiedInstance, mock);\n        }\n        \n        return mock;\n    }\n\n    public <T> void resetMock(T mock) {\n        MockHandlerInterface<T> oldMockHandler = getMockHandler(mock);\n        MockHandler<T> newMockHandler = new MockHandler<T>(oldMockHandler);\n        MethodInterceptorFilter newFilter = new MethodInterceptorFilter(newMockHandler, \n                        (MockSettingsImpl) withSettings().defaultAnswer(RETURNS_DEFAULTS));\n        ((Factory) mock).setCallback(0, newFilter);\n    }\n\n    public <T> MockHandlerInterface<T> getMockHandler(T mock) {\n        if (mock == null) {\n            throw new NotAMockException(\"Argument should be a mock, but is null!\");\n        }\n\n        if (isMockitoMock(mock)) {\n            return (MockHandlerInterface) getInterceptor(mock).getHandler();\n        } else {\n            throw new NotAMockException(\"Argument should be a mock, but is: \" + mock.getClass());\n        }\n    }\n\n    private <T> boolean isMockitoMock(T mock) {\n        return Enhancer.isEnhanced(mock.getClass()) && getInterceptor(mock) != null;\n    }\n\n    public boolean isMock(Object mock) {\n        return mock != null && isMockitoMock(mock);\n    }\n\n    private <T> MethodInterceptorFilter getInterceptor(T mock) {\n        Factory factory = (Factory) mock;\n        Callback callback = factory.getCallback(0);\n        if (callback instanceof MethodInterceptorFilter) {\n            return (MethodInterceptorFilter) callback;\n        }\n        return null;\n    }\n\n    public MockName getMockName(Object mock) {\n        return getMockHandler(mock).getMockSettings().getMockName();\n    }\n}"
+      },
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 34.94552397727966,
+        "total_tokens": 18118,
+        "files": [
+          {
+            "file": "MockSettingsImpl.java",
+            "ablation": "full",
+            "model": "gemini-3.1-flash-lite",
+            "time_seconds": 6.277213096618652,
+            "line_count": 79,
+            "token_budget": 20000,
+            "temperature_used": 0.1,
+            "edit_mode": "search_replace",
+            "generation_attempts": 1,
+            "blocks_applied": 2,
+            "changed_lines": 13,
+            "drift_suspected": false,
+            "noop_detected": false,
+            "generation_rejected": "",
+            "candidate_tokens": 458,
+            "prompt_tokens": 3882,
+            "total_tokens": 4340
+          },
+          {
+            "file": "MockUtil.java",
+            "ablation": "full",
+            "model": "gemini-3.1-flash-lite",
+            "time_seconds": 28.66831088066101,
+            "line_count": 97,
+            "token_budget": 20000,
+            "temperature_used": 0.1,
+            "edit_mode": "search_replace",
+            "generation_attempts": 3,
+            "blocks_applied": 0,
+            "changed_lines": 0,
+            "drift_suspected": false,
+            "noop_detected": false,
+            "generation_rejected": "block 1: SEARCH text not found in source",
+            "candidate_tokens": 493,
+            "total_tokens": 13778,
+            "prompt_tokens": 13285
+          }
+        ],
+        "is_multi_file": true
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly adds return statements to the validation logic in extraInterfaces(), but the implementation of serializable() is flawed. By creating a new array and calling extraInterfaces(), it triggers the validation logic inside extraInterfaces() which throws exceptions (via Reporter) if the input is invalid. However, the original implementation of serializable() simply called extraInterfaces(Serializable.class), which would overwrite any existing interfaces rather than appending to them. The test failure suggests that the expectation is to maintain existing interfaces while adding Serializable, but the current implementation of serializable() is likely causing side effects or failing to handle the state correctly when called multiple times or in conjunction with other settings.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 6.652929782867432,
+        "issues": [
+          "The serializable() method logic is overly complex and potentially redundant given the existing extraInterfaces() implementation.",
+          "The original code for serializable() was 'return this.extraInterfaces(java.io.Serializable.class);', which replaced existing interfaces. If the test expects to keep existing interfaces, the original code was also buggy, but the new implementation might be violating the expected contract of the MockSettings API."
+        ],
+        "suggestions": [
+          "In serializable(): change the implementation to 'return this.extraInterfaces(ObjectArrays.concat(extraInterfaces, Serializable.class));' (assuming a utility like ObjectArrays is available) or maintain the original behavior if the test expects replacement, while ensuring the validation logic in extraInterfaces() does not crash the flow."
+        ],
+        "problematic_lines": [
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2145,
+        "candidate_tokens": 369,
+        "total_tokens": 2514,
+        "is_multi_file": true
+      }
+    }
+  ],
+  "error": ""
+}

@@ -1,0 +1,212 @@
+{
+  "bug_id": "Mockito_37",
+  "status": "completed",
+  "verdict": "incorrect",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 2,
+  "accepted": false,
+  "plausible_patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.answers;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.invocation.Invocation;\nimport org.mockito.stubbing.Answer;\n\npublic class AnswersValidator {\n\n    private Reporter reporter = new Reporter();\n    \n    public void validate(Answer<?> answer, Invocation invocation) {\n        if (answer instanceof ThrowsException) {\n            validateException((ThrowsException) answer, invocation);\n        }\n        \n        if (answer instanceof Returns) {\n            validateReturnValue((Returns) answer, invocation);\n        }\n        \n        if (answer instanceof DoesNothing) {\n            validateDoNothing((DoesNothing) answer, invocation);\n        }\n        \n        if (answer instanceof CallsRealMethods) {\n            validateCallsRealMethod((CallsRealMethods) answer, invocation);\n        }\n    }\n\n    private void validateCallsRealMethod(CallsRealMethods answer, Invocation invocation) {\n        if (invocation.getMethod().getDeclaringClass().isInterface()) {\n            reporter.callsRealMethodOnInterface();\n        }\n    }\n\n\n    private void validateDoNothing(DoesNothing answer, Invocation invocation) {\n        if (!invocation.isVoid()) {\n            reporter.onlyVoidMethodsCanBeSetToDoNothing();\n        }\n    }\n\n    private void validateReturnValue(Returns answer, Invocation invocation) {\n        if (invocation.isVoid()) {\n            reporter.cannotStubVoidMethodWithAReturnValue();\n        }\n        \n        if (answer.returnsNull() && invocation.returnsPrimitive()) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), \"null\", invocation.getMethodName());\n        } \n\n        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());\n        }\n    }\n\n    private void validateException(ThrowsException answer, Invocation invocation) {\n        Throwable throwable = answer.getThrowable();\n        if (throwable == null) {\n            reporter.cannotStubWithNullThrowable();\n        }\n        \n        if (throwable instanceof RuntimeException || throwable instanceof Error) {\n            return;\n        }\n        \n        if (!invocation.isValidException(throwable)) {\n            reporter.checkedExceptionInvalid(throwable);\n        }\n    }\n}",
+  "plausible_iteration": 0,
+  "reason": "The patch fails to compile because it introduces a dependency on 'org.mockito.internal.stubbing.answers.CallsRealMethods', which does not exist in the codebase. The build log confirms that the compilation failed during the 'compile.tests' phase, likely due to this missing class or incorrect package structure.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.answers;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.invocation.Invocation;\nimport org.mockito.stubbing.Answer;\nimport org.mockito.internal.stubbing.answers.CallsRealMethods;\n\npublic class AnswersValidator {\n\n    private Reporter reporter = new Reporter();\n    \n    public void validate(Answer<?> answer, Invocation invocation) {\n        if (answer instanceof ThrowsException) {\n            validateException((ThrowsException) answer, invocation);\n        }\n        \n        if (answer instanceof Returns) {\n            validateReturnValue((Returns) answer, invocation);\n        }\n        \n        if (answer instanceof DoesNothing) {\n            validateDoNothing((DoesNothing) answer, invocation);\n        }\n        \n        if (answer instanceof CallsRealMethods) {\n            validateCallsRealMethod((CallsRealMethods) answer, invocation);\n        }\n    }\n\n    private void validateCallsRealMethod(CallsRealMethods answer, Invocation invocation) {\n        if (invocation.getMethod().getDeclaringClass().isInterface()) {\n            reporter.callsRealMethodOnInterface();\n        }\n    }\n\n\n    private void validateDoNothing(DoesNothing answer, Invocation invocation) {\n        if (!invocation.isVoid()) {\n            reporter.onlyVoidMethodsCanBeSetToDoNothing();\n        }\n    }\n\n    private void validateReturnValue(Returns answer, Invocation invocation) {\n        if (invocation.isVoid()) {\n            reporter.cannotStubVoidMethodWithAReturnValue();\n        }\n        \n        if (answer.returnsNull() && invocation.returnsPrimitive()) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), \"null\", invocation.getMethodName());\n        } \n\n        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());\n        }\n    }\n\n    private void validateException(ThrowsException answer, Invocation invocation) {\n        Throwable throwable = answer.getThrowable();\n        if (throwable == null) {\n            reporter.cannotStubWithNullThrowable();\n        }\n        \n        if (throwable instanceof RuntimeException || throwable instanceof Error) {\n            return;\n        }\n        \n        if (!invocation.isValidException(throwable)) {\n            reporter.checkedExceptionInvalid(throwable);\n        }\n    }\n}",
+  "per_file_patches": "{\"AnswersValidator.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 106.77,
+  "total_tokens": 23612,
+  "estimated_usd": 0.0083,
+  "failing_tests": "org.mockito.internal.stubbing.answers.AnswersValidatorTest::shouldFailWhenCallingRealMethodOnIterface|org.mockitousage.spies.SpyingOnInterfacesTest::shouldFailFastWhenCallingRealMethodOnInterface",
+  "modified_classes": "org.mockito.internal.stubbing.answers.AnswersValidator",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.answers;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.invocation.Invocation;\nimport org.mockito.stubbing.Answer;\n\npublic class AnswersValidator {\n\n    private Reporter reporter = new Reporter();\n    \n    public void validate(Answer<?> answer, Invocation invocation) {\n        if (answer instanceof ThrowsException) {\n            validateException((ThrowsException) answer, invocation);\n        }\n        \n        if (answer instanceof Returns) {\n            validateReturnValue((Returns) answer, invocation);\n        }\n        \n        if (answer instanceof DoesNothing) {\n            validateDoNothing((DoesNothing) answer, invocation);\n        }\n        \n        if (answer instanceof CallsRealMethods) {\n            validateCallsRealMethod((CallsRealMethods) answer, invocation);\n        }\n    }\n\n    private void validateCallsRealMethod(CallsRealMethods answer, Invocation invocation) {\n        if (invocation.getMethod().getDeclaringClass().isInterface()) {\n            reporter.callsRealMethodOnInterface();\n        }\n    }\n\n\n    private void validateDoNothing(DoesNothing answer, Invocation invocation) {\n        if (!invocation.isVoid()) {\n            reporter.onlyVoidMethodsCanBeSetToDoNothing();\n        }\n    }\n\n    private void validateReturnValue(Returns answer, Invocation invocation) {\n        if (invocation.isVoid()) {\n            reporter.cannotStubVoidMethodWithAReturnValue();\n        }\n        \n        if (answer.returnsNull() && invocation.returnsPrimitive()) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), \"null\", invocation.getMethodName());\n        } \n\n        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());\n        }\n    }\n\n    private void validateException(ThrowsException answer, Invocation invocation) {\n        Throwable throwable = answer.getThrowable();\n        if (throwable == null) {\n            reporter.cannotStubWithNullThrowable();\n        }\n        \n        if (throwable instanceof RuntimeException || throwable instanceof Error) {\n            return;\n        }\n        \n        if (!invocation.isValidException(throwable)) {\n            reporter.checkedExceptionInvalid(throwable);\n        }\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 4.673814058303833,
+        "line_count": 64,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 9,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 152,
+        "prompt_tokens": 1561,
+        "total_tokens": 1713,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch fails to compile because the class 'CallsRealMethods' is not imported or available in the scope of 'AnswersValidator'. While the logic to prevent calling real methods on interfaces is sound, the implementation is incomplete as it introduces a reference to a non-existent class, causing the build failure observed in the test logs.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 9.050028085708618,
+        "issues": [
+          "Compilation error: 'CallsRealMethods' cannot be resolved to a type.",
+          "Missing import statement for 'CallsRealMethods'."
+        ],
+        "suggestions": [
+          "In AnswersValidator.java: add 'import org.mockito.internal.stubbing.answers.CallsRealMethods;' to the imports section because the class is used in the 'validate' method and 'validateCallsRealMethod' helper."
+        ],
+        "problematic_lines": [
+          28,
+          33
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2540,
+        "candidate_tokens": 203,
+        "total_tokens": 2743,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.answers;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.invocation.Invocation;\nimport org.mockito.stubbing.Answer;\nimport org.mockito.internal.stubbing.answers.CallsRealMethods;\n\npublic class AnswersValidator {\n\n    private Reporter reporter = new Reporter();\n    \n    public void validate(Answer<?> answer, Invocation invocation) {\n        if (answer instanceof ThrowsException) {\n            validateException((ThrowsException) answer, invocation);\n        }\n        \n        if (answer instanceof Returns) {\n            validateReturnValue((Returns) answer, invocation);\n        }\n        \n        if (answer instanceof DoesNothing) {\n            validateDoNothing((DoesNothing) answer, invocation);\n        }\n        \n        if (answer instanceof CallsRealMethods) {\n            validateCallsRealMethod((CallsRealMethods) answer, invocation);\n        }\n    }\n\n    private void validateCallsRealMethod(CallsRealMethods answer, Invocation invocation) {\n        if (invocation.getMethod().getDeclaringClass().isInterface()) {\n            reporter.callsRealMethodOnInterface();\n        }\n    }\n\n\n    private void validateDoNothing(DoesNothing answer, Invocation invocation) {\n        if (!invocation.isVoid()) {\n            reporter.onlyVoidMethodsCanBeSetToDoNothing();\n        }\n    }\n\n    private void validateReturnValue(Returns answer, Invocation invocation) {\n        if (invocation.isVoid()) {\n            reporter.cannotStubVoidMethodWithAReturnValue();\n        }\n        \n        if (answer.returnsNull() && invocation.returnsPrimitive()) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), \"null\", invocation.getMethodName());\n        } \n\n        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());\n        }\n    }\n\n    private void validateException(ThrowsException answer, Invocation invocation) {\n        Throwable throwable = answer.getThrowable();\n        if (throwable == null) {\n            reporter.cannotStubWithNullThrowable();\n        }\n        \n        if (throwable instanceof RuntimeException || throwable instanceof Error) {\n            return;\n        }\n        \n        if (!invocation.isValidException(throwable)) {\n            reporter.checkedExceptionInvalid(throwable);\n        }\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 12.350972890853882,
+        "line_count": 64,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 2,
+        "changed_lines": 10,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 237,
+        "prompt_tokens": 3931,
+        "total_tokens": 4168,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "error",
+      "reason": "Empty model response",
+      "metadata": {
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.answers;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.invocation.Invocation;\nimport org.mockito.stubbing.Answer;\nimport org.mockito.internal.stubbing.answers.CallsRealMethods;\n\npublic class AnswersValidator {\n\n    private Reporter reporter = new Reporter();\n    \n    public void validate(Answer<?> answer, Invocation invocation) {\n        if (answer instanceof ThrowsException) {\n            validateException((ThrowsException) answer, invocation);\n        }\n        \n        if (answer instanceof Returns) {\n            validateReturnValue((Returns) answer, invocation);\n        }\n        \n        if (answer instanceof DoesNothing) {\n            validateDoNothing((DoesNothing) answer, invocation);\n        }\n        \n        if (answer instanceof CallsRealMethods) {\n            validateCallsRealMethod((CallsRealMethods) answer, invocation);\n        }\n    }\n\n    private void validateCallsRealMethod(CallsRealMethods answer, Invocation invocation) {\n        if (invocation.getMethod().getDeclaringClass().isInterface()) {\n            reporter.callsRealMethodOnInterface();\n        }\n    }\n\n\n    private void validateDoNothing(DoesNothing answer, Invocation invocation) {\n        if (!invocation.isVoid()) {\n            reporter.onlyVoidMethodsCanBeSetToDoNothing();\n        }\n    }\n\n    private void validateReturnValue(Returns answer, Invocation invocation) {\n        if (invocation.isVoid()) {\n            reporter.cannotStubVoidMethodWithAReturnValue();\n        }\n        \n        if (answer.returnsNull() && invocation.returnsPrimitive()) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), \"null\", invocation.getMethodName());\n        } \n\n        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());\n        }\n    }\n\n    private void validateException(ThrowsException answer, Invocation invocation) {\n        Throwable throwable = answer.getThrowable();\n        if (throwable == null) {\n            reporter.cannotStubWithNullThrowable();\n        }\n        \n        if (throwable instanceof RuntimeException || throwable instanceof Error) {\n            return;\n        }\n        \n        if (!invocation.isValidException(throwable)) {\n            reporter.checkedExceptionInvalid(throwable);\n        }\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.7208991050720215,
+        "line_count": 64,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 2,
+        "changed_lines": 10,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 237,
+        "prompt_tokens": 3930,
+        "total_tokens": 4167,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch fails to compile because it introduces a dependency on 'org.mockito.internal.stubbing.answers.CallsRealMethods', which does not exist in the codebase. The build log confirms that the compilation failed during the 'compile.tests' phase, specifically due to the inability to resolve this class. While the logic for validating real method calls on interfaces is sound, the implementation is broken due to the incorrect import path.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 6.149698972702026,
+        "issues": [
+          "Compilation error: package org.mockito.internal.stubbing.answers does not contain class CallsRealMethods.",
+          "The patch introduces a non-existent class reference, causing the build to fail."
+        ],
+        "suggestions": [
+          "In AnswersValidator.java: change 'import org.mockito.internal.stubbing.answers.CallsRealMethods;' to the correct import path for the class that handles real method calls, or verify if the class name or package structure has changed."
+        ],
+        "problematic_lines": [
+          10,
+          28,
+          32
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2628,
+        "candidate_tokens": 245,
+        "total_tokens": 2873,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.answers;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.invocation.Invocation;\nimport org.mockito.stubbing.Answer;\nimport org.mockito.internal.stubbing.answers.CallsRealMethods;\n\npublic class AnswersValidator {\n\n    private Reporter reporter = new Reporter();\n    \n    public void validate(Answer<?> answer, Invocation invocation) {\n        if (answer instanceof ThrowsException) {\n            validateException((ThrowsException) answer, invocation);\n        }\n        \n        if (answer instanceof Returns) {\n            validateReturnValue((Returns) answer, invocation);\n        }\n        \n        if (answer instanceof DoesNothing) {\n            validateDoNothing((DoesNothing) answer, invocation);\n        }\n        \n        if (answer instanceof CallsRealMethods) {\n            validateCallsRealMethod((CallsRealMethods) answer, invocation);\n        }\n    }\n\n    private void validateCallsRealMethod(CallsRealMethods answer, Invocation invocation) {\n        if (invocation.getMethod().getDeclaringClass().isInterface()) {\n            reporter.callsRealMethodOnInterface();\n        }\n    }\n\n\n    private void validateDoNothing(DoesNothing answer, Invocation invocation) {\n        if (!invocation.isVoid()) {\n            reporter.onlyVoidMethodsCanBeSetToDoNothing();\n        }\n    }\n\n    private void validateReturnValue(Returns answer, Invocation invocation) {\n        if (invocation.isVoid()) {\n            reporter.cannotStubVoidMethodWithAReturnValue();\n        }\n        \n        if (answer.returnsNull() && invocation.returnsPrimitive()) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), \"null\", invocation.getMethodName());\n        } \n\n        if (!answer.returnsNull() && !invocation.isValidReturnType(answer.getReturnType())) {\n            reporter.wrongTypeOfReturnValue(invocation.printMethodReturnType(), answer.printReturnType(), invocation.getMethodName());\n        }\n    }\n\n    private void validateException(ThrowsException answer, Invocation invocation) {\n        Throwable throwable = answer.getThrowable();\n        if (throwable == null) {\n            reporter.cannotStubWithNullThrowable();\n        }\n        \n        if (throwable instanceof RuntimeException || throwable instanceof Error) {\n            return;\n        }\n        \n        if (!invocation.isValidException(throwable)) {\n            reporter.checkedExceptionInvalid(throwable);\n        }\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 17.69761085510254,
+        "line_count": 64,
+        "token_budget": 20000,
+        "temperature_used": 0.5499999999999999,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 2,
+        "changed_lines": 10,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 237,
+        "prompt_tokens": 4865,
+        "total_tokens": 5102,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch fails to compile because it introduces a dependency on 'org.mockito.internal.stubbing.answers.CallsRealMethods', which does not exist in the codebase. The build log confirms that the compilation failed during the 'compile.tests' phase, likely due to this missing class or incorrect package structure.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.542794942855835,
+        "issues": [
+          "Compilation error: The class 'org.mockito.internal.stubbing.answers.CallsRealMethods' cannot be found.",
+          "The patch introduces a new import that breaks the build."
+        ],
+        "suggestions": [
+          "In AnswersValidator.java: remove 'import org.mockito.internal.stubbing.answers.CallsRealMethods;' and verify the correct package or class name for the 'CallsRealMethods' implementation before attempting to use it in the validator."
+        ],
+        "problematic_lines": [
+          9,
+          29,
+          33
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2628,
+        "candidate_tokens": 218,
+        "total_tokens": 2846,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

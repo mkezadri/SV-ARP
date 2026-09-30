@@ -1,0 +1,69 @@
+{
+  "bug_id": "Mockito_15",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 1,
+  "accepted": true,
+  "plausible_patch": "package org.mockito.internal.configuration.injection;\n\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.util.reflection.BeanPropertySetter;\nimport org.mockito.internal.util.reflection.FieldSetter;\n\nimport java.lang.reflect.Field;\nimport java.util.Collection;\n\n/**\n * This node returns an actual injecter which will be either :\n *\n * <ul>\n * <li>an {@link OngoingInjecter} that do nothing if a candidate couldn't be found</li>\n * <li>an {@link OngoingInjecter} that will try to inject the candidate trying first the property setter then if not possible try the field access</li>\n * </ul>\n */\npublic class FinalMockCandidateFilter implements MockCandidateFilter {\n    public OngoingInjecter filterCandidate(final Collection<Object> mocks, final Field field, final Object fieldInstance) {\n        if(mocks.size() == 1) {\n            final Object matchingMock = mocks.iterator().next();\n\n            return new OngoingInjecter() {\n                public boolean thenInject() {\n                    if (new BeanPropertySetter(fieldInstance, field).set(matchingMock)) {\n                        return true;\n                    }\n                    try {\n                        new FieldSetter(fieldInstance, field).set(matchingMock);\n                    } catch (Exception e) {\n                        throw new MockitoException(\"Problems injecting dependency in \" + field.getName(), e);\n                    }\n                    return true;\n                }\n            };\n        }\n\n        return new OngoingInjecter() {\n            public boolean thenInject() {\n                return false;\n            }\n        };\n\n    }\n}\n",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly implements the intended behavior described in the class Javadoc, which states that the injector should attempt to use a property setter before falling back to direct field access. The implementation uses the BeanPropertySetter to attempt injection via standard Java Bean conventions, and only proceeds to the FieldSetter if the property setter fails, which is a robust approach for dependency injection in Mockito.",
+  "iterations": 1,
+  "has_patch": true,
+  "patch": "package org.mockito.internal.configuration.injection;\n\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.util.reflection.BeanPropertySetter;\nimport org.mockito.internal.util.reflection.FieldSetter;\n\nimport java.lang.reflect.Field;\nimport java.util.Collection;\n\n/**\n * This node returns an actual injecter which will be either :\n *\n * <ul>\n * <li>an {@link OngoingInjecter} that do nothing if a candidate couldn't be found</li>\n * <li>an {@link OngoingInjecter} that will try to inject the candidate trying first the property setter then if not possible try the field access</li>\n * </ul>\n */\npublic class FinalMockCandidateFilter implements MockCandidateFilter {\n    public OngoingInjecter filterCandidate(final Collection<Object> mocks, final Field field, final Object fieldInstance) {\n        if(mocks.size() == 1) {\n            final Object matchingMock = mocks.iterator().next();\n\n            return new OngoingInjecter() {\n                public boolean thenInject() {\n                    if (new BeanPropertySetter(fieldInstance, field).set(matchingMock)) {\n                        return true;\n                    }\n                    try {\n                        new FieldSetter(fieldInstance, field).set(matchingMock);\n                    } catch (Exception e) {\n                        throw new MockitoException(\"Problems injecting dependency in \" + field.getName(), e);\n                    }\n                    return true;\n                }\n            };\n        }\n\n        return new OngoingInjecter() {\n            public boolean thenInject() {\n                return false;\n            }\n        };\n\n    }\n}\n",
+  "per_file_patches": "{\"FinalMockCandidateFilter.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 59.62,
+  "total_tokens": 2755,
+  "estimated_usd": 0.001,
+  "failing_tests": "org.mockitousage.bugs.InjectMocksShouldTryPropertySettersFirstBeforeFieldAccessTest::shouldInjectUsingPropertySetterIfAvailable",
+  "modified_classes": "org.mockito.internal.configuration.injection.FinalMockCandidateFilter",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "package org.mockito.internal.configuration.injection;\n\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.util.reflection.BeanPropertySetter;\nimport org.mockito.internal.util.reflection.FieldSetter;\n\nimport java.lang.reflect.Field;\nimport java.util.Collection;\n\n/**\n * This node returns an actual injecter which will be either :\n *\n * <ul>\n * <li>an {@link OngoingInjecter} that do nothing if a candidate couldn't be found</li>\n * <li>an {@link OngoingInjecter} that will try to inject the candidate trying first the property setter then if not possible try the field access</li>\n * </ul>\n */\npublic class FinalMockCandidateFilter implements MockCandidateFilter {\n    public OngoingInjecter filterCandidate(final Collection<Object> mocks, final Field field, final Object fieldInstance) {\n        if(mocks.size() == 1) {\n            final Object matchingMock = mocks.iterator().next();\n\n            return new OngoingInjecter() {\n                public boolean thenInject() {\n                    if (new BeanPropertySetter(fieldInstance, field).set(matchingMock)) {\n                        return true;\n                    }\n                    try {\n                        new FieldSetter(fieldInstance, field).set(matchingMock);\n                    } catch (Exception e) {\n                        throw new MockitoException(\"Problems injecting dependency in \" + field.getName(), e);\n                    }\n                    return true;\n                }\n            };\n        }\n\n        return new OngoingInjecter() {\n            public boolean thenInject() {\n                return false;\n            }\n        };\n\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.2477047443389893,
+        "line_count": 41,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 2,
+        "changed_lines": 6,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 275,
+        "prompt_tokens": 1009,
+        "total_tokens": 1284,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly implements the intended behavior described in the class Javadoc, which states that the injector should attempt to use a property setter before falling back to direct field access. The implementation uses the BeanPropertySetter to attempt injection via standard Java Bean conventions, and only proceeds to the FieldSetter if the property setter fails, which is a robust approach for dependency injection in Mockito.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.1270511150360107,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 1357,
+        "candidate_tokens": 114,
+        "total_tokens": 1471,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

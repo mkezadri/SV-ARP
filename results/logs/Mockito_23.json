@@ -1,0 +1,227 @@
+{
+  "bug_id": "Mockito_23",
+  "status": "completed",
+  "verdict": "needs_revision",
+  "ablation": "full",
+  "plausible": false,
+  "baseline_failing_count": 3,
+  "accepted": false,
+  "plausible_patch": "",
+  "plausible_iteration": -1,
+  "reason": "The patch introduces a regression in concurrent verification tests because it modifies the mock settings globally for all deep-stubbed interfaces. While the change aims to improve serializability, it likely interferes with the internal state or thread-safety of the mock settings during concurrent access, causing a ConcurrentModificationException. Furthermore, the original test failure indicates that simply forcing serializability on interfaces is insufficient or incorrectly applied for the specific requirements of the failing test case.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport static org.mockito.Mockito.*;\n\nimport java.io.Serializable;\n\nimport org.mockito.MockSettings;\nimport org.mockito.internal.InternalMockHandler;\nimport org.mockito.internal.MockitoCore;\nimport org.mockito.internal.creation.settings.CreationSettings;\nimport org.mockito.internal.stubbing.InvocationContainerImpl;\nimport org.mockito.internal.stubbing.StubbedInvocationMatcher;\nimport org.mockito.internal.util.MockUtil;\nimport org.mockito.internal.util.reflection.GenericMetadataSupport;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Returning deep stub implementation.\n *\n * Will return previously created mock if the invocation matches.\n *\n * <p>Supports nested generic information, with this answer you can write code like this :\n *\n * <pre class=\"code\"><code class=\"java\">\n *     interface GenericsNest&lt;K extends Comparable&lt;K&gt; & Cloneable&gt; extends Map&lt;K, Set&lt;Number&gt;&gt; {}\n *\n *     GenericsNest&lt;?&gt; mock = mock(GenericsNest.class, new ReturnsGenericDeepStubs());\n *     Number number = mock.entrySet().iterator().next().getValue().iterator().next();\n * </code></pre>\n * </p>\n *\n * @see org.mockito.Mockito#RETURNS_DEEP_STUBS\n * @see org.mockito.Answers#RETURNS_DEEP_STUBS\n */\npublic class ReturnsDeepStubs implements Answer<Object>, Serializable {\n    \n    private static final long serialVersionUID = -7105341425736035847L;\n\n    private MockitoCore mockitoCore = new MockitoCore();\n    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();\n\n    public Object answer(InvocationOnMock invocation) throws Throwable {\n        GenericMetadataSupport returnTypeGenericMetadata =\n                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());\n\n        Class<?> rawType = returnTypeGenericMetadata.rawType();\n        if (!mockitoCore.isTypeMockable(rawType)) {\n            return delegate.returnValueFor(rawType);\n        }\n\n        return getMock(invocation, returnTypeGenericMetadata);\n    }\n\n\n\n    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {\n    \tInternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());\n    \tInvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();\n\n        // matches invocation for verification\n        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {\n    \t\tif(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {\n    \t\t\treturn stubbedInvocationMatcher.answer(invocation);\n    \t\t}\n\t\t}\n\n        // deep stub\n        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);\n    }\n\n    /**\n     * Creates a mock using the Generics Metadata.\n     *\n     * <li>Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data\n     * that was resolved for the current return type, for this to happen we associate to the mock an new instance of\n     * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.\n     *\n     * @param returnTypeGenericMetadata The metadata to use to create the new mock.\n     * @return The mock\n     */\n    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {\n        return mockitoCore.mock(\n                returnTypeGenericMetadata.rawType(),\n                withSettingsUsing(returnTypeGenericMetadata)\n        );\n    }\n\n    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {\n        MockSettings mockSettings =\n                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?\n                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())\n                : withSettings();\n\n        if (returnTypeGenericMetadata.rawType().isInterface()) {\n            mockSettings.serializable();\n        }\n\n        return mockSettings\n                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));\n    }\n\n    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {\n        return new ReturnsDeepStubs() {\n            @Override\n            protected GenericMetadataSupport actualParameterizedType(Object mock) {\n                return returnTypeGenericMetadata;\n            }\n        };\n    }\n\n    private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {\n\n        container.addAnswer(new Answer<Object>() {\n            public Object answer(InvocationOnMock invocation) throws Throwable {\n                return mock;\n            }\n        }, false);\n\n        return mock;\n    }\n\t\n\t\t\n\t\n\n    protected GenericMetadataSupport actualParameterizedType(Object mock) {\n        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();\n        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());\n    }\n}\n",
+  "per_file_patches": "{\"ReturnsDeepStubs.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 996.61,
+  "total_tokens": 31330,
+  "estimated_usd": 0.011,
+  "failing_tests": "org.mockitousage.stubbing.DeepStubsSerializableTest::should_serialize_and_deserialize_mock_created_by_deep_stubs",
+  "modified_classes": "org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport static org.mockito.Mockito.*;\n\nimport java.io.Serializable;\n\nimport org.mockito.MockSettings;\nimport org.mockito.internal.InternalMockHandler;\nimport org.mockito.internal.MockitoCore;\nimport org.mockito.internal.creation.settings.CreationSettings;\nimport org.mockito.internal.stubbing.InvocationContainerImpl;\nimport org.mockito.internal.stubbing.StubbedInvocationMatcher;\nimport org.mockito.internal.util.MockUtil;\nimport org.mockito.internal.util.reflection.GenericMetadataSupport;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Returning deep stub implementation.\n *\n * Will return previously created mock if the invocation matches.\n *\n * <p>Supports nested generic information, with this answer you can write code like this :\n *\n * <pre class=\"code\"><code class=\"java\">\n *     interface GenericsNest&lt;K extends Comparable&lt;K&gt; & Cloneable&gt; extends Map&lt;K, Set&lt;Number&gt;&gt; {}\n *\n *     GenericsNest&lt;?&gt; mock = mock(GenericsNest.class, new ReturnsGenericDeepStubs());\n *     Number number = mock.entrySet().iterator().next().getValue().iterator().next();\n * </code></pre>\n * </p>\n *\n * @see org.mockito.Mockito#RETURNS_DEEP_STUBS\n * @see org.mockito.Answers#RETURNS_DEEP_STUBS\n */\npublic class ReturnsDeepStubs implements Answer<Object>, Serializable {\n    \n    private static final long serialVersionUID = -7105341425736035847L;\n\n    private MockitoCore mockitoCore = new MockitoCore();\n    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();\n\n    public Object answer(InvocationOnMock invocation) throws Throwable {\n        GenericMetadataSupport returnTypeGenericMetadata =\n                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());\n\n        Class<?> rawType = returnTypeGenericMetadata.rawType();\n        if (!mockitoCore.isTypeMockable(rawType)) {\n            return delegate.returnValueFor(rawType);\n        }\n\n        return getMock(invocation, returnTypeGenericMetadata);\n    }\n\n\n\n    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {\n    \tInternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());\n    \tInvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();\n\n        // matches invocation for verification\n        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {\n    \t\tif(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {\n    \t\t\treturn stubbedInvocationMatcher.answer(invocation);\n    \t\t}\n\t\t}\n\n        // deep stub\n        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);\n    }\n\n    /**\n     * Creates a mock using the Generics Metadata.\n     *\n     * <li>Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data\n     * that was resolved for the current return type, for this to happen we associate to the mock an new instance of\n     * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.\n     *\n     * @param returnTypeGenericMetadata The metadata to use to create the new mock.\n     * @return The mock\n     */\n    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {\n        return mockitoCore.mock(\n                returnTypeGenericMetadata.rawType(),\n                withSettingsUsing(returnTypeGenericMetadata)\n        );\n    }\n\n    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {\n        MockSettings mockSettings =\n                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?\n                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())\n                : withSettings();\n\n        return mockSettings\n                .serializable()\n                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));\n    }\n\n    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {\n        return new ReturnsDeepStubs() {\n            @Override\n            protected GenericMetadataSupport actualParameterizedType(Object mock) {\n                return returnTypeGenericMetadata;\n            }\n        };\n    }\n\n    private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {\n\n        container.addAnswer(new Answer<Object>() {\n            public Object answer(InvocationOnMock invocation) throws Throwable {\n                return mock;\n            }\n        }, false);\n\n        return mock;\n    }\n\t\n\t\t\n\t\n\n    protected GenericMetadataSupport actualParameterizedType(Object mock) {\n        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();\n        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.8037397861480713,
+        "line_count": 130,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 1,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 195,
+        "prompt_tokens": 2064,
+        "total_tokens": 2259,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to make deep stub mocks serializable by adding .serializable() to the MockSettings, but this introduces a regression in concurrent verification tests. The regression suggests that forcing serializability on all deep-stubbed objects might be interfering with the internal state management or thread-safety of the mock handlers during concurrent verification, or that the serialization configuration is incompatible with the way these mocks are being tracked in the invocation container.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.5469701290130615,
+        "issues": [
+          "Regression in ConcurrentModificationExceptionOnMultiThreadedVerificationTest",
+          "Failure to resolve the serialization requirement for deep stubs without breaking existing concurrency guarantees"
+        ],
+        "suggestions": [
+          "In withSettingsUsing(): change '.serializable()' to a conditional check that only applies serializability if the parent mock is also serializable, or investigate if the MockSettings configuration is causing side effects in the MockHandler's thread-local storage."
+        ],
+        "problematic_lines": [
+          100
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 3098,
+        "candidate_tokens": 227,
+        "total_tokens": 3325,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport static org.mockito.Mockito.*;\n\nimport java.io.Serializable;\n\nimport org.mockito.MockSettings;\nimport org.mockito.internal.InternalMockHandler;\nimport org.mockito.internal.MockitoCore;\nimport org.mockito.internal.creation.settings.CreationSettings;\nimport org.mockito.internal.stubbing.InvocationContainerImpl;\nimport org.mockito.internal.stubbing.StubbedInvocationMatcher;\nimport org.mockito.internal.util.MockUtil;\nimport org.mockito.internal.util.reflection.GenericMetadataSupport;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Returning deep stub implementation.\n *\n * Will return previously created mock if the invocation matches.\n *\n * <p>Supports nested generic information, with this answer you can write code like this :\n *\n * <pre class=\"code\"><code class=\"java\">\n *     interface GenericsNest&lt;K extends Comparable&lt;K&gt; & Cloneable&gt; extends Map&lt;K, Set&lt;Number&gt;&gt; {}\n *\n *     GenericsNest&lt;?&gt; mock = mock(GenericsNest.class, new ReturnsGenericDeepStubs());\n *     Number number = mock.entrySet().iterator().next().getValue().iterator().next();\n * </code></pre>\n * </p>\n *\n * @see org.mockito.Mockito#RETURNS_DEEP_STUBS\n * @see org.mockito.Answers#RETURNS_DEEP_STUBS\n */\npublic class ReturnsDeepStubs implements Answer<Object>, Serializable {\n    \n    private static final long serialVersionUID = -7105341425736035847L;\n\n    private MockitoCore mockitoCore = new MockitoCore();\n    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();\n\n    public Object answer(InvocationOnMock invocation) throws Throwable {\n        GenericMetadataSupport returnTypeGenericMetadata =\n                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());\n\n        Class<?> rawType = returnTypeGenericMetadata.rawType();\n        if (!mockitoCore.isTypeMockable(rawType)) {\n            return delegate.returnValueFor(rawType);\n        }\n\n        return getMock(invocation, returnTypeGenericMetadata);\n    }\n\n\n\n    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {\n    \tInternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());\n    \tInvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();\n\n        // matches invocation for verification\n        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {\n    \t\tif(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {\n    \t\t\treturn stubbedInvocationMatcher.answer(invocation);\n    \t\t}\n\t\t}\n\n        // deep stub\n        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);\n    }\n\n    /**\n     * Creates a mock using the Generics Metadata.\n     *\n     * <li>Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data\n     * that was resolved for the current return type, for this to happen we associate to the mock an new instance of\n     * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.\n     *\n     * @param returnTypeGenericMetadata The metadata to use to create the new mock.\n     * @return The mock\n     */\n    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {\n        return mockitoCore.mock(\n                returnTypeGenericMetadata.rawType(),\n                withSettingsUsing(returnTypeGenericMetadata)\n        );\n    }\n\n    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {\n        MockSettings mockSettings =\n                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?\n                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())\n                : withSettings();\n\n        return mockSettings\n                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata))\n                .serializable();\n    }\n\n    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {\n        return new ReturnsDeepStubs() {\n            @Override\n            protected GenericMetadataSupport actualParameterizedType(Object mock) {\n                return returnTypeGenericMetadata;\n            }\n        };\n    }\n\n    private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {\n\n        container.addAnswer(new Answer<Object>() {\n            public Object answer(InvocationOnMock invocation) throws Throwable {\n                return mock;\n            }\n        }, false);\n\n        return mock;\n    }\n\t\n\t\t\n\t\n\n    protected GenericMetadataSupport actualParameterizedType(Object mock) {\n        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();\n        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 8.124456882476807,
+        "line_count": 130,
+        "token_budget": 20000,
+        "temperature_used": 0.45,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 195,
+        "prompt_tokens": 4414,
+        "total_tokens": 4609,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly addresses the serialization requirement for deep stubs by adding .serializable() to the mock settings, but it introduces a regression in concurrent verification. The use of .serializable() likely alters the internal state or configuration of the mock in a way that interferes with the thread-safety or the way Mockito handles concurrent invocations during verification, leading to a ConcurrentModificationException.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 26.617353916168213,
+        "issues": [
+          "The addition of .serializable() causes a regression in concurrent verification tests.",
+          "The test 'should_serialize_and_deserialize_mock_created_by_deep_stubs' still fails, suggesting that simply calling .serializable() on the settings is insufficient to make the deep stub chain fully serializable."
+        ],
+        "suggestions": [
+          "In withSettingsUsing(): change '.defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata))' to '.defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata)).serializable()' because while this was the intended fix, it needs to be verified against the internal state handling of the mock handler to avoid concurrent modification issues."
+        ],
+        "problematic_lines": [
+          100
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 3142,
+        "candidate_tokens": 275,
+        "total_tokens": 3417,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport static org.mockito.Mockito.*;\n\nimport java.io.Serializable;\n\nimport org.mockito.MockSettings;\nimport org.mockito.internal.InternalMockHandler;\nimport org.mockito.internal.MockitoCore;\nimport org.mockito.internal.creation.settings.CreationSettings;\nimport org.mockito.internal.stubbing.InvocationContainerImpl;\nimport org.mockito.internal.stubbing.StubbedInvocationMatcher;\nimport org.mockito.internal.util.MockUtil;\nimport org.mockito.internal.util.reflection.GenericMetadataSupport;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Returning deep stub implementation.\n *\n * Will return previously created mock if the invocation matches.\n *\n * <p>Supports nested generic information, with this answer you can write code like this :\n *\n * <pre class=\"code\"><code class=\"java\">\n *     interface GenericsNest&lt;K extends Comparable&lt;K&gt; & Cloneable&gt; extends Map&lt;K, Set&lt;Number&gt;&gt; {}\n *\n *     GenericsNest&lt;?&gt; mock = mock(GenericsNest.class, new ReturnsGenericDeepStubs());\n *     Number number = mock.entrySet().iterator().next().getValue().iterator().next();\n * </code></pre>\n * </p>\n *\n * @see org.mockito.Mockito#RETURNS_DEEP_STUBS\n * @see org.mockito.Answers#RETURNS_DEEP_STUBS\n */\npublic class ReturnsDeepStubs implements Answer<Object>, Serializable {\n    \n    private static final long serialVersionUID = -7105341425736035847L;\n\n    private MockitoCore mockitoCore = new MockitoCore();\n    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();\n\n    public Object answer(InvocationOnMock invocation) throws Throwable {\n        GenericMetadataSupport returnTypeGenericMetadata =\n                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());\n\n        Class<?> rawType = returnTypeGenericMetadata.rawType();\n        if (!mockitoCore.isTypeMockable(rawType)) {\n            return delegate.returnValueFor(rawType);\n        }\n\n        return getMock(invocation, returnTypeGenericMetadata);\n    }\n\n\n\n    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {\n    \tInternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());\n    \tInvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();\n\n        // matches invocation for verification\n        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {\n    \t\tif(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {\n    \t\t\treturn stubbedInvocationMatcher.answer(invocation);\n    \t\t}\n\t\t}\n\n        // deep stub\n        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);\n    }\n\n    /**\n     * Creates a mock using the Generics Metadata.\n     *\n     * <li>Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data\n     * that was resolved for the current return type, for this to happen we associate to the mock an new instance of\n     * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.\n     *\n     * @param returnTypeGenericMetadata The metadata to use to create the new mock.\n     * @return The mock\n     */\n    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {\n        return mockitoCore.mock(\n                returnTypeGenericMetadata.rawType(),\n                withSettingsUsing(returnTypeGenericMetadata)\n        );\n    }\n\n    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {\n        MockSettings mockSettings =\n                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?\n                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())\n                : withSettings();\n\n        return mockSettings\n                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata))\n                .serializable();\n    }\n\n    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {\n        return new ReturnsDeepStubs() {\n            @Override\n            protected GenericMetadataSupport actualParameterizedType(Object mock) {\n                return returnTypeGenericMetadata;\n            }\n        };\n    }\n\n    private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {\n\n        container.addAnswer(new Answer<Object>() {\n            public Object answer(InvocationOnMock invocation) throws Throwable {\n                return mock;\n            }\n        }, false);\n\n        return mock;\n    }\n\t\n\t\t\n\t\n\n    protected GenericMetadataSupport actualParameterizedType(Object mock) {\n        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();\n        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 12.972012996673584,
+        "line_count": 130,
+        "token_budget": 20000,
+        "temperature_used": 0.45,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 195,
+        "prompt_tokens": 4833,
+        "total_tokens": 5028,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to make deep stub mocks serializable by adding .serializable() to the mock settings. While this addresses the serialization requirement, it introduces regressions in concurrent verification and delayed verification tests. This suggests that forcing serializability on all deep stub mocks interferes with the internal state management or thread-safety mechanisms of the mock handler, likely due to how Mockito handles serializable proxies versus standard ones.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 8.207694292068481,
+        "issues": [
+          "Regression in ConcurrentModificationExceptionOnMultiThreadedVerificationTest",
+          "Regression in VerificationAfterDelayTest",
+          "Failure to resolve the original test case despite the change"
+        ],
+        "suggestions": [
+          "In withSettingsUsing(): change '.defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata)).serializable()' to '.defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata))' and investigate if the mock's serializability should be conditional based on the parent mock's settings rather than forced globally."
+        ],
+        "problematic_lines": [
+          100
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 3163,
+        "candidate_tokens": 245,
+        "total_tokens": 3408,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport static org.mockito.Mockito.*;\n\nimport java.io.Serializable;\n\nimport org.mockito.MockSettings;\nimport org.mockito.internal.InternalMockHandler;\nimport org.mockito.internal.MockitoCore;\nimport org.mockito.internal.creation.settings.CreationSettings;\nimport org.mockito.internal.stubbing.InvocationContainerImpl;\nimport org.mockito.internal.stubbing.StubbedInvocationMatcher;\nimport org.mockito.internal.util.MockUtil;\nimport org.mockito.internal.util.reflection.GenericMetadataSupport;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Returning deep stub implementation.\n *\n * Will return previously created mock if the invocation matches.\n *\n * <p>Supports nested generic information, with this answer you can write code like this :\n *\n * <pre class=\"code\"><code class=\"java\">\n *     interface GenericsNest&lt;K extends Comparable&lt;K&gt; & Cloneable&gt; extends Map&lt;K, Set&lt;Number&gt;&gt; {}\n *\n *     GenericsNest&lt;?&gt; mock = mock(GenericsNest.class, new ReturnsGenericDeepStubs());\n *     Number number = mock.entrySet().iterator().next().getValue().iterator().next();\n * </code></pre>\n * </p>\n *\n * @see org.mockito.Mockito#RETURNS_DEEP_STUBS\n * @see org.mockito.Answers#RETURNS_DEEP_STUBS\n */\npublic class ReturnsDeepStubs implements Answer<Object>, Serializable {\n    \n    private static final long serialVersionUID = -7105341425736035847L;\n\n    private MockitoCore mockitoCore = new MockitoCore();\n    private ReturnsEmptyValues delegate = new ReturnsEmptyValues();\n\n    public Object answer(InvocationOnMock invocation) throws Throwable {\n        GenericMetadataSupport returnTypeGenericMetadata =\n                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());\n\n        Class<?> rawType = returnTypeGenericMetadata.rawType();\n        if (!mockitoCore.isTypeMockable(rawType)) {\n            return delegate.returnValueFor(rawType);\n        }\n\n        return getMock(invocation, returnTypeGenericMetadata);\n    }\n\n\n\n    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {\n    \tInternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());\n    \tInvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();\n\n        // matches invocation for verification\n        for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {\n    \t\tif(container.getInvocationForStubbing().matches(stubbedInvocationMatcher.getInvocation())) {\n    \t\t\treturn stubbedInvocationMatcher.answer(invocation);\n    \t\t}\n\t\t}\n\n        // deep stub\n        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);\n    }\n\n    /**\n     * Creates a mock using the Generics Metadata.\n     *\n     * <li>Finally as we want to mock the actual type, but we want to pass along the contextual generics meta-data\n     * that was resolved for the current return type, for this to happen we associate to the mock an new instance of\n     * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.\n     *\n     * @param returnTypeGenericMetadata The metadata to use to create the new mock.\n     * @return The mock\n     */\n    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {\n        return mockitoCore.mock(\n                returnTypeGenericMetadata.rawType(),\n                withSettingsUsing(returnTypeGenericMetadata)\n        );\n    }\n\n    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {\n        MockSettings mockSettings =\n                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?\n                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())\n                : withSettings();\n\n        if (returnTypeGenericMetadata.rawType().isInterface()) {\n            mockSettings.serializable();\n        }\n\n        return mockSettings\n                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));\n    }\n\n    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {\n        return new ReturnsDeepStubs() {\n            @Override\n            protected GenericMetadataSupport actualParameterizedType(Object mock) {\n                return returnTypeGenericMetadata;\n            }\n        };\n    }\n\n    private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {\n\n        container.addAnswer(new Answer<Object>() {\n            public Object answer(InvocationOnMock invocation) throws Throwable {\n                return mock;\n            }\n        }, false);\n\n        return mock;\n    }\n\t\n\t\t\n\t\n\n    protected GenericMetadataSupport actualParameterizedType(Object mock) {\n        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();\n        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 7.650449991226196,
+        "line_count": 130,
+        "token_budget": 20000,
+        "temperature_used": 0.85,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 4,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 216,
+        "prompt_tokens": 5631,
+        "total_tokens": 5847,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch introduces a regression in concurrent verification tests because it modifies the mock settings globally for all deep-stubbed interfaces. While the change aims to improve serializability, it likely interferes with the internal state or thread-safety of the mock settings during concurrent access, causing a ConcurrentModificationException. Furthermore, the original test failure indicates that simply forcing serializability on interfaces is insufficient or incorrectly applied for the specific requirements of the failing test case.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 14.35815715789795,
+        "issues": [
+          "Introduced a regression in concurrent verification tests (ConcurrentModificationException).",
+          "Failed to resolve the original test failure in DeepStubsSerializableTest.",
+          "Modifying mock settings globally for all interfaces may have side effects on internal Mockito state management."
+        ],
+        "suggestions": [
+          "In withSettingsUsing(): change 'if (returnTypeGenericMetadata.rawType().isInterface()) { mockSettings.serializable(); }' to a more targeted approach that checks if the parent mock is serializable before applying it to the deep stub, as this avoids unnecessary state mutation on non-serializable mock chains."
+        ],
+        "problematic_lines": [
+          99,
+          100,
+          101
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 3160,
+        "candidate_tokens": 277,
+        "total_tokens": 3437,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

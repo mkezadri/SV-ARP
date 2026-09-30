@@ -1,0 +1,71 @@
+{
+  "bug_id": "Mockito_38",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 2,
+  "accepted": true,
+  "plausible_patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.verification.argumentmatching;\n\nimport java.util.LinkedList;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.hamcrest.StringDescription;\nimport org.mockito.internal.matchers.ContainsExtraTypeInformation;\n\n@SuppressWarnings(\"unchecked\")\npublic class ArgumentMatchingTool {\n\n    /**\n     * Suspiciously not matching arguments are those that don't much, the toString() representation is the same but types are different.\n     */\n    public Integer[] getSuspiciouslyNotMatchingArgsIndexes(List<Matcher> matchers, Object[] arguments) {\n        if (matchers.size() != arguments.length) {\n            return new Integer[0];\n        }\n        \n        List<Integer> suspicious = new LinkedList<Integer>();\n        int i = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof ContainsExtraTypeInformation \n                    && !safelyMatches(m, arguments[i]) \n                    && toStringEquals(m, arguments[i])\n                    && !((ContainsExtraTypeInformation) m).typeMatches(arguments[i])) {\n                suspicious.add(i);\n            }\n            i++;\n        }\n        return suspicious.toArray(new Integer[0]);\n    }\n\n    private boolean safelyMatches(Matcher m, Object arg) {\n        try {\n            return m.matches(arg);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    private boolean toStringEquals(Matcher m, Object arg) {\n        return StringDescription.toString(m).equals(arg == null ? \"null\" : arg.toString());\n    }\n}\n",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly addresses a potential NullPointerException in the toStringEquals method. By adding a null check for the argument before calling toString(), the code becomes more robust when dealing with null arguments, which is a common scenario in mock verification.",
+  "iterations": 1,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.verification.argumentmatching;\n\nimport java.util.LinkedList;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.hamcrest.StringDescription;\nimport org.mockito.internal.matchers.ContainsExtraTypeInformation;\n\n@SuppressWarnings(\"unchecked\")\npublic class ArgumentMatchingTool {\n\n    /**\n     * Suspiciously not matching arguments are those that don't much, the toString() representation is the same but types are different.\n     */\n    public Integer[] getSuspiciouslyNotMatchingArgsIndexes(List<Matcher> matchers, Object[] arguments) {\n        if (matchers.size() != arguments.length) {\n            return new Integer[0];\n        }\n        \n        List<Integer> suspicious = new LinkedList<Integer>();\n        int i = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof ContainsExtraTypeInformation \n                    && !safelyMatches(m, arguments[i]) \n                    && toStringEquals(m, arguments[i])\n                    && !((ContainsExtraTypeInformation) m).typeMatches(arguments[i])) {\n                suspicious.add(i);\n            }\n            i++;\n        }\n        return suspicious.toArray(new Integer[0]);\n    }\n\n    private boolean safelyMatches(Matcher m, Object arg) {\n        try {\n            return m.matches(arg);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    private boolean toStringEquals(Matcher m, Object arg) {\n        return StringDescription.toString(m).equals(arg == null ? \"null\" : arg.toString());\n    }\n}\n",
+  "per_file_patches": "{\"ArgumentMatchingTool.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 44.4,
+  "total_tokens": 2812,
+  "estimated_usd": 0.001,
+  "failing_tests": "org.mockito.internal.verification.argumentmatching.ArgumentMatchingToolTest::shouldWorkFineWhenGivenArgIsNull|org.mockitousage.bugs.ActualInvocationHasNullArgumentNPEBugTest::shouldAllowPassingNullArgument",
+  "modified_classes": "org.mockito.internal.verification.argumentmatching.ArgumentMatchingTool",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.verification.argumentmatching;\n\nimport java.util.LinkedList;\nimport java.util.List;\n\nimport org.hamcrest.Matcher;\nimport org.hamcrest.StringDescription;\nimport org.mockito.internal.matchers.ContainsExtraTypeInformation;\n\n@SuppressWarnings(\"unchecked\")\npublic class ArgumentMatchingTool {\n\n    /**\n     * Suspiciously not matching arguments are those that don't much, the toString() representation is the same but types are different.\n     */\n    public Integer[] getSuspiciouslyNotMatchingArgsIndexes(List<Matcher> matchers, Object[] arguments) {\n        if (matchers.size() != arguments.length) {\n            return new Integer[0];\n        }\n        \n        List<Integer> suspicious = new LinkedList<Integer>();\n        int i = 0;\n        for (Matcher m : matchers) {\n            if (m instanceof ContainsExtraTypeInformation \n                    && !safelyMatches(m, arguments[i]) \n                    && toStringEquals(m, arguments[i])\n                    && !((ContainsExtraTypeInformation) m).typeMatches(arguments[i])) {\n                suspicious.add(i);\n            }\n            i++;\n        }\n        return suspicious.toArray(new Integer[0]);\n    }\n\n    private boolean safelyMatches(Matcher m, Object arg) {\n        try {\n            return m.matches(arg);\n        } catch (Throwable t) {\n            return false;\n        }\n    }\n\n    private boolean toStringEquals(Matcher m, Object arg) {\n        return StringDescription.toString(m).equals(arg == null ? \"null\" : arg.toString());\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.8642067909240723,
+        "line_count": 50,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 83,
+        "prompt_tokens": 1292,
+        "total_tokens": 1375,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly addresses a potential NullPointerException in the toStringEquals method. By adding a null check for the argument before calling toString(), the code becomes more robust when dealing with null arguments, which is a common scenario in mock verification.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.5864710807800293,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [
+          46
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 1349,
+        "candidate_tokens": 88,
+        "total_tokens": 1437,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

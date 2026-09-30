@@ -1,0 +1,118 @@
+{
+  "bug_id": "Mockito_31",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 1,
+  "accepted": true,
+  "plausible_patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\n\nimport org.mockito.Mockito;\nimport org.mockito.cglib.proxy.MethodInterceptor;\nimport org.mockito.cglib.proxy.MethodProxy;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.creation.jmock.ClassImposterizer;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.util.ObjectMethodsGuru;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Optional Answer that can be used with\n * {@link Mockito#mock(Class, Answer)}\n * <p>\n * This implementation can be helpful when working with legacy code. Unstubbed\n * methods often return null. If your code uses the object returned by an\n * unstubbed call you get a NullPointerException. This implementation of\n * Answer returns SmartNulls instead of nulls.\n * SmartNull gives nicer exception message than NPE because it points out the\n * line where unstubbed method was called. You just click on the stack trace.\n * <p>\n * ReturnsSmartNulls first tries to return ordinary return values (see\n * {@link ReturnsMoreEmptyValues}) then it tries to return SmartNull. If the\n * return type is not mockable (e.g. final) then ordinary null is returned.\n * <p>\n * ReturnsSmartNulls will be probably the default return values strategy in\n * Mockito 2.0\n */\npublic class ReturnsSmartNulls implements Answer<Object>, Serializable {\n\n    private static final long serialVersionUID = 7618312406617949441L;\n\n    private final class ThrowingInterceptor implements MethodInterceptor {\n        private final InvocationOnMock invocation;\n        private final Location location = new Location();\n\n        private ThrowingInterceptor(InvocationOnMock invocation) {\n            this.invocation = invocation;\n        }\n\n        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {\n            if (new ObjectMethodsGuru().isToString(method)) {\n                return \"SmartNull returned by unstubbed \" + formatMethodCall()  + \" method on mock\";\n            }\n\n            new Reporter().smartNullPointerException(location);\n            return null;\n        }\n\n\t\tprivate String formatMethodCall() {\n\t\t\tString args = java.util.Arrays.toString(invocation.getArguments());\n\t\t\treturn invocation.getMethod().getName() + \"(\" + args.substring(1, args.length() - 1) + \")\";\n\t\t}\n    }\n\n    private final Answer<Object> delegate = new ReturnsMoreEmptyValues();\n\n    public Object answer(final InvocationOnMock invocation) throws Throwable {\n        Object defaultReturnValue = delegate.answer(invocation);\n        if (defaultReturnValue != null) {\n            return defaultReturnValue;\n        }\n        Class<?> type = invocation.getMethod().getReturnType();\n        if (ClassImposterizer.INSTANCE.canImposterise(type)) {\n            return ClassImposterizer.INSTANCE.imposterise(new ThrowingInterceptor(invocation), type);\n        }\n        return null;\n    }\n}\n",
+  "plausible_iteration": 1,
+  "reason": "The patch improves the diagnostic information provided by SmartNulls by including the actual arguments passed to the unstubbed method call, rather than just an empty parameter list. This makes debugging significantly easier when multiple calls to the same method occur with different arguments. The implementation correctly handles the string conversion of the arguments array and strips the brackets from Arrays.toString() output to maintain a standard method signature format.",
+  "iterations": 2,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\n\nimport org.mockito.Mockito;\nimport org.mockito.cglib.proxy.MethodInterceptor;\nimport org.mockito.cglib.proxy.MethodProxy;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.creation.jmock.ClassImposterizer;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.util.ObjectMethodsGuru;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Optional Answer that can be used with\n * {@link Mockito#mock(Class, Answer)}\n * <p>\n * This implementation can be helpful when working with legacy code. Unstubbed\n * methods often return null. If your code uses the object returned by an\n * unstubbed call you get a NullPointerException. This implementation of\n * Answer returns SmartNulls instead of nulls.\n * SmartNull gives nicer exception message than NPE because it points out the\n * line where unstubbed method was called. You just click on the stack trace.\n * <p>\n * ReturnsSmartNulls first tries to return ordinary return values (see\n * {@link ReturnsMoreEmptyValues}) then it tries to return SmartNull. If the\n * return type is not mockable (e.g. final) then ordinary null is returned.\n * <p>\n * ReturnsSmartNulls will be probably the default return values strategy in\n * Mockito 2.0\n */\npublic class ReturnsSmartNulls implements Answer<Object>, Serializable {\n\n    private static final long serialVersionUID = 7618312406617949441L;\n\n    private final class ThrowingInterceptor implements MethodInterceptor {\n        private final InvocationOnMock invocation;\n        private final Location location = new Location();\n\n        private ThrowingInterceptor(InvocationOnMock invocation) {\n            this.invocation = invocation;\n        }\n\n        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {\n            if (new ObjectMethodsGuru().isToString(method)) {\n                return \"SmartNull returned by unstubbed \" + formatMethodCall()  + \" method on mock\";\n            }\n\n            new Reporter().smartNullPointerException(location);\n            return null;\n        }\n\n\t\tprivate String formatMethodCall() {\n\t\t\tString args = java.util.Arrays.toString(invocation.getArguments());\n\t\t\treturn invocation.getMethod().getName() + \"(\" + args.substring(1, args.length() - 1) + \")\";\n\t\t}\n    }\n\n    private final Answer<Object> delegate = new ReturnsMoreEmptyValues();\n\n    public Object answer(final InvocationOnMock invocation) throws Throwable {\n        Object defaultReturnValue = delegate.answer(invocation);\n        if (defaultReturnValue != null) {\n            return defaultReturnValue;\n        }\n        Class<?> type = invocation.getMethod().getReturnType();\n        if (ClassImposterizer.INSTANCE.canImposterise(type)) {\n            return ClassImposterizer.INSTANCE.imposterise(new ThrowingInterceptor(invocation), type);\n        }\n        return null;\n    }\n}\n",
+  "per_file_patches": "{\"ReturnsSmartNulls.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 243.76,
+  "total_tokens": 9436,
+  "estimated_usd": 0.0033,
+  "failing_tests": "org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNullsTest::shouldPrintTheParametersWhenCallingAMethodWithArgs",
+  "modified_classes": "org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNulls",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\n\nimport org.mockito.Mockito;\nimport org.mockito.cglib.proxy.MethodInterceptor;\nimport org.mockito.cglib.proxy.MethodProxy;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.creation.jmock.ClassImposterizer;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.util.ObjectMethodsGuru;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Optional Answer that can be used with\n * {@link Mockito#mock(Class, Answer)}\n * <p>\n * This implementation can be helpful when working with legacy code. Unstubbed\n * methods often return null. If your code uses the object returned by an\n * unstubbed call you get a NullPointerException. This implementation of\n * Answer returns SmartNulls instead of nulls.\n * SmartNull gives nicer exception message than NPE because it points out the\n * line where unstubbed method was called. You just click on the stack trace.\n * <p>\n * ReturnsSmartNulls first tries to return ordinary return values (see\n * {@link ReturnsMoreEmptyValues}) then it tries to return SmartNull. If the\n * return type is not mockable (e.g. final) then ordinary null is returned.\n * <p>\n * ReturnsSmartNulls will be probably the default return values strategy in\n * Mockito 2.0\n */\npublic class ReturnsSmartNulls implements Answer<Object>, Serializable {\n\n    private static final long serialVersionUID = 7618312406617949441L;\n\n    private final class ThrowingInterceptor implements MethodInterceptor {\n        private final InvocationOnMock invocation;\n        private final Location location = new Location();\n\n        private ThrowingInterceptor(InvocationOnMock invocation) {\n            this.invocation = invocation;\n        }\n\n        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {\n            if (new ObjectMethodsGuru().isToString(method)) {\n                return \"SmartNull returned by unstubbed \" + formatMethodCall()  + \" method on mock\";\n            }\n\n            new Reporter().smartNullPointerException(location);\n            return null;\n        }\n\n\t\tprivate String formatMethodCall() {\n\t\t\treturn invocation.toString();\n\t\t}\n    }\n\n    private final Answer<Object> delegate = new ReturnsMoreEmptyValues();\n\n    public Object answer(final InvocationOnMock invocation) throws Throwable {\n        Object defaultReturnValue = delegate.answer(invocation);\n        if (defaultReturnValue != null) {\n            return defaultReturnValue;\n        }\n        Class<?> type = invocation.getMethod().getReturnType();\n        if (ClassImposterizer.INSTANCE.canImposterise(type)) {\n            return ClassImposterizer.INSTANCE.imposterise(new ThrowingInterceptor(invocation), type);\n        }\n        return null;\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.8436079025268555,
+        "line_count": 77,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 53,
+        "prompt_tokens": 1414,
+        "total_tokens": 1467,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to improve the error message by using invocation.toString(), but this causes a regression in 'shouldReturnAnObjectThatAllowsObjectMethods' because the toString() representation of the invocation likely includes information that conflicts with the expected output of the SmartNull's own toString() method, or it creates a circular dependency/unexpected format. Furthermore, the original test failure 'shouldPrintTheParametersWhenCallingAMethodWithArgs' suggests that the previous implementation was insufficient, but the new implementation is too broad.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 14.417720079421997,
+        "issues": [
+          "The change to invocation.toString() causes a regression in tests verifying object methods on the SmartNull proxy.",
+          "The original test failure 'shouldPrintTheParametersWhenCallingAMethodWithArgs' is not resolved by simply calling toString() on the invocation object."
+        ],
+        "suggestions": [
+          "In formatMethodCall(): change 'return invocation.toString();' to 'return invocation.getMethod().getName() + \"(\" + java.util.Arrays.toString(invocation.getArguments()) + \")\";' because this explicitly formats the method name and arguments as expected by the test suite without relying on the full invocation string representation which may contain unwanted metadata."
+        ],
+        "problematic_lines": [
+          60
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2106,
+        "candidate_tokens": 285,
+        "total_tokens": 2391,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.stubbing.defaultanswers;\n\nimport java.io.Serializable;\nimport java.lang.reflect.Method;\n\nimport org.mockito.Mockito;\nimport org.mockito.cglib.proxy.MethodInterceptor;\nimport org.mockito.cglib.proxy.MethodProxy;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.creation.jmock.ClassImposterizer;\nimport org.mockito.internal.debugging.Location;\nimport org.mockito.internal.util.ObjectMethodsGuru;\nimport org.mockito.invocation.InvocationOnMock;\nimport org.mockito.stubbing.Answer;\n\n/**\n * Optional Answer that can be used with\n * {@link Mockito#mock(Class, Answer)}\n * <p>\n * This implementation can be helpful when working with legacy code. Unstubbed\n * methods often return null. If your code uses the object returned by an\n * unstubbed call you get a NullPointerException. This implementation of\n * Answer returns SmartNulls instead of nulls.\n * SmartNull gives nicer exception message than NPE because it points out the\n * line where unstubbed method was called. You just click on the stack trace.\n * <p>\n * ReturnsSmartNulls first tries to return ordinary return values (see\n * {@link ReturnsMoreEmptyValues}) then it tries to return SmartNull. If the\n * return type is not mockable (e.g. final) then ordinary null is returned.\n * <p>\n * ReturnsSmartNulls will be probably the default return values strategy in\n * Mockito 2.0\n */\npublic class ReturnsSmartNulls implements Answer<Object>, Serializable {\n\n    private static final long serialVersionUID = 7618312406617949441L;\n\n    private final class ThrowingInterceptor implements MethodInterceptor {\n        private final InvocationOnMock invocation;\n        private final Location location = new Location();\n\n        private ThrowingInterceptor(InvocationOnMock invocation) {\n            this.invocation = invocation;\n        }\n\n        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {\n            if (new ObjectMethodsGuru().isToString(method)) {\n                return \"SmartNull returned by unstubbed \" + formatMethodCall()  + \" method on mock\";\n            }\n\n            new Reporter().smartNullPointerException(location);\n            return null;\n        }\n\n\t\tprivate String formatMethodCall() {\n\t\t\tString args = java.util.Arrays.toString(invocation.getArguments());\n\t\t\treturn invocation.getMethod().getName() + \"(\" + args.substring(1, args.length() - 1) + \")\";\n\t\t}\n    }\n\n    private final Answer<Object> delegate = new ReturnsMoreEmptyValues();\n\n    public Object answer(final InvocationOnMock invocation) throws Throwable {\n        Object defaultReturnValue = delegate.answer(invocation);\n        if (defaultReturnValue != null) {\n            return defaultReturnValue;\n        }\n        Class<?> type = invocation.getMethod().getReturnType();\n        if (ClassImposterizer.INSTANCE.canImposterise(type)) {\n            return ClassImposterizer.INSTANCE.imposterise(new ThrowingInterceptor(invocation), type);\n        }\n        return null;\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.5597739219665527,
+        "line_count": 77,
+        "token_budget": 20000,
+        "temperature_used": 0.25,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 92,
+        "prompt_tokens": 3308,
+        "total_tokens": 3400,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch improves the diagnostic information provided by SmartNulls by including the actual arguments passed to the unstubbed method call, rather than just an empty parameter list. This makes debugging significantly easier when multiple calls to the same method occur with different arguments. The implementation correctly handles the string conversion of the arguments array and strips the brackets from Arrays.toString() output to maintain a standard method signature format.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.481165885925293,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2060,
+        "candidate_tokens": 118,
+        "total_tokens": 2178,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

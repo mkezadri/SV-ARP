@@ -1,0 +1,125 @@
+{
+  "bug_id": "Mockito_21",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 0,
+  "accepted": true,
+  "plausible_patch": "package org.mockito.internal.creation.instance;\n\nimport java.lang.reflect.Constructor;\n\npublic class ConstructorInstantiator implements Instantiator {\n\n    private final Object outerClassInstance;\n\n    public ConstructorInstantiator(Object outerClassInstance) {\n        this.outerClassInstance = outerClassInstance;\n    }\n\n    public <T> T newInstance(Class<T> cls) {\n        if (outerClassInstance == null) {\n            return noArgConstructor(cls);\n        }\n        return withOuterClass(cls);\n    }\n\n    private <T> T withOuterClass(Class<T> cls) {\n        try {\n            //this is kind of overengineered because we don't need to support more params\n            //however, I know we will be needing it :)\n            Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass().getEnclosingClass());\n            return c.newInstance(outerClassInstance);\n        } catch (Exception e) {\n            throw paramsException(cls, e);\n        }\n    }\n\n    private static <T> InstantationException paramsException(Class<T> cls, Exception e) {\n        return new InstantationException(\"Unable to create mock instance of '\"\n                + cls.getSimpleName() + \"'.\\nPlease ensure that the outer instance has correct type and that the target class has parameter-less constructor.\", e);\n    }\n\n\n    private static <T> T noArgConstructor(Class<T> cls) {\n        try {\n            return cls.newInstance();\n        } catch (Exception e) {\n            throw new InstantationException(\"Unable to create mock instance of '\"\n                    + cls.getSimpleName() + \"'.\\nPlease ensure it has parameter-less constructor.\", e);\n        }\n    }\n}\n",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly addresses the issue where the original implementation relied on an exact match of the outer class type, which fails when the constructor parameter is a superclass or interface of the outer class instance. By iterating through constructors and using isAssignableFrom, the patch correctly identifies the appropriate constructor for inner class instantiation. The build failure reported is an infrastructure issue related to the Gradle wrapper environment, not a failure of the logic itself.",
+  "iterations": 2,
+  "has_patch": true,
+  "patch": "package org.mockito.internal.creation.instance;\n\nimport java.lang.reflect.Constructor;\n\npublic class ConstructorInstantiator implements Instantiator {\n\n    private final Object outerClassInstance;\n\n    public ConstructorInstantiator(Object outerClassInstance) {\n        this.outerClassInstance = outerClassInstance;\n    }\n\n    public <T> T newInstance(Class<T> cls) {\n        if (outerClassInstance == null) {\n            return noArgConstructor(cls);\n        }\n        return withOuterClass(cls);\n    }\n\n    private <T> T withOuterClass(Class<T> cls) {\n        try {\n            Constructor<?>[] constructors = cls.getDeclaredConstructors();\n            for (Constructor<?> constructor : constructors) {\n                Class<?>[] params = constructor.getParameterTypes();\n                if (params.length == 1 && params[0].isAssignableFrom(outerClassInstance.getClass())) {\n                    constructor.setAccessible(true);\n                    return (T) constructor.newInstance(outerClassInstance);\n                }\n            }\n            throw new NoSuchMethodException();\n        } catch (Exception e) {\n            throw paramsException(cls, e);\n        }\n    }\n\n    private static <T> InstantationException paramsException(Class<T> cls, Exception e) {\n        return new InstantationException(\"Unable to create mock instance of '\"\n                + cls.getSimpleName() + \"'.\\nPlease ensure that the outer instance has correct type and that the target class has parameter-less constructor.\", e);\n    }\n\n\n    private static <T> T noArgConstructor(Class<T> cls) {\n        try {\n            return cls.newInstance();\n        } catch (Exception e) {\n            throw new InstantationException(\"Unable to create mock instance of '\"\n                    + cls.getSimpleName() + \"'.\\nPlease ensure it has parameter-less constructor.\", e);\n        }\n    }\n}\n",
+  "per_file_patches": "{\"ConstructorInstantiator.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 26.44,
+  "total_tokens": 10371,
+  "estimated_usd": 0.0036,
+  "failing_tests": "org.mockito.internal.creation.instance.ConstructorInstantiatorTest::creates_instances_of_inner_classes",
+  "modified_classes": "org.mockito.internal.creation.instance.ConstructorInstantiator",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "package org.mockito.internal.creation.instance;\n\nimport java.lang.reflect.Constructor;\n\npublic class ConstructorInstantiator implements Instantiator {\n\n    private final Object outerClassInstance;\n\n    public ConstructorInstantiator(Object outerClassInstance) {\n        this.outerClassInstance = outerClassInstance;\n    }\n\n    public <T> T newInstance(Class<T> cls) {\n        if (outerClassInstance == null) {\n            return noArgConstructor(cls);\n        }\n        return withOuterClass(cls);\n    }\n\n    private <T> T withOuterClass(Class<T> cls) {\n        try {\n            //this is kind of overengineered because we don't need to support more params\n            //however, I know we will be needing it :)\n            Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass().getEnclosingClass());\n            return c.newInstance(outerClassInstance);\n        } catch (Exception e) {\n            throw paramsException(cls, e);\n        }\n    }\n\n    private static <T> InstantationException paramsException(Class<T> cls, Exception e) {\n        return new InstantationException(\"Unable to create mock instance of '\"\n                + cls.getSimpleName() + \"'.\\nPlease ensure that the outer instance has correct type and that the target class has parameter-less constructor.\", e);\n    }\n\n\n    private static <T> T noArgConstructor(Class<T> cls) {\n        try {\n            return cls.newInstance();\n        } catch (Exception e) {\n            throw new InstantationException(\"Unable to create mock instance of '\"\n                    + cls.getSimpleName() + \"'.\\nPlease ensure it has parameter-less constructor.\", e);\n        }\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 5.117486000061035,
+        "line_count": 45,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 188,
+        "prompt_tokens": 1112,
+        "total_tokens": 1300,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch is logically incorrect because it changes the constructor lookup to use the enclosing class of the outer instance, rather than the class of the outer instance itself. In Java, inner classes require an instance of the enclosing class as the first parameter of their constructor. By using getEnclosingClass(), the code is looking for a constructor that takes the class type of the outer instance's parent, which is incorrect; it should be looking for the class type of the outer instance itself.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.3862149715423584,
+        "issues": [
+          "The patch incorrectly uses getEnclosingClass() instead of the actual class of the outer instance.",
+          "The build failure is due to environment issues (missing Gradle distribution), not the code change itself, but the logic change is fundamentally flawed for inner class instantiation."
+        ],
+        "suggestions": [
+          "In withOuterClass(): change 'Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass().getEnclosingClass());' to 'Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());' because the inner class constructor requires the specific type of the outer instance provided."
+        ],
+        "problematic_lines": [
+          24
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2333,
+        "candidate_tokens": 272,
+        "total_tokens": 2605,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "package org.mockito.internal.creation.instance;\n\nimport java.lang.reflect.Constructor;\n\npublic class ConstructorInstantiator implements Instantiator {\n\n    private final Object outerClassInstance;\n\n    public ConstructorInstantiator(Object outerClassInstance) {\n        this.outerClassInstance = outerClassInstance;\n    }\n\n    public <T> T newInstance(Class<T> cls) {\n        if (outerClassInstance == null) {\n            return noArgConstructor(cls);\n        }\n        return withOuterClass(cls);\n    }\n\n    private <T> T withOuterClass(Class<T> cls) {\n        try {\n            Constructor<?>[] constructors = cls.getDeclaredConstructors();\n            for (Constructor<?> constructor : constructors) {\n                Class<?>[] params = constructor.getParameterTypes();\n                if (params.length == 1 && params[0].isAssignableFrom(outerClassInstance.getClass())) {\n                    constructor.setAccessible(true);\n                    return (T) constructor.newInstance(outerClassInstance);\n                }\n            }\n            throw new NoSuchMethodException();\n        } catch (Exception e) {\n            throw paramsException(cls, e);\n        }\n    }\n\n    private static <T> InstantationException paramsException(Class<T> cls, Exception e) {\n        return new InstantationException(\"Unable to create mock instance of '\"\n                + cls.getSimpleName() + \"'.\\nPlease ensure that the outer instance has correct type and that the target class has parameter-less constructor.\", e);\n    }\n\n\n    private static <T> T noArgConstructor(Class<T> cls) {\n        try {\n            return cls.newInstance();\n        } catch (Exception e) {\n            throw new InstantationException(\"Unable to create mock instance of '\"\n                    + cls.getSimpleName() + \"'.\\nPlease ensure it has parameter-less constructor.\", e);\n        }\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.3690450191497803,
+        "line_count": 45,
+        "token_budget": 20000,
+        "temperature_used": 0.25,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 13,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 262,
+        "prompt_tokens": 3527,
+        "total_tokens": 3789,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly addresses the issue where the original implementation relied on an exact match of the outer class type, which fails when the constructor parameter is a superclass or interface of the outer class instance. By iterating through constructors and using isAssignableFrom, the patch correctly identifies the appropriate constructor for inner class instantiation. The build failure reported is an infrastructure issue related to the Gradle wrapper environment, not a failure of the logic itself.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 7.571460962295532,
+        "issues": [
+          "The original implementation used getDeclaredConstructor(outerClassInstance.getClass()), which is too restrictive for polymorphic inner class instantiation."
+        ],
+        "suggestions": [
+          "In withOuterClass(): change the direct constructor lookup to an iteration over getDeclaredConstructors() using isAssignableFrom() to support inheritance and interface-based outer class references."
+        ],
+        "problematic_lines": [
+          22,
+          23
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2472,
+        "candidate_tokens": 205,
+        "total_tokens": 2677,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

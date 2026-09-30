@@ -1,0 +1,226 @@
+{
+  "bug_id": "Mockito_32",
+  "status": "completed",
+  "verdict": "needs_revision",
+  "ablation": "full",
+  "plausible": false,
+  "baseline_failing_count": 1,
+  "accepted": false,
+  "plausible_patch": "",
+  "plausible_iteration": -1,
+  "reason": "The patch attempts to set the mock name using the field name, which is a good practice for debugging, but it fails to account for the fact that the mock might already have a name or that the MockSettings might not be accessible or mutable in the way the patch assumes. The test failure suggests that the implementation of setting the mock name is either incomplete or interfering with existing mock initialization logic.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport java.lang.annotation.Annotation;\nimport java.lang.reflect.Field;\n\nimport org.mockito.Captor;\nimport org.mockito.Mock;\nimport org.mockito.Mockito;\nimport org.mockito.Spy;\nimport org.mockito.configuration.AnnotationEngine;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.util.MockUtil;\n\n\n@SuppressWarnings({\"unchecked\"})\npublic class SpyAnnotationEngine implements AnnotationEngine {\n\n    public Object createMockFor(Annotation annotation, Field field) {\n        return null;\n    }\n    \n    @SuppressWarnings(\"deprecation\")\n    public void process(Class<?> context, Object testClass) {\n        Field[] fields = context.getDeclaredFields();\n        for (Field field : fields) {\n            if (field.isAnnotationPresent(Spy.class)) {\n                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);\n                boolean wasAccessible = field.isAccessible();\n                field.setAccessible(true);\n                try {\n                    Object instance = field.get(testClass);\n                    if (instance == null) {\n                        throw new MockitoException(\"Cannot create a @Spy for '\" + field.getName() + \"' field because the *instance* is missing\\n\" +\n                        \t\t  \"The instance must be created *before* initMocks();\\n\" +\n                                  \"Example of correct usage of @Spy:\\n\" +\n                            \t  \"   @Spy List mock = new LinkedList();\\n\" +\n                            \t  \"   //also, don't forget about MockitoAnnotations.initMocks();\");\n\n                    }\n                    MockUtil mockUtil = new MockUtil();\n                    if (mockUtil.isMock(instance)) { \n                        // instance has been spied earlier\n                        Mockito.reset(instance);\n                    } else {\n                        instance = Mockito.spy(instance);\n                        field.set(testClass, instance);\n                        mockUtil.getMockHandler(instance).getMockSettings().name(field.getName());\n                    }\n                } catch (IllegalAccessException e) {\n                    throw new MockitoException(\"Problems initiating spied field \" + field.getName(), e);\n                } finally {\n                    field.setAccessible(wasAccessible);\n                }\n            }\n        }\n    }\n    \n    //TODO duplicated elsewhere\n    void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {\n        for (Class u : undesiredAnnotations) {\n            if (field.isAnnotationPresent(u)) {\n                new Reporter().unsupportedCombinationOfAnnotations(annotation.getSimpleName(), annotation.getClass().getSimpleName());\n            }\n        }        \n    }    \n}\n",
+  "per_file_patches": "{\"SpyAnnotationEngine.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 431.27,
+  "total_tokens": 21858,
+  "estimated_usd": 0.0077,
+  "failing_tests": "org.mockitousage.bugs.SpyShouldHaveNiceNameTest::shouldPrintNiceName",
+  "modified_classes": "org.mockito.internal.configuration.SpyAnnotationEngine",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport java.lang.annotation.Annotation;\nimport java.lang.reflect.Field;\n\nimport org.mockito.Captor;\nimport org.mockito.Mock;\nimport org.mockito.Mockito;\nimport org.mockito.Spy;\nimport org.mockito.configuration.AnnotationEngine;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.util.MockUtil;\n\n\n@SuppressWarnings({\"unchecked\"})\npublic class SpyAnnotationEngine implements AnnotationEngine {\n\n    public Object createMockFor(Annotation annotation, Field field) {\n        return null;\n    }\n    \n    @SuppressWarnings(\"deprecation\")\n    public void process(Class<?> context, Object testClass) {\n        Field[] fields = context.getDeclaredFields();\n        for (Field field : fields) {\n            if (field.isAnnotationPresent(Spy.class)) {\n                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);\n                boolean wasAccessible = field.isAccessible();\n                field.setAccessible(true);\n                try {\n                    Object instance = field.get(testClass);\n                    if (instance == null) {\n                        throw new MockitoException(\"Cannot create a @Spy for '\" + field.getName() + \"' field because the *instance* is missing\\n\" +\n                        \t\t  \"The instance must be created *before* initMocks();\\n\" +\n                                  \"Example of correct usage of @Spy:\\n\" +\n                            \t  \"   @Spy List mock = new LinkedList();\\n\" +\n                            \t  \"   //also, don't forget about MockitoAnnotations.initMocks();\");\n\n                    }\n                    if (new MockUtil().isMock(instance)) { \n                        // instance has been spied earlier\n                        Mockito.reset(instance);\n                    } else {\n                        field.set(testClass, Mockito.spy(instance));\n                    }\n                    if (new MockUtil().isMock(field.get(testClass))) {\n                        new MockUtil().getMockHandler(field.get(testClass)).getMockSettings().name(field.getName());\n                    }\n                } catch (IllegalAccessException e) {\n                    throw new MockitoException(\"Problems initiating spied field \" + field.getName(), e);\n                } finally {\n                    field.setAccessible(wasAccessible);\n                }\n            }\n        }\n    }\n    \n    //TODO duplicated elsewhere\n    void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {\n        for (Class u : undesiredAnnotations) {\n            if (field.isAnnotationPresent(u)) {\n                new Reporter().unsupportedCombinationOfAnnotations(annotation.getSimpleName(), annotation.getClass().getSimpleName());\n            }\n        }        \n    }    \n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.148336887359619,
+        "line_count": 68,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 170,
+        "prompt_tokens": 1231,
+        "total_tokens": 1401,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly attempts to set the mock name for @Spy fields, but it fails to account for the fact that the field value might have been updated by Mockito.spy() in the previous block. While the logic is sound, the test failure suggests that the mock name assignment might be failing or being overwritten, or that the MockUtil interaction is not correctly identifying the mock object in the context of the test.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.2547149658203125,
+        "issues": [
+          "The test org.mockitousage.bugs.SpyShouldHaveNiceNameTest::shouldPrintNiceName is still failing, indicating the mock name is not being correctly applied or retrieved.",
+          "Redundant calls to new MockUtil() inside the loop could be optimized by reusing the instance created earlier in the method."
+        ],
+        "suggestions": [
+          "In process(): change the block adding the mock name to use the 'instance' variable or the result of the spy creation directly instead of re-fetching from the field via field.get(testClass) because it avoids unnecessary reflection and potential state inconsistencies."
+        ],
+        "problematic_lines": [
+          51,
+          52,
+          53
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 1974,
+        "candidate_tokens": 262,
+        "total_tokens": 2236,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport java.lang.annotation.Annotation;\nimport java.lang.reflect.Field;\n\nimport org.mockito.Captor;\nimport org.mockito.Mock;\nimport org.mockito.Mockito;\nimport org.mockito.Spy;\nimport org.mockito.configuration.AnnotationEngine;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.util.MockUtil;\n\n\n@SuppressWarnings({\"unchecked\"})\npublic class SpyAnnotationEngine implements AnnotationEngine {\n\n    public Object createMockFor(Annotation annotation, Field field) {\n        return null;\n    }\n    \n    @SuppressWarnings(\"deprecation\")\n    public void process(Class<?> context, Object testClass) {\n        Field[] fields = context.getDeclaredFields();\n        for (Field field : fields) {\n            if (field.isAnnotationPresent(Spy.class)) {\n                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);\n                boolean wasAccessible = field.isAccessible();\n                field.setAccessible(true);\n                try {\n                    Object instance = field.get(testClass);\n                    if (instance == null) {\n                        throw new MockitoException(\"Cannot create a @Spy for '\" + field.getName() + \"' field because the *instance* is missing\\n\" +\n                        \t\t  \"The instance must be created *before* initMocks();\\n\" +\n                                  \"Example of correct usage of @Spy:\\n\" +\n                            \t  \"   @Spy List mock = new LinkedList();\\n\" +\n                            \t  \"   //also, don't forget about MockitoAnnotations.initMocks();\");\n\n                    }\n                    MockUtil mockUtil = new MockUtil();\n                    if (mockUtil.isMock(instance)) { \n                        // instance has been spied earlier\n                        Mockito.reset(instance);\n                    } else {\n                        instance = Mockito.spy(instance);\n                        field.set(testClass, instance);\n                    }\n                    mockUtil.getMockHandler(instance).getMockSettings().name(field.getName());\n                } catch (IllegalAccessException e) {\n                    throw new MockitoException(\"Problems initiating spied field \" + field.getName(), e);\n                } finally {\n                    field.setAccessible(wasAccessible);\n                }\n            }\n        }\n    }\n    \n    //TODO duplicated elsewhere\n    void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {\n        for (Class u : undesiredAnnotations) {\n            if (field.isAnnotationPresent(u)) {\n                new Reporter().unsupportedCombinationOfAnnotations(annotation.getSimpleName(), annotation.getClass().getSimpleName());\n            }\n        }        \n    }    \n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.9836792945861816,
+        "line_count": 68,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 7,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 178,
+        "prompt_tokens": 3141,
+        "total_tokens": 3319,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly attempts to set the mock name using the field name, but it fails to account for the fact that Mockito.reset(instance) does not update the mock name if the instance was already a mock. Furthermore, the logic assumes that mockUtil.getMockHandler(instance) will always return a valid handler, which might not be the case if the instance is not a mock or if the reset operation affects the handler state.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.200227975845337,
+        "issues": [
+          "The mock name is not updated when the instance is already a mock and reset() is called.",
+          "The code assumes that the mock handler is always accessible and mutable after a reset."
+        ],
+        "suggestions": [
+          "In process(): change 'Mockito.reset(instance);' to 'Mockito.reset(instance); mockUtil.getMockHandler(instance).getMockSettings().name(field.getName());' because the mock name needs to be updated even when the instance is being reset."
+        ],
+        "problematic_lines": [
+          47,
+          53
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2047,
+        "candidate_tokens": 243,
+        "total_tokens": 2290,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport java.lang.annotation.Annotation;\nimport java.lang.reflect.Field;\n\nimport org.mockito.Captor;\nimport org.mockito.Mock;\nimport org.mockito.Mockito;\nimport org.mockito.Spy;\nimport org.mockito.configuration.AnnotationEngine;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.util.MockUtil;\n\n\n@SuppressWarnings({\"unchecked\"})\npublic class SpyAnnotationEngine implements AnnotationEngine {\n\n    public Object createMockFor(Annotation annotation, Field field) {\n        return null;\n    }\n    \n    @SuppressWarnings(\"deprecation\")\n    public void process(Class<?> context, Object testClass) {\n        Field[] fields = context.getDeclaredFields();\n        for (Field field : fields) {\n            if (field.isAnnotationPresent(Spy.class)) {\n                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);\n                boolean wasAccessible = field.isAccessible();\n                field.setAccessible(true);\n                try {\n                    Object instance = field.get(testClass);\n                    if (instance == null) {\n                        throw new MockitoException(\"Cannot create a @Spy for '\" + field.getName() + \"' field because the *instance* is missing\\n\" +\n                        \t\t  \"The instance must be created *before* initMocks();\\n\" +\n                                  \"Example of correct usage of @Spy:\\n\" +\n                            \t  \"   @Spy List mock = new LinkedList();\\n\" +\n                            \t  \"   //also, don't forget about MockitoAnnotations.initMocks();\");\n\n                    }\n                    MockUtil mockUtil = new MockUtil();\n                    if (mockUtil.isMock(instance)) { \n                        // instance has been spied earlier\n                        Mockito.reset(instance);\n                    } else {\n                        instance = Mockito.spy(instance);\n                        field.set(testClass, instance);\n                    }\n                    mockUtil.getMockHandler(instance).getMockSettings().name(field.getName());\n                } catch (IllegalAccessException e) {\n                    throw new MockitoException(\"Problems initiating spied field \" + field.getName(), e);\n                } finally {\n                    field.setAccessible(wasAccessible);\n                }\n            }\n        }\n    }\n    \n    //TODO duplicated elsewhere\n    void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {\n        for (Class u : undesiredAnnotations) {\n            if (field.isAnnotationPresent(u)) {\n                new Reporter().unsupportedCombinationOfAnnotations(annotation.getSimpleName(), annotation.getClass().getSimpleName());\n            }\n        }        \n    }    \n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.2100138664245605,
+        "line_count": 68,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 7,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 158,
+        "prompt_tokens": 3594,
+        "total_tokens": 3752,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly attempts to set the mock name using the field name, but it fails to account for the fact that Mockito.reset(instance) does not update the mock name if the mock was already initialized. Furthermore, the test failure suggests that the logic for naming the spy might be interfering with existing mock settings or failing to apply the name correctly when the instance is already a mock.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.6312899589538574,
+        "issues": [
+          "The call to mockUtil.getMockHandler(instance).getMockSettings().name(field.getName()) is executed even when the instance is already a mock and reset, which may not be the intended way to update the name of an existing mock.",
+          "The test org.mockitousage.bugs.SpyShouldHaveNiceNameTest::shouldPrintNiceName is failing, indicating the name is not being correctly associated with the spy instance."
+        ],
+        "suggestions": [
+          "In process(): change 'mockUtil.getMockHandler(instance).getMockSettings().name(field.getName());' to 'if (!mockUtil.isMock(instance)) { mockUtil.getMockHandler(instance).getMockSettings().name(field.getName()); }' because the name should only be set during the initial creation of the spy to avoid overriding existing mock configurations."
+        ],
+        "problematic_lines": [
+          55
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2047,
+        "candidate_tokens": 305,
+        "total_tokens": 2352,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport java.lang.annotation.Annotation;\nimport java.lang.reflect.Field;\n\nimport org.mockito.Captor;\nimport org.mockito.Mock;\nimport org.mockito.Mockito;\nimport org.mockito.Spy;\nimport org.mockito.configuration.AnnotationEngine;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.util.MockUtil;\n\n\n@SuppressWarnings({\"unchecked\"})\npublic class SpyAnnotationEngine implements AnnotationEngine {\n\n    public Object createMockFor(Annotation annotation, Field field) {\n        return null;\n    }\n    \n    @SuppressWarnings(\"deprecation\")\n    public void process(Class<?> context, Object testClass) {\n        Field[] fields = context.getDeclaredFields();\n        for (Field field : fields) {\n            if (field.isAnnotationPresent(Spy.class)) {\n                assertNoAnnotations(Spy.class, field, Mock.class, org.mockito.MockitoAnnotations.Mock.class, Captor.class);\n                boolean wasAccessible = field.isAccessible();\n                field.setAccessible(true);\n                try {\n                    Object instance = field.get(testClass);\n                    if (instance == null) {\n                        throw new MockitoException(\"Cannot create a @Spy for '\" + field.getName() + \"' field because the *instance* is missing\\n\" +\n                        \t\t  \"The instance must be created *before* initMocks();\\n\" +\n                                  \"Example of correct usage of @Spy:\\n\" +\n                            \t  \"   @Spy List mock = new LinkedList();\\n\" +\n                            \t  \"   //also, don't forget about MockitoAnnotations.initMocks();\");\n\n                    }\n                    MockUtil mockUtil = new MockUtil();\n                    if (mockUtil.isMock(instance)) { \n                        // instance has been spied earlier\n                        Mockito.reset(instance);\n                    } else {\n                        instance = Mockito.spy(instance);\n                        field.set(testClass, instance);\n                        mockUtil.getMockHandler(instance).getMockSettings().name(field.getName());\n                    }\n                } catch (IllegalAccessException e) {\n                    throw new MockitoException(\"Problems initiating spied field \" + field.getName(), e);\n                } finally {\n                    field.setAccessible(wasAccessible);\n                }\n            }\n        }\n    }\n    \n    //TODO duplicated elsewhere\n    void assertNoAnnotations(Class annotation, Field field, Class ... undesiredAnnotations) {\n        for (Class u : undesiredAnnotations) {\n            if (field.isAnnotationPresent(u)) {\n                new Reporter().unsupportedCombinationOfAnnotations(annotation.getSimpleName(), annotation.getClass().getSimpleName());\n            }\n        }        \n    }    \n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.2920830249786377,
+        "line_count": 68,
+        "token_budget": 20000,
+        "temperature_used": 0.5499999999999999,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 7,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 158,
+        "prompt_tokens": 4022,
+        "total_tokens": 4180,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to set the mock name using the field name, which is a good practice for debugging, but it fails to account for the fact that the mock might already have a name or that the MockSettings might not be accessible or mutable in the way the patch assumes. The test failure suggests that the implementation of setting the mock name is either incomplete or interfering with existing mock initialization logic.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.4665122032165527,
+        "issues": [
+          "The patch assumes that mockUtil.getMockHandler(instance).getMockSettings().name(field.getName()) is sufficient to set the name, but this might be failing if the mock settings are immutable or if the name is already set.",
+          "The test org.mockitousage.bugs.SpyShouldHaveNiceNameTest::shouldPrintNiceName indicates that the naming logic is not correctly applied or is being overwritten."
+        ],
+        "suggestions": [
+          "In process(): change 'mockUtil.getMockHandler(instance).getMockSettings().name(field.getName());' to 'Mockito.mockingDetails(instance).getMockHandler().getMockSettings().name(field.getName());' because it is the standard API for modifying mock settings after creation."
+        ],
+        "problematic_lines": [
+          53
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2042,
+        "candidate_tokens": 286,
+        "total_tokens": 2328,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}
