@@ -1,0 +1,227 @@
+{
+  "bug_id": "Closure_28",
+  "status": "completed",
+  "verdict": "needs_revision",
+  "ablation": "full",
+  "plausible": false,
+  "baseline_failing_count": 2,
+  "accepted": false,
+  "plausible_patch": "",
+  "plausible_iteration": -1,
+  "reason": "The patch introduces a regression in testCostBasedInlining8 because it forces a cost of 1 for all constants. Previously, constants were effectively ignored by the estimator (cost 0). By adding a cost of 1, the estimator now overestimates the size of code snippets containing constants, causing the inlining heuristic to reject valid inlining opportunities that were previously accepted.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Copyright 2008 The Closure Compiler Authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.rhino.Node;\n\n/**\n * For use with CodeGenerator to determine the cost of generated code.\n *\n * @see CodeGenerator\n * @see CodePrinter\n */\nclass InlineCostEstimator {\n  // For now simply assume identifiers are 2 characters.\n  private static final String ESTIMATED_IDENTIFIER = \"ab\";\n  static final int ESTIMATED_IDENTIFIER_COST = ESTIMATED_IDENTIFIER.length();\n\n  private InlineCostEstimator() {\n  }\n\n  /**\n   * Determines the size of the js code.\n   */\n  static int getCost(Node root) {\n    return getCost(root, Integer.MAX_VALUE);\n  }\n\n  /**\n   * Determines the estimated size of the js snippet represented by the node.\n   */\n  static int getCost(Node root, int costThreshhold) {\n    CompiledSizeEstimator estimator = new CompiledSizeEstimator(costThreshhold);\n    estimator.add(root);\n    return estimator.getCost();\n  }\n\n  /**\n   * Code consumer that estimates compiled size by assuming names are\n   * shortened and all whitespace is stripped.\n   */\n  private static class CompiledSizeEstimator extends CodeConsumer {\n    private int maxCost;\n    private int cost = 0;\n    private char last = '\\0';\n    private boolean continueProcessing = true;\n\n    CompiledSizeEstimator(int costThreshhold) {\n      this.maxCost = costThreshhold;\n    }\n\n    void add(Node root) {\n      CodeGenerator cg = new CodeGenerator(this);\n      cg.add(root);\n    }\n\n    int getCost() {\n      return cost;\n    }\n\n    @Override\n    boolean continueProcessing() {\n      return continueProcessing;\n    }\n\n    @Override\n    char getLastChar() {\n      return last;\n    }\n\n    @Override\n    void append(String str){\n      last = str.charAt(str.length() - 1);\n      cost += str.length();\n      if (maxCost <= cost) {\n        continueProcessing = false;\n      }\n    }\n\n    @Override\n    void addIdentifier(String identifier) {\n      add(ESTIMATED_IDENTIFIER);\n    }\n\n    @Override\n    void addConstant(String constant) {\n      // Constants are considered basically free, but we must account for\n      // the cost of the token itself if it's not folded.\n      // To maintain consistency with previous behavior, we treat them as\n      // having a cost of 1.\n      append(\"1\");\n    }\n\n    /**\n     * Constants (true, false, null) are considered basically free,\n     * because it's likely that they will get folded when we're done.\n     */\n  }\n}\n",
+  "per_file_patches": "{\"InlineCostEstimator.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 344.82,
+  "total_tokens": 24318,
+  "estimated_usd": 0.0085,
+  "failing_tests": "com.google.javascript.jscomp.InlineCostEstimatorTest::testCost|com.google.javascript.jscomp.InlineFunctionsTest::testIssue728",
+  "modified_classes": "com.google.javascript.jscomp.InlineCostEstimator",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright 2008 The Closure Compiler Authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.rhino.Node;\n\n/**\n * For use with CodeGenerator to determine the cost of generated code.\n *\n * @see CodeGenerator\n * @see CodePrinter\n */\nclass InlineCostEstimator {\n  // For now simply assume identifiers are 2 characters.\n  private static final String ESTIMATED_IDENTIFIER = \"ab\";\n  static final int ESTIMATED_IDENTIFIER_COST = ESTIMATED_IDENTIFIER.length();\n\n  private InlineCostEstimator() {\n  }\n\n  /**\n   * Determines the size of the js code.\n   */\n  static int getCost(Node root) {\n    return getCost(root, Integer.MAX_VALUE);\n  }\n\n  /**\n   * Determines the estimated size of the js snippet represented by the node.\n   */\n  static int getCost(Node root, int costThreshhold) {\n    CompiledSizeEstimator estimator = new CompiledSizeEstimator(costThreshhold);\n    estimator.add(root);\n    return estimator.getCost();\n  }\n\n  /**\n   * Code consumer that estimates compiled size by assuming names are\n   * shortened and all whitespace is stripped.\n   */\n  private static class CompiledSizeEstimator extends CodeConsumer {\n    private int maxCost;\n    private int cost = 0;\n    private char last = '\\0';\n    private boolean continueProcessing = true;\n\n    CompiledSizeEstimator(int costThreshhold) {\n      this.maxCost = costThreshhold;\n    }\n\n    void add(Node root) {\n      CodeGenerator cg = new CodeGenerator(this);\n      cg.add(root);\n    }\n\n    int getCost() {\n      return cost;\n    }\n\n    @Override\n    boolean continueProcessing() {\n      return continueProcessing;\n    }\n\n    @Override\n    char getLastChar() {\n      return last;\n    }\n\n    @Override\n    void append(String str){\n      last = str.charAt(str.length() - 1);\n      cost += str.length();\n      if (maxCost <= cost) {\n        continueProcessing = false;\n      }\n    }\n\n    @Override\n    void addIdentifier(String identifier) {\n      add(ESTIMATED_IDENTIFIER);\n    }\n\n    @Override\n    void addConstant(String constant) {\n      add(constant);\n    }\n\n    /**\n     * Constants (true, false, null) are considered basically free,\n     * because it's likely that they will get folded when we're done.\n     */\n  }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.1961617469787598,
+        "line_count": 103,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 5,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "prompt_tokens": 1779,
+        "total_tokens": 1955,
+        "candidate_tokens": 176,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to account for constants by adding them to the cost, but the existing documentation and logic suggest that constants should be treated as 'basically free' (cost 0) rather than their literal length. By adding the full length of the constant string to the cost, the estimator is likely overestimating the size, causing the tests to fail because the calculated cost exceeds the expected threshold.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 5.123163938522339,
+        "issues": [
+          "The implementation of addConstant adds the full length of the constant string, contradicting the class comment that constants are considered 'basically free'."
+        ],
+        "suggestions": [
+          "In addConstant(): change 'add(constant);' to '// Constants are free, do nothing' because the class documentation states that constants are considered basically free and should not contribute to the size estimation."
+        ],
+        "problematic_lines": [
+          99
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2133,
+        "candidate_tokens": 205,
+        "total_tokens": 2338,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright 2008 The Closure Compiler Authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.rhino.Node;\n\n/**\n * For use with CodeGenerator to determine the cost of generated code.\n *\n * @see CodeGenerator\n * @see CodePrinter\n */\nclass InlineCostEstimator {\n  // For now simply assume identifiers are 2 characters.\n  private static final String ESTIMATED_IDENTIFIER = \"ab\";\n  static final int ESTIMATED_IDENTIFIER_COST = ESTIMATED_IDENTIFIER.length();\n\n  private InlineCostEstimator() {\n  }\n\n  /**\n   * Determines the size of the js code.\n   */\n  static int getCost(Node root) {\n    return getCost(root, Integer.MAX_VALUE);\n  }\n\n  /**\n   * Determines the estimated size of the js snippet represented by the node.\n   */\n  static int getCost(Node root, int costThreshhold) {\n    CompiledSizeEstimator estimator = new CompiledSizeEstimator(costThreshhold);\n    estimator.add(root);\n    return estimator.getCost();\n  }\n\n  /**\n   * Code consumer that estimates compiled size by assuming names are\n   * shortened and all whitespace is stripped.\n   */\n  private static class CompiledSizeEstimator extends CodeConsumer {\n    private int maxCost;\n    private int cost = 0;\n    private char last = '\\0';\n    private boolean continueProcessing = true;\n\n    CompiledSizeEstimator(int costThreshhold) {\n      this.maxCost = costThreshhold;\n    }\n\n    void add(Node root) {\n      CodeGenerator cg = new CodeGenerator(this);\n      cg.add(root);\n    }\n\n    int getCost() {\n      return cost;\n    }\n\n    @Override\n    boolean continueProcessing() {\n      return continueProcessing;\n    }\n\n    @Override\n    char getLastChar() {\n      return last;\n    }\n\n    @Override\n    void append(String str){\n      last = str.charAt(str.length() - 1);\n      cost += str.length();\n      if (maxCost <= cost) {\n        continueProcessing = false;\n      }\n    }\n\n    @Override\n    void addIdentifier(String identifier) {\n      add(ESTIMATED_IDENTIFIER);\n    }\n\n    @Override\n    void addConstant(String constant) {\n      // Constants are free, do nothing.\n    }\n\n    /**\n     * Constants (true, false, null) are considered basically free,\n     * because it's likely that they will get folded when we're done.\n     */\n  }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.524791955947876,
+        "line_count": 103,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 5,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "prompt_tokens": 3404,
+        "total_tokens": 3578,
+        "candidate_tokens": 174,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly implements addConstant to treat constants as free, which aligns with the class documentation. However, this change causes regressions in cost-based inlining tests because the cost estimation logic is now under-counting the size of the generated code. The previous implementation implicitly counted constants via the default CodeConsumer behavior; by overriding addConstant to do nothing, the estimator now ignores the cost of constant tokens entirely, leading to inaccurate cost calculations that trigger incorrect inlining decisions.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.354971170425415,
+        "issues": [
+          "The implementation of addConstant(String constant) ignores the cost of constants entirely, causing the estimator to return a lower cost than the actual generated code.",
+          "The regressions in InlineFunctionsTest indicate that the compiler relies on these constants having a non-zero cost for accurate inlining heuristics."
+        ],
+        "suggestions": [
+          "In CompiledSizeEstimator(): change 'void addConstant(String constant) { // Constants are free, do nothing. }' to 'void addConstant(String constant) { append(constant); }' because constants should contribute their actual length to the cost estimate to maintain parity with the previous behavior while allowing for future fine-tuning."
+        ],
+        "problematic_lines": [
+          98,
+          99,
+          100
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2233,
+        "candidate_tokens": 291,
+        "total_tokens": 2524,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright 2008 The Closure Compiler Authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.rhino.Node;\n\n/**\n * For use with CodeGenerator to determine the cost of generated code.\n *\n * @see CodeGenerator\n * @see CodePrinter\n */\nclass InlineCostEstimator {\n  // For now simply assume identifiers are 2 characters.\n  private static final String ESTIMATED_IDENTIFIER = \"ab\";\n  static final int ESTIMATED_IDENTIFIER_COST = ESTIMATED_IDENTIFIER.length();\n\n  private InlineCostEstimator() {\n  }\n\n  /**\n   * Determines the size of the js code.\n   */\n  static int getCost(Node root) {\n    return getCost(root, Integer.MAX_VALUE);\n  }\n\n  /**\n   * Determines the estimated size of the js snippet represented by the node.\n   */\n  static int getCost(Node root, int costThreshhold) {\n    CompiledSizeEstimator estimator = new CompiledSizeEstimator(costThreshhold);\n    estimator.add(root);\n    return estimator.getCost();\n  }\n\n  /**\n   * Code consumer that estimates compiled size by assuming names are\n   * shortened and all whitespace is stripped.\n   */\n  private static class CompiledSizeEstimator extends CodeConsumer {\n    private int maxCost;\n    private int cost = 0;\n    private char last = '\\0';\n    private boolean continueProcessing = true;\n\n    CompiledSizeEstimator(int costThreshhold) {\n      this.maxCost = costThreshhold;\n    }\n\n    void add(Node root) {\n      CodeGenerator cg = new CodeGenerator(this);\n      cg.add(root);\n    }\n\n    int getCost() {\n      return cost;\n    }\n\n    @Override\n    boolean continueProcessing() {\n      return continueProcessing;\n    }\n\n    @Override\n    char getLastChar() {\n      return last;\n    }\n\n    @Override\n    void append(String str){\n      last = str.charAt(str.length() - 1);\n      cost += str.length();\n      if (maxCost <= cost) {\n        continueProcessing = false;\n      }\n    }\n\n    @Override\n    void addIdentifier(String identifier) {\n      add(ESTIMATED_IDENTIFIER);\n    }\n\n    @Override\n    void addConstant(String constant) {\n      append(constant);\n    }\n\n    /**\n     * Constants (true, false, null) are considered basically free,\n     * because it's likely that they will get folded when we're done.\n     */\n  }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.6182992458343506,
+        "line_count": 103,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 5,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "prompt_tokens": 4272,
+        "total_tokens": 4442,
+        "candidate_tokens": 170,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to account for constants in the cost estimation, but it contradicts the existing class documentation which states that constants are considered 'basically free' and should not contribute to the cost. By adding 'addConstant' to append the constant's length, the estimator now overestimates the cost, causing regressions in tests that rely on the previous assumption that constants are free.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.3817148208618164,
+        "issues": [
+          "The implementation of addConstant violates the documented design principle that constants are considered free.",
+          "The patch causes regressions in InlineFunctionsTest and InlineCostEstimatorTest by increasing the estimated cost of code snippets containing constants."
+        ],
+        "suggestions": [
+          "In CompiledSizeEstimator(): remove the addConstant(String constant) method override entirely because the class documentation explicitly states that constants are considered free and should not be counted towards the cost."
+        ],
+        "problematic_lines": [
+          98,
+          99,
+          100,
+          101
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2134,
+        "candidate_tokens": 232,
+        "total_tokens": 2366,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Copyright 2008 The Closure Compiler Authors.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.rhino.Node;\n\n/**\n * For use with CodeGenerator to determine the cost of generated code.\n *\n * @see CodeGenerator\n * @see CodePrinter\n */\nclass InlineCostEstimator {\n  // For now simply assume identifiers are 2 characters.\n  private static final String ESTIMATED_IDENTIFIER = \"ab\";\n  static final int ESTIMATED_IDENTIFIER_COST = ESTIMATED_IDENTIFIER.length();\n\n  private InlineCostEstimator() {\n  }\n\n  /**\n   * Determines the size of the js code.\n   */\n  static int getCost(Node root) {\n    return getCost(root, Integer.MAX_VALUE);\n  }\n\n  /**\n   * Determines the estimated size of the js snippet represented by the node.\n   */\n  static int getCost(Node root, int costThreshhold) {\n    CompiledSizeEstimator estimator = new CompiledSizeEstimator(costThreshhold);\n    estimator.add(root);\n    return estimator.getCost();\n  }\n\n  /**\n   * Code consumer that estimates compiled size by assuming names are\n   * shortened and all whitespace is stripped.\n   */\n  private static class CompiledSizeEstimator extends CodeConsumer {\n    private int maxCost;\n    private int cost = 0;\n    private char last = '\\0';\n    private boolean continueProcessing = true;\n\n    CompiledSizeEstimator(int costThreshhold) {\n      this.maxCost = costThreshhold;\n    }\n\n    void add(Node root) {\n      CodeGenerator cg = new CodeGenerator(this);\n      cg.add(root);\n    }\n\n    int getCost() {\n      return cost;\n    }\n\n    @Override\n    boolean continueProcessing() {\n      return continueProcessing;\n    }\n\n    @Override\n    char getLastChar() {\n      return last;\n    }\n\n    @Override\n    void append(String str){\n      last = str.charAt(str.length() - 1);\n      cost += str.length();\n      if (maxCost <= cost) {\n        continueProcessing = false;\n      }\n    }\n\n    @Override\n    void addIdentifier(String identifier) {\n      add(ESTIMATED_IDENTIFIER);\n    }\n\n    @Override\n    void addConstant(String constant) {\n      // Constants are considered basically free, but we must account for\n      // the cost of the token itself if it's not folded.\n      // To maintain consistency with previous behavior, we treat them as\n      // having a cost of 1.\n      append(\"1\");\n    }\n\n    /**\n     * Constants (true, false, null) are considered basically free,\n     * because it's likely that they will get folded when we're done.\n     */\n  }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.8333230018615723,
+        "line_count": 103,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 9,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "prompt_tokens": 4415,
+        "total_tokens": 4639,
+        "candidate_tokens": 224,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch introduces a regression in testCostBasedInlining8 because it forces a cost of 1 for all constants. Previously, constants were effectively ignored by the estimator (cost 0). By adding a cost of 1, the estimator now overestimates the size of code snippets containing constants, causing the inlining heuristic to reject valid inlining opportunities that were previously accepted.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.835542917251587,
+        "issues": [
+          "The implementation of addConstant(String constant) adds a cost of 1, which contradicts the previous behavior where constants were treated as free (cost 0).",
+          "The regression in testCostBasedInlining8 indicates that the cost threshold for inlining is being exceeded due to this new constant cost calculation."
+        ],
+        "suggestions": [
+          "In addConstant(): change append(\"1\"); to // do nothing; because constants should remain free to maintain the original cost estimation logic that the compiler relies on for inlining decisions."
+        ],
+        "problematic_lines": [
+          103
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2238,
+        "candidate_tokens": 238,
+        "total_tokens": 2476,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}
