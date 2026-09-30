@@ -1,0 +1,224 @@
+{
+  "bug_id": "Closure_91",
+  "status": "completed",
+  "verdict": "needs_revision",
+  "ablation": "full",
+  "plausible": false,
+  "baseline_failing_count": 1,
+  "accepted": false,
+  "plausible_patch": "",
+  "plausible_iteration": -1,
+  "reason": "The patch correctly identifies that the original implementation of getFunctionJsDocInfo failed to look up JSDoc on object literals, which is necessary for correctly identifying functions that should not be flagged by CheckGlobalThis. However, the implementation incorrectly looks for JSDoc on the OBJECTLIT node itself (gramps.getJSDocInfo()) rather than the property node (parent.getJSDocInfo()) or the function node, failing to account for how JSDoc is attached to object literal properties in the AST.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Copyright 2007 Google Inc.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.jscomp.CheckLevel;\nimport com.google.javascript.jscomp.NodeTraversal.Callback;\nimport com.google.javascript.rhino.JSDocInfo;\nimport com.google.javascript.rhino.Node;\nimport com.google.javascript.rhino.Token;\n\n/**\n * Checks for certain uses of the {@code this} keyword that are considered\n * unsafe because they are likely to reference the global {@code this} object\n * unintentionally.\n *\n * <p>A use of {@code this} is considered unsafe if it's on the left side of an\n * assignment or a property access, and not inside one of the following:\n * <ol>\n * <li>a prototype method\n * <li>a function annotated with {@code @constructor}\n * <li>a function annotated with {@code @this}.\n * <li>a function where there's no logical place to put a\n *     {@code this} annotation.\n * </ol>\n *\n * <p>Note that this check does not track assignments of {@code this} to\n * variables or objects. The code\n * <pre>\n * function evil() {\n *   var a = this;\n *   a.useful = undefined;\n * }\n * </pre>\n * will not get flagged, even though it is semantically equivalent to\n * <pre>\n * function evil() {\n *   this.useful = undefined;\n * }\n * </pre>\n * which would get flagged.\n *\n */\nfinal class CheckGlobalThis implements Callback {\n\n  static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(\n      \"JSC_USED_GLOBAL_THIS\",\n      \"dangerous use of the global 'this' object\");\n\n  private final AbstractCompiler compiler;\n  private final CheckLevel level;\n\n  /**\n   * If {@code assignLhsChild != null}, then the node being traversed is\n   * a descendant of the first child of an ASSIGN node. assignLhsChild's\n   * parent is this ASSIGN node.\n   */\n  private Node assignLhsChild = null;\n\n  CheckGlobalThis(AbstractCompiler compiler, CheckLevel level) {\n    this.compiler = compiler;\n    this.level = level;\n  }\n\n  /**\n   * Since this pass reports errors only when a global {@code this} keyword\n   * is encountered, there is no reason to traverse non global contexts.\n   */\n  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {\n\n    if (n.getType() == Token.FUNCTION) {\n      // Don't traverse functions that are constructors or have the @this\n      // or @override annotation.\n      JSDocInfo jsDoc = getFunctionJsDocInfo(n);\n      if (jsDoc != null &&\n          (jsDoc.isConstructor() ||\n           jsDoc.isInterface() ||\n           jsDoc.hasThisType() ||\n           jsDoc.isOverride())) {\n        return false;\n      }\n\n      // Don't traverse functions unless they would normally\n      // be able to have a @this annotation associated with them. e.g.,\n      // var a = function() { }; // or\n      // function a() {} // or\n      // a.x = function() {}; // or\n      // var a = {x: function() {}};\n      int pType = parent.getType();\n      if (!(pType == Token.BLOCK ||\n            pType == Token.SCRIPT ||\n            pType == Token.NAME ||\n            pType == Token.ASSIGN ||\n\n            // object literal keys\n            pType == Token.STRING ||\n            pType == Token.NUMBER)) {\n        return false;\n      }\n\n      // Don't traverse functions that are getting lent to a prototype.\n    }\n\n    if (parent != null && parent.getType() == Token.ASSIGN) {\n      Node lhs = parent.getFirstChild();\n      Node rhs = lhs.getNext();\n\n      if (n == lhs) {\n        // Always traverse the left side of the assignment. To handle\n        // nested assignments properly (e.g., (a = this).property = c;),\n        // assignLhsChild should not be overridden.\n        if (assignLhsChild == null) {\n          assignLhsChild = lhs;\n        }\n      } else {\n        // Only traverse the right side if it's not an assignment to a prototype\n        // property or subproperty.\n        if (NodeUtil.isGet(lhs)) {\n          if (lhs.getType() == Token.GETPROP &&\n              lhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n          Node llhs = lhs.getFirstChild();\n          if (llhs.getType() == Token.GETPROP &&\n              llhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n        }\n      }\n    }\n\n    return true;\n  }\n\n  public void visit(NodeTraversal t, Node n, Node parent) {\n    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {\n      compiler.report(t.makeError(n, level, GLOBAL_THIS));\n    }\n    if (n == assignLhsChild) {\n      assignLhsChild = null;\n    }\n  }\n\n  private boolean shouldReportThis(Node n, Node parent) {\n    if (assignLhsChild != null) {\n      // Always report a THIS on the left side of an assign.\n      return true;\n    }\n\n    // Also report a THIS with a property access.\n    return parent != null && NodeUtil.isGet(parent);\n  }\n\n  /**\n   * Gets a function's JSDoc information, if it has any. Checks for a few\n   * patterns (ellipses show where JSDoc would be):\n   * <pre>\n   * ... function() {}\n   * ... x = function() {};\n   * var ... x = function() {};\n   * ... var x = function() {};\n   * </pre>\n   */\n  private JSDocInfo getFunctionJsDocInfo(Node n) {\n    JSDocInfo jsDoc = n.getJSDocInfo();\n    if (jsDoc != null) return jsDoc;\n\n    Node parent = n.getParent();\n    if (parent == null) return null;\n\n    int parentType = parent.getType();\n    if (parentType == Token.NAME || parentType == Token.ASSIGN) {\n      jsDoc = parent.getJSDocInfo();\n      if (jsDoc == null && parentType == Token.NAME) {\n        Node gramps = parent.getParent();\n        if (gramps != null && gramps.getType() == Token.VAR) {\n          jsDoc = gramps.getJSDocInfo();\n        }\n      }\n    } else if (parentType == Token.STRING || parentType == Token.NUMBER) {\n      // Object literal property: {foo: function() {}}\n      Node gramps = parent.getParent();\n      if (gramps != null && gramps.getType() == Token.OBJECTLIT) {\n        jsDoc = gramps.getJSDocInfo();\n      }\n    }\n    return jsDoc;\n  }\n}\n",
+  "per_file_patches": "{\"CheckGlobalThis.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 97.97,
+  "total_tokens": 38819,
+  "estimated_usd": 0.0136,
+  "failing_tests": "com.google.javascript.jscomp.CheckGlobalThisTest::testLendsAnnotation3",
+  "modified_classes": "com.google.javascript.jscomp.CheckGlobalThis",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright 2007 Google Inc.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.jscomp.CheckLevel;\nimport com.google.javascript.jscomp.NodeTraversal.Callback;\nimport com.google.javascript.rhino.JSDocInfo;\nimport com.google.javascript.rhino.Node;\nimport com.google.javascript.rhino.Token;\n\n/**\n * Checks for certain uses of the {@code this} keyword that are considered\n * unsafe because they are likely to reference the global {@code this} object\n * unintentionally.\n *\n * <p>A use of {@code this} is considered unsafe if it's on the left side of an\n * assignment or a property access, and not inside one of the following:\n * <ol>\n * <li>a prototype method\n * <li>a function annotated with {@code @constructor}\n * <li>a function annotated with {@code @this}.\n * <li>a function where there's no logical place to put a\n *     {@code this} annotation.\n * </ol>\n *\n * <p>Note that this check does not track assignments of {@code this} to\n * variables or objects. The code\n * <pre>\n * function evil() {\n *   var a = this;\n *   a.useful = undefined;\n * }\n * </pre>\n * will not get flagged, even though it is semantically equivalent to\n * <pre>\n * function evil() {\n *   this.useful = undefined;\n * }\n * </pre>\n * which would get flagged.\n *\n */\nfinal class CheckGlobalThis implements Callback {\n\n  static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(\n      \"JSC_USED_GLOBAL_THIS\",\n      \"dangerous use of the global 'this' object\");\n\n  private final AbstractCompiler compiler;\n  private final CheckLevel level;\n\n  /**\n   * If {@code assignLhsChild != null}, then the node being traversed is\n   * a descendant of the first child of an ASSIGN node. assignLhsChild's\n   * parent is this ASSIGN node.\n   */\n  private Node assignLhsChild = null;\n\n  CheckGlobalThis(AbstractCompiler compiler, CheckLevel level) {\n    this.compiler = compiler;\n    this.level = level;\n  }\n\n  /**\n   * Since this pass reports errors only when a global {@code this} keyword\n   * is encountered, there is no reason to traverse non global contexts.\n   */\n  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {\n\n    if (n.getType() == Token.FUNCTION) {\n      // Don't traverse functions that are constructors or have the @this\n      // or @override annotation.\n      JSDocInfo jsDoc = getFunctionJsDocInfo(n);\n      if (jsDoc != null &&\n          (jsDoc.isConstructor() ||\n           jsDoc.isInterface() ||\n           jsDoc.hasThisType() ||\n           jsDoc.isOverride() ||\n           jsDoc.getLendsName() != null)) {\n        return false;\n      }\n\n      // Don't traverse functions unless they would normally\n      // be able to have a @this annotation associated with them. e.g.,\n      // var a = function() { }; // or\n      // function a() {} // or\n      // a.x = function() {}; // or\n      // var a = {x: function() {}};\n      int pType = parent.getType();\n      if (!(pType == Token.BLOCK ||\n            pType == Token.SCRIPT ||\n            pType == Token.NAME ||\n            pType == Token.ASSIGN ||\n\n            // object literal keys\n            pType == Token.STRING ||\n            pType == Token.NUMBER)) {\n        return false;\n      }\n\n      // Don't traverse functions that are getting lent to a prototype.\n    }\n\n    if (parent != null && parent.getType() == Token.ASSIGN) {\n      Node lhs = parent.getFirstChild();\n      Node rhs = lhs.getNext();\n\n      if (n == lhs) {\n        // Always traverse the left side of the assignment. To handle\n        // nested assignments properly (e.g., (a = this).property = c;),\n        // assignLhsChild should not be overridden.\n        if (assignLhsChild == null) {\n          assignLhsChild = lhs;\n        }\n      } else {\n        // Only traverse the right side if it's not an assignment to a prototype\n        // property or subproperty.\n        if (NodeUtil.isGet(lhs)) {\n          if (lhs.getType() == Token.GETPROP &&\n              lhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n          Node llhs = lhs.getFirstChild();\n          if (llhs.getType() == Token.GETPROP &&\n              llhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n        }\n      }\n    }\n\n    return true;\n  }\n\n  public void visit(NodeTraversal t, Node n, Node parent) {\n    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {\n      compiler.report(t.makeError(n, level, GLOBAL_THIS));\n    }\n    if (n == assignLhsChild) {\n      assignLhsChild = null;\n    }\n  }\n\n  private boolean shouldReportThis(Node n, Node parent) {\n    if (assignLhsChild != null) {\n      // Always report a THIS on the left side of an assign.\n      return true;\n    }\n\n    // Also report a THIS with a property access.\n    return parent != null && NodeUtil.isGet(parent);\n  }\n\n  /**\n   * Gets a function's JSDoc information, if it has any. Checks for a few\n   * patterns (ellipses show where JSDoc would be):\n   * <pre>\n   * ... function() {}\n   * ... x = function() {};\n   * var ... x = function() {};\n   * ... var x = function() {};\n   * </pre>\n   */\n  private JSDocInfo getFunctionJsDocInfo(Node n) {\n    JSDocInfo jsDoc = n.getJSDocInfo();\n    Node parent = n.getParent();\n    if (jsDoc == null) {\n      int parentType = parent.getType();\n      if (parentType == Token.NAME || parentType == Token.ASSIGN) {\n        jsDoc = parent.getJSDocInfo();\n        if (jsDoc == null && parentType == Token.NAME) {\n          Node gramps = parent.getParent();\n          if (gramps.getType() == Token.VAR) {\n            jsDoc = gramps.getJSDocInfo();\n          }\n        }\n      }\n    }\n    return jsDoc;\n  }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.7945210933685303,
+        "line_count": 194,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "total_tokens": 2483,
+        "prompt_tokens": 2350,
+        "candidate_tokens": 133,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly identifies that functions with @lends annotations should be excluded from the global 'this' check, but it fails to account for the fact that the @lends annotation is often attached to the object literal being assigned, not the function node itself. The current implementation of getFunctionJsDocInfo only looks at the function node, its parent, and its grandparent, which is insufficient to capture the JSDoc info for functions defined within an object literal that is being lent.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.163745164871216,
+        "issues": [
+          "The check fails to retrieve the @lends annotation for functions defined inside object literals because getFunctionJsDocInfo does not traverse up to the object literal node."
+        ],
+        "suggestions": [
+          "In getFunctionJsDocInfo(): update the logic to traverse up to the object literal node (Token.OBJECTLIT) if the function is a property of an object literal, as @lends annotations are typically applied to the object literal itself."
+        ],
+        "problematic_lines": [
+          92
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 4049,
+        "candidate_tokens": 236,
+        "total_tokens": 4285,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright 2007 Google Inc.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.jscomp.CheckLevel;\nimport com.google.javascript.jscomp.NodeTraversal.Callback;\nimport com.google.javascript.rhino.JSDocInfo;\nimport com.google.javascript.rhino.Node;\nimport com.google.javascript.rhino.Token;\n\n/**\n * Checks for certain uses of the {@code this} keyword that are considered\n * unsafe because they are likely to reference the global {@code this} object\n * unintentionally.\n *\n * <p>A use of {@code this} is considered unsafe if it's on the left side of an\n * assignment or a property access, and not inside one of the following:\n * <ol>\n * <li>a prototype method\n * <li>a function annotated with {@code @constructor}\n * <li>a function annotated with {@code @this}.\n * <li>a function where there's no logical place to put a\n *     {@code this} annotation.\n * </ol>\n *\n * <p>Note that this check does not track assignments of {@code this} to\n * variables or objects. The code\n * <pre>\n * function evil() {\n *   var a = this;\n *   a.useful = undefined;\n * }\n * </pre>\n * will not get flagged, even though it is semantically equivalent to\n * <pre>\n * function evil() {\n *   this.useful = undefined;\n * }\n * </pre>\n * which would get flagged.\n *\n */\nfinal class CheckGlobalThis implements Callback {\n\n  static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(\n      \"JSC_USED_GLOBAL_THIS\",\n      \"dangerous use of the global 'this' object\");\n\n  private final AbstractCompiler compiler;\n  private final CheckLevel level;\n\n  /**\n   * If {@code assignLhsChild != null}, then the node being traversed is\n   * a descendant of the first child of an ASSIGN node. assignLhsChild's\n   * parent is this ASSIGN node.\n   */\n  private Node assignLhsChild = null;\n\n  CheckGlobalThis(AbstractCompiler compiler, CheckLevel level) {\n    this.compiler = compiler;\n    this.level = level;\n  }\n\n  /**\n   * Since this pass reports errors only when a global {@code this} keyword\n   * is encountered, there is no reason to traverse non global contexts.\n   */\n  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {\n\n    if (n.getType() == Token.FUNCTION) {\n      // Don't traverse functions that are constructors or have the @this\n      // or @override annotation.\n      JSDocInfo jsDoc = getFunctionJsDocInfo(n);\n      if (jsDoc != null &&\n          (jsDoc.isConstructor() ||\n           jsDoc.isInterface() ||\n           jsDoc.hasThisType() ||\n           jsDoc.isOverride())) {\n        return false;\n      }\n\n      // Don't traverse functions unless they would normally\n      // be able to have a @this annotation associated with them. e.g.,\n      // var a = function() { }; // or\n      // function a() {} // or\n      // a.x = function() {}; // or\n      // var a = {x: function() {}};\n      int pType = parent.getType();\n      if (!(pType == Token.BLOCK ||\n            pType == Token.SCRIPT ||\n            pType == Token.NAME ||\n            pType == Token.ASSIGN ||\n\n            // object literal keys\n            pType == Token.STRING ||\n            pType == Token.NUMBER)) {\n        return false;\n      }\n\n      // Don't traverse functions that are getting lent to a prototype.\n    }\n\n    if (parent != null && parent.getType() == Token.ASSIGN) {\n      Node lhs = parent.getFirstChild();\n      Node rhs = lhs.getNext();\n\n      if (n == lhs) {\n        // Always traverse the left side of the assignment. To handle\n        // nested assignments properly (e.g., (a = this).property = c;),\n        // assignLhsChild should not be overridden.\n        if (assignLhsChild == null) {\n          assignLhsChild = lhs;\n        }\n      } else {\n        // Only traverse the right side if it's not an assignment to a prototype\n        // property or subproperty.\n        if (NodeUtil.isGet(lhs)) {\n          if (lhs.getType() == Token.GETPROP &&\n              lhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n          Node llhs = lhs.getFirstChild();\n          if (llhs.getType() == Token.GETPROP &&\n              llhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n        }\n      }\n    }\n\n    return true;\n  }\n\n  public void visit(NodeTraversal t, Node n, Node parent) {\n    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {\n      compiler.report(t.makeError(n, level, GLOBAL_THIS));\n    }\n    if (n == assignLhsChild) {\n      assignLhsChild = null;\n    }\n  }\n\n  private boolean shouldReportThis(Node n, Node parent) {\n    if (assignLhsChild != null) {\n      // Always report a THIS on the left side of an assign.\n      return true;\n    }\n\n    // Also report a THIS with a property access.\n    return parent != null && NodeUtil.isGet(parent);\n  }\n\n  /**\n   * Gets a function's JSDoc information, if it has any. Checks for a few\n   * patterns (ellipses show where JSDoc would be):\n   * <pre>\n   * ... function() {}\n   * ... x = function() {};\n   * var ... x = function() {};\n   * ... var x = function() {};\n   * </pre>\n   */\n  private JSDocInfo getFunctionJsDocInfo(Node n) {\n    JSDocInfo jsDoc = n.getJSDocInfo();\n    if (jsDoc != null) {\n      return jsDoc;\n    }\n\n    Node parent = n.getParent();\n    int parentType = parent.getType();\n    if (parentType == Token.NAME || parentType == Token.ASSIGN ||\n        parentType == Token.STRING || parentType == Token.NUMBER) {\n      jsDoc = parent.getJSDocInfo();\n      if (jsDoc == null && parentType == Token.NAME) {\n        Node gramps = parent.getParent();\n        if (gramps.getType() == Token.VAR) {\n          jsDoc = gramps.getJSDocInfo();\n        }\n      }\n    }\n    if (jsDoc == null) {\n      Node gramps = parent.getParent();\n      if (gramps != null && gramps.getType() == Token.OBJECTLIT) {\n        jsDoc = gramps.getJSDocInfo();\n      }\n    }\n    return jsDoc;\n  }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.112771987915039,
+        "line_count": 194,
+        "token_budget": 20000,
+        "temperature_used": 0.45,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 27,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "total_tokens": 5556,
+        "prompt_tokens": 5119,
+        "candidate_tokens": 437,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch improves the JSDoc lookup logic but fails to account for the specific requirements of the 'lends' annotation in the failing test case. The test 'testLendsAnnotation3' likely expects the JSDoc to be retrieved from the object literal or the 'lends' property, which is not fully covered by the current logic, causing the check to incorrectly flag a valid 'this' usage.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.5586910247802734,
+        "issues": [
+          "The updated getFunctionJsDocInfo method does not correctly resolve JSDoc information when a function is part of an object literal that uses a @lends annotation, leading to a false positive in CheckGlobalThis."
+        ],
+        "suggestions": [
+          "In getFunctionJsDocInfo(): change the logic to explicitly check for @lends annotations on the parent object literal or the associated JSDocInfo because the current implementation fails to recognize that a function inside a @lends block should be treated as having a valid 'this' context."
+        ],
+        "problematic_lines": [
+          198,
+          199,
+          200,
+          201
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 4437,
+        "candidate_tokens": 256,
+        "total_tokens": 4693,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright 2007 Google Inc.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.jscomp.CheckLevel;\nimport com.google.javascript.jscomp.NodeTraversal.Callback;\nimport com.google.javascript.rhino.JSDocInfo;\nimport com.google.javascript.rhino.Node;\nimport com.google.javascript.rhino.Token;\n\n/**\n * Checks for certain uses of the {@code this} keyword that are considered\n * unsafe because they are likely to reference the global {@code this} object\n * unintentionally.\n *\n * <p>A use of {@code this} is considered unsafe if it's on the left side of an\n * assignment or a property access, and not inside one of the following:\n * <ol>\n * <li>a prototype method\n * <li>a function annotated with {@code @constructor}\n * <li>a function annotated with {@code @this}.\n * <li>a function where there's no logical place to put a\n *     {@code this} annotation.\n * </ol>\n *\n * <p>Note that this check does not track assignments of {@code this} to\n * variables or objects. The code\n * <pre>\n * function evil() {\n *   var a = this;\n *   a.useful = undefined;\n * }\n * </pre>\n * will not get flagged, even though it is semantically equivalent to\n * <pre>\n * function evil() {\n *   this.useful = undefined;\n * }\n * </pre>\n * which would get flagged.\n *\n */\nfinal class CheckGlobalThis implements Callback {\n\n  static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(\n      \"JSC_USED_GLOBAL_THIS\",\n      \"dangerous use of the global 'this' object\");\n\n  private final AbstractCompiler compiler;\n  private final CheckLevel level;\n\n  /**\n   * If {@code assignLhsChild != null}, then the node being traversed is\n   * a descendant of the first child of an ASSIGN node. assignLhsChild's\n   * parent is this ASSIGN node.\n   */\n  private Node assignLhsChild = null;\n\n  CheckGlobalThis(AbstractCompiler compiler, CheckLevel level) {\n    this.compiler = compiler;\n    this.level = level;\n  }\n\n  /**\n   * Since this pass reports errors only when a global {@code this} keyword\n   * is encountered, there is no reason to traverse non global contexts.\n   */\n  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {\n\n    if (n.getType() == Token.FUNCTION) {\n      // Don't traverse functions that are constructors or have the @this\n      // or @override annotation.\n      JSDocInfo jsDoc = getFunctionJsDocInfo(n);\n      if (jsDoc != null &&\n          (jsDoc.isConstructor() ||\n           jsDoc.isInterface() ||\n           jsDoc.hasThisType() ||\n           jsDoc.isOverride() ||\n           jsDoc.getLendsName() != null)) {\n        return false;\n      }\n\n      // Don't traverse functions unless they would normally\n      // be able to have a @this annotation associated with them. e.g.,\n      // var a = function() { }; // or\n      // function a() {} // or\n      // a.x = function() {}; // or\n      // var a = {x: function() {}};\n      int pType = parent.getType();\n      if (!(pType == Token.BLOCK ||\n            pType == Token.SCRIPT ||\n            pType == Token.NAME ||\n            pType == Token.ASSIGN ||\n\n            // object literal keys\n            pType == Token.STRING ||\n            pType == Token.NUMBER)) {\n        return false;\n      }\n\n      // Don't traverse functions that are getting lent to a prototype.\n    }\n\n    if (parent != null && parent.getType() == Token.ASSIGN) {\n      Node lhs = parent.getFirstChild();\n      Node rhs = lhs.getNext();\n\n      if (n == lhs) {\n        // Always traverse the left side of the assignment. To handle\n        // nested assignments properly (e.g., (a = this).property = c;),\n        // assignLhsChild should not be overridden.\n        if (assignLhsChild == null) {\n          assignLhsChild = lhs;\n        }\n      } else {\n        // Only traverse the right side if it's not an assignment to a prototype\n        // property or subproperty.\n        if (NodeUtil.isGet(lhs)) {\n          if (lhs.getType() == Token.GETPROP &&\n              lhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n          Node llhs = lhs.getFirstChild();\n          if (llhs.getType() == Token.GETPROP &&\n              llhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n        }\n      }\n    }\n\n    return true;\n  }\n\n  public void visit(NodeTraversal t, Node n, Node parent) {\n    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {\n      compiler.report(t.makeError(n, level, GLOBAL_THIS));\n    }\n    if (n == assignLhsChild) {\n      assignLhsChild = null;\n    }\n  }\n\n  private boolean shouldReportThis(Node n, Node parent) {\n    if (assignLhsChild != null) {\n      // Always report a THIS on the left side of an assign.\n      return true;\n    }\n\n    // Also report a THIS with a property access.\n    return parent != null && NodeUtil.isGet(parent);\n  }\n\n  /**\n   * Gets a function's JSDoc information, if it has any. Checks for a few\n   * patterns (ellipses show where JSDoc would be):\n   * <pre>\n   * ... function() {}\n   * ... x = function() {};\n   * var ... x = function() {};\n   * ... var x = function() {};\n   * </pre>\n   */\n  private JSDocInfo getFunctionJsDocInfo(Node n) {\n    JSDocInfo jsDoc = n.getJSDocInfo();\n    Node parent = n.getParent();\n    if (jsDoc == null) {\n      int parentType = parent.getType();\n      if (parentType == Token.NAME || parentType == Token.ASSIGN) {\n        jsDoc = parent.getJSDocInfo();\n        if (jsDoc == null && parentType == Token.NAME) {\n          Node gramps = parent.getParent();\n          if (gramps.getType() == Token.VAR) {\n            jsDoc = gramps.getJSDocInfo();\n          }\n        }\n      }\n    }\n    return jsDoc;\n  }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.488241195678711,
+        "line_count": 194,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "total_tokens": 6112,
+        "prompt_tokens": 5979,
+        "candidate_tokens": 133,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly identifies that functions with @lends annotations should be excluded from the global 'this' check, but it fails to account for the fact that the @lends annotation is often attached to the object literal being assigned, not the function node itself. The current implementation of getFunctionJsDocInfo only looks at the function node, its parent (for assignments/names), and the grandparent (for var declarations), which is insufficient to capture the JSDoc associated with an object literal containing the function.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.71443510055542,
+        "issues": [
+          "The check fails to resolve the @lends annotation when the JSDoc is attached to an object literal that contains the function, rather than the function node or its immediate parent."
+        ],
+        "suggestions": [
+          "In shouldTraverse(): update the logic to check if the function is a property of an object literal that has a @lends annotation, as the current getFunctionJsDocInfo does not traverse up to the object literal node."
+        ],
+        "problematic_lines": [
+          92
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 4049,
+        "candidate_tokens": 240,
+        "total_tokens": 4289,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Copyright 2007 Google Inc.\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\npackage com.google.javascript.jscomp;\n\nimport com.google.javascript.jscomp.CheckLevel;\nimport com.google.javascript.jscomp.NodeTraversal.Callback;\nimport com.google.javascript.rhino.JSDocInfo;\nimport com.google.javascript.rhino.Node;\nimport com.google.javascript.rhino.Token;\n\n/**\n * Checks for certain uses of the {@code this} keyword that are considered\n * unsafe because they are likely to reference the global {@code this} object\n * unintentionally.\n *\n * <p>A use of {@code this} is considered unsafe if it's on the left side of an\n * assignment or a property access, and not inside one of the following:\n * <ol>\n * <li>a prototype method\n * <li>a function annotated with {@code @constructor}\n * <li>a function annotated with {@code @this}.\n * <li>a function where there's no logical place to put a\n *     {@code this} annotation.\n * </ol>\n *\n * <p>Note that this check does not track assignments of {@code this} to\n * variables or objects. The code\n * <pre>\n * function evil() {\n *   var a = this;\n *   a.useful = undefined;\n * }\n * </pre>\n * will not get flagged, even though it is semantically equivalent to\n * <pre>\n * function evil() {\n *   this.useful = undefined;\n * }\n * </pre>\n * which would get flagged.\n *\n */\nfinal class CheckGlobalThis implements Callback {\n\n  static final DiagnosticType GLOBAL_THIS = DiagnosticType.warning(\n      \"JSC_USED_GLOBAL_THIS\",\n      \"dangerous use of the global 'this' object\");\n\n  private final AbstractCompiler compiler;\n  private final CheckLevel level;\n\n  /**\n   * If {@code assignLhsChild != null}, then the node being traversed is\n   * a descendant of the first child of an ASSIGN node. assignLhsChild's\n   * parent is this ASSIGN node.\n   */\n  private Node assignLhsChild = null;\n\n  CheckGlobalThis(AbstractCompiler compiler, CheckLevel level) {\n    this.compiler = compiler;\n    this.level = level;\n  }\n\n  /**\n   * Since this pass reports errors only when a global {@code this} keyword\n   * is encountered, there is no reason to traverse non global contexts.\n   */\n  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {\n\n    if (n.getType() == Token.FUNCTION) {\n      // Don't traverse functions that are constructors or have the @this\n      // or @override annotation.\n      JSDocInfo jsDoc = getFunctionJsDocInfo(n);\n      if (jsDoc != null &&\n          (jsDoc.isConstructor() ||\n           jsDoc.isInterface() ||\n           jsDoc.hasThisType() ||\n           jsDoc.isOverride())) {\n        return false;\n      }\n\n      // Don't traverse functions unless they would normally\n      // be able to have a @this annotation associated with them. e.g.,\n      // var a = function() { }; // or\n      // function a() {} // or\n      // a.x = function() {}; // or\n      // var a = {x: function() {}};\n      int pType = parent.getType();\n      if (!(pType == Token.BLOCK ||\n            pType == Token.SCRIPT ||\n            pType == Token.NAME ||\n            pType == Token.ASSIGN ||\n\n            // object literal keys\n            pType == Token.STRING ||\n            pType == Token.NUMBER)) {\n        return false;\n      }\n\n      // Don't traverse functions that are getting lent to a prototype.\n    }\n\n    if (parent != null && parent.getType() == Token.ASSIGN) {\n      Node lhs = parent.getFirstChild();\n      Node rhs = lhs.getNext();\n\n      if (n == lhs) {\n        // Always traverse the left side of the assignment. To handle\n        // nested assignments properly (e.g., (a = this).property = c;),\n        // assignLhsChild should not be overridden.\n        if (assignLhsChild == null) {\n          assignLhsChild = lhs;\n        }\n      } else {\n        // Only traverse the right side if it's not an assignment to a prototype\n        // property or subproperty.\n        if (NodeUtil.isGet(lhs)) {\n          if (lhs.getType() == Token.GETPROP &&\n              lhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n          Node llhs = lhs.getFirstChild();\n          if (llhs.getType() == Token.GETPROP &&\n              llhs.getLastChild().getString().equals(\"prototype\")) {\n            return false;\n          }\n        }\n      }\n    }\n\n    return true;\n  }\n\n  public void visit(NodeTraversal t, Node n, Node parent) {\n    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {\n      compiler.report(t.makeError(n, level, GLOBAL_THIS));\n    }\n    if (n == assignLhsChild) {\n      assignLhsChild = null;\n    }\n  }\n\n  private boolean shouldReportThis(Node n, Node parent) {\n    if (assignLhsChild != null) {\n      // Always report a THIS on the left side of an assign.\n      return true;\n    }\n\n    // Also report a THIS with a property access.\n    return parent != null && NodeUtil.isGet(parent);\n  }\n\n  /**\n   * Gets a function's JSDoc information, if it has any. Checks for a few\n   * patterns (ellipses show where JSDoc would be):\n   * <pre>\n   * ... function() {}\n   * ... x = function() {};\n   * var ... x = function() {};\n   * ... var x = function() {};\n   * </pre>\n   */\n  private JSDocInfo getFunctionJsDocInfo(Node n) {\n    JSDocInfo jsDoc = n.getJSDocInfo();\n    if (jsDoc != null) return jsDoc;\n\n    Node parent = n.getParent();\n    if (parent == null) return null;\n\n    int parentType = parent.getType();\n    if (parentType == Token.NAME || parentType == Token.ASSIGN) {\n      jsDoc = parent.getJSDocInfo();\n      if (jsDoc == null && parentType == Token.NAME) {\n        Node gramps = parent.getParent();\n        if (gramps != null && gramps.getType() == Token.VAR) {\n          jsDoc = gramps.getJSDocInfo();\n        }\n      }\n    } else if (parentType == Token.STRING || parentType == Token.NUMBER) {\n      // Object literal property: {foo: function() {}}\n      Node gramps = parent.getParent();\n      if (gramps != null && gramps.getType() == Token.OBJECTLIT) {\n        jsDoc = gramps.getJSDocInfo();\n      }\n    }\n    return jsDoc;\n  }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.449090003967285,
+        "line_count": 194,
+        "token_budget": 20000,
+        "temperature_used": 0.75,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 26,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "total_tokens": 6572,
+        "prompt_tokens": 6119,
+        "candidate_tokens": 453,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly identifies that the original implementation of getFunctionJsDocInfo failed to look up JSDoc on object literals, which is necessary for correctly identifying functions that should not be flagged by CheckGlobalThis. However, the implementation incorrectly looks for JSDoc on the OBJECTLIT node itself (gramps.getJSDocInfo()) rather than the property node (parent.getJSDocInfo()) or the function node, failing to account for how JSDoc is attached to object literal properties in the AST.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 4.054946184158325,
+        "issues": [
+          "The logic for retrieving JSDoc from object literals incorrectly checks the parent's parent (the OBJECTLIT node) instead of checking the property node or the function node correctly.",
+          "The test failure 'testLendsAnnotation3' indicates that the logic is still not correctly identifying the JSDoc context for functions defined within object literals."
+        ],
+        "suggestions": [
+          "In getFunctionJsDocInfo(): change 'if (gramps != null && gramps.getType() == Token.OBJECTLIT) { jsDoc = gramps.getJSDocInfo(); }' to 'if (gramps != null && gramps.getType() == Token.OBJECTLIT) { jsDoc = parent.getJSDocInfo(); }' because JSDoc for an object literal property is attached to the property node (the STRING or NUMBER key), not the entire object literal container."
+        ],
+        "problematic_lines": [
+          205,
+          206
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 4479,
+        "candidate_tokens": 350,
+        "total_tokens": 4829,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}
