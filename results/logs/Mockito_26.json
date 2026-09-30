@@ -1,0 +1,235 @@
+{
+  "bug_id": "Mockito_26",
+  "status": "completed",
+  "verdict": "incorrect",
+  "ablation": "full",
+  "plausible": false,
+  "baseline_failing_count": 5,
+  "accepted": false,
+  "plausible_patch": "",
+  "plausible_iteration": -1,
+  "reason": "The patch correctly fixes a type inconsistency for the double primitive value, but it introduces a regression in a concurrent test. The static initialization of the Maps is not thread-safe. While the patch changes a value, the underlying issue in the failing test is likely related to the fact that these static maps are being accessed or modified in a way that is not thread-safe during class initialization or subsequent access, and the change in the static block might be triggering a different class loading or initialization sequence that exposes the race condition.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport java.util.HashMap;\nimport java.util.Map;\n\n@SuppressWarnings(\"unchecked\")\npublic class Primitives {\n    \n    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {\n        if(clazz.isPrimitive()) {\n            return clazz;\n        }\n        return (Class<T>) primitiveTypes.get(clazz);\n    }\n\n    public static boolean isPrimitiveWrapper(Class<?> type) {\n        return wrapperReturnValues.containsKey(type);\n    }\n\n    public static <T> T primitiveWrapperOf(Class<T> type) {\n        return (T) wrapperReturnValues.get(type);\n    }\n\n    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {\n        return (T) primitiveValues.get(primitiveType);\n    }\n    private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();\n    private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();\n    private static Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();\n    private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();\n\n    static {\n        primitiveTypes.put(Boolean.class, Boolean.TYPE);\n        primitiveTypes.put(Character.class, Character.TYPE);\n        primitiveTypes.put(Byte.class, Byte.TYPE);\n        primitiveTypes.put(Short.class, Short.TYPE);\n        primitiveTypes.put(Integer.class, Integer.TYPE);\n        primitiveTypes.put(Long.class, Long.TYPE);\n        primitiveTypes.put(Float.class, Float.TYPE);\n        primitiveTypes.put(Double.class, Double.TYPE);\n    }\n\n    static {\n        wrapperReturnValues.put(Boolean.class, false);\n        wrapperReturnValues.put(Character.class, '\\u0000');\n        wrapperReturnValues.put(Byte.class, (byte) 0);\n        wrapperReturnValues.put(Short.class, (short) 0);\n        wrapperReturnValues.put(Integer.class, 0);\n        wrapperReturnValues.put(Long.class, 0L);\n        wrapperReturnValues.put(Float.class, 0F);\n        wrapperReturnValues.put(Double.class, 0D);\n    }\n\n    static {\n        primitiveValues.put(boolean.class, false);\n        primitiveValues.put(char.class, '\\u0000');\n        primitiveValues.put(byte.class, (byte) 0);\n        primitiveValues.put(short.class, (short) 0);\n        primitiveValues.put(int.class, 0);\n        primitiveValues.put(long.class, 0L);\n        primitiveValues.put(float.class, 0F);\n        primitiveValues.put(double.class, 0D);\n    }\n}",
+  "per_file_patches": "{\"Primitives.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 479.34,
+  "total_tokens": 30111,
+  "estimated_usd": 0.0105,
+  "failing_tests": "org.mockito.internal.progress.HandyReturnValuesTest::should_default_values_for_primitive|org.mockito.internal.stubbing.defaultanswers.ReturnsEmptyValuesTest::should_return_primitive|org.mockito.internal.stubbing.defaultanswers.ReturnsMocksTest::should_return_the_usual_default_values_for_primitives|org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNullsTest::should_return_the_usual_default_values_for_primitives",
+  "modified_classes": "org.mockito.internal.util.Primitives",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport java.util.HashMap;\nimport java.util.Map;\n\n@SuppressWarnings(\"unchecked\")\npublic class Primitives {\n    \n    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {\n        if(clazz.isPrimitive()) {\n            return clazz;\n        }\n        return (Class<T>) primitiveTypes.get(clazz);\n    }\n\n    public static boolean isPrimitiveWrapper(Class<?> type) {\n        return wrapperReturnValues.containsKey(type);\n    }\n\n    public static <T> T primitiveWrapperOf(Class<T> type) {\n        return (T) wrapperReturnValues.get(type);\n    }\n\n    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {\n        return (T) primitiveValues.get(primitiveType);\n    }\n    private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();\n    private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();\n    private static Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();\n    private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();\n\n    static {\n        primitiveTypes.put(Boolean.class, Boolean.TYPE);\n        primitiveTypes.put(Character.class, Character.TYPE);\n        primitiveTypes.put(Byte.class, Byte.TYPE);\n        primitiveTypes.put(Short.class, Short.TYPE);\n        primitiveTypes.put(Integer.class, Integer.TYPE);\n        primitiveTypes.put(Long.class, Long.TYPE);\n        primitiveTypes.put(Float.class, Float.TYPE);\n        primitiveTypes.put(Double.class, Double.TYPE);\n    }\n\n    static {\n        wrapperReturnValues.put(Boolean.class, false);\n        wrapperReturnValues.put(Character.class, '\\u0000');\n        wrapperReturnValues.put(Byte.class, (byte) 0);\n        wrapperReturnValues.put(Short.class, (short) 0);\n        wrapperReturnValues.put(Integer.class, 0);\n        wrapperReturnValues.put(Long.class, 0L);\n        wrapperReturnValues.put(Float.class, 0F);\n        wrapperReturnValues.put(Double.class, 0D);\n    }\n\n    static {\n        primitiveValues.put(boolean.class, false);\n        primitiveValues.put(char.class, '\\u0000');\n        primitiveValues.put(byte.class, (byte) 0);\n        primitiveValues.put(short.class, (short) 0);\n        primitiveValues.put(int.class, 0);\n        primitiveValues.put(long.class, 0L);\n        primitiveValues.put(float.class, 0F);\n        primitiveValues.put(double.class, 0D);\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.026135206222534,
+        "line_count": 67,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 78,
+        "prompt_tokens": 2332,
+        "total_tokens": 2410,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch correctly fixes a type inconsistency for the double primitive value, but it introduces a regression in a multi-threaded test. The use of non-thread-safe HashMap instances for static initialization in a class that is accessed concurrently leads to race conditions during class loading or initialization, which is likely being triggered by the change in the static block execution order or timing.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 7.316079139709473,
+        "issues": [
+          "The use of HashMap for static shared state is not thread-safe.",
+          "The regression in ConcurrentModificationExceptionOnMultiThreadedVerificationTest suggests that the static initialization or access pattern is not safe for concurrent environments."
+        ],
+        "suggestions": [
+          "In Primitives(): change 'private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();' to 'private static final Map<Class<?>, Object> primitiveValues = new ConcurrentHashMap<Class<?>, Object>();' because the class is accessed by multiple threads and requires thread-safe collection access to prevent ConcurrentModificationException."
+        ],
+        "problematic_lines": [
+          26,
+          27,
+          28,
+          29
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2147,
+        "candidate_tokens": 262,
+        "total_tokens": 2409,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport java.util.HashMap;\nimport java.util.Map;\nimport java.util.concurrent.ConcurrentHashMap;\n\n@SuppressWarnings(\"unchecked\")\npublic class Primitives {\n    \n    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {\n        if(clazz.isPrimitive()) {\n            return clazz;\n        }\n        return (Class<T>) primitiveTypes.get(clazz);\n    }\n\n    public static boolean isPrimitiveWrapper(Class<?> type) {\n        return wrapperReturnValues.containsKey(type);\n    }\n\n    public static <T> T primitiveWrapperOf(Class<T> type) {\n        return (T) wrapperReturnValues.get(type);\n    }\n\n    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {\n        return (T) primitiveValues.get(primitiveType);\n    }\n    private static final Map<Class<?>, Class<?>> wrapperTypes = new ConcurrentHashMap<Class<?>, Class<?>>();\n    private static final Map<Class<?>, Class<?>> primitiveTypes = new ConcurrentHashMap<Class<?>, Class<?>>();\n    private static final Map<Class<?>, Object> wrapperReturnValues = new ConcurrentHashMap<Class<?>, Object>();\n    private static final Map<Class<?>, Object> primitiveValues = new ConcurrentHashMap<Class<?>, Object>();\n\n    static {\n        primitiveTypes.put(Boolean.class, Boolean.TYPE);\n        primitiveTypes.put(Character.class, Character.TYPE);\n        primitiveTypes.put(Byte.class, Byte.TYPE);\n        primitiveTypes.put(Short.class, Short.TYPE);\n        primitiveTypes.put(Integer.class, Integer.TYPE);\n        primitiveTypes.put(Long.class, Long.TYPE);\n        primitiveTypes.put(Float.class, Float.TYPE);\n        primitiveTypes.put(Double.class, Double.TYPE);\n    }\n\n    static {\n        wrapperReturnValues.put(Boolean.class, false);\n        wrapperReturnValues.put(Character.class, '\\u0000');\n        wrapperReturnValues.put(Byte.class, (byte) 0);\n        wrapperReturnValues.put(Short.class, (short) 0);\n        wrapperReturnValues.put(Integer.class, 0);\n        wrapperReturnValues.put(Long.class, 0L);\n        wrapperReturnValues.put(Float.class, 0F);\n        wrapperReturnValues.put(Double.class, 0D);\n    }\n\n    static {\n        primitiveValues.put(boolean.class, false);\n        primitiveValues.put(char.class, '\\u0000');\n        primitiveValues.put(byte.class, (byte) 0);\n        primitiveValues.put(short.class, (short) 0);\n        primitiveValues.put(int.class, 0);\n        primitiveValues.put(long.class, 0L);\n        primitiveValues.put(float.class, 0F);\n        primitiveValues.put(double.class, 0D);\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 23.292936086654663,
+        "line_count": 67,
+        "token_budget": 20000,
+        "temperature_used": 0.45,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 3,
+        "changed_lines": 11,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 463,
+        "prompt_tokens": 4742,
+        "total_tokens": 5205,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "While the patch correctly fixes a type mismatch for double values and introduces thread-safe collections, the use of ConcurrentHashMap is unnecessary for these static, immutable maps. More importantly, the regressions in CapturingArgumentsTest and HandyReturnValuesTest suggest that the change to ConcurrentHashMap or the initialization logic is interfering with how Mockito's internal state is accessed or expected to behave, possibly due to how these maps are initialized or accessed in a static context.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.738964080810547,
+        "issues": [
+          "ConcurrentHashMap is unnecessary for static, immutable maps initialized in static blocks.",
+          "The change to ConcurrentHashMap caused regressions in tests that likely rely on specific map behavior or initialization order.",
+          "The original code used HashMap, which is sufficient for read-only static maps."
+        ],
+        "suggestions": [
+          "In Primitives(): change 'private static final Map<Class<?>, Class<?>> wrapperTypes = new ConcurrentHashMap<Class<?>, Class<?>>();' to 'private static final Map<Class<?>, Class<?>> wrapperTypes = Collections.unmodifiableMap(new HashMap<Class<?>, Class<?>>());' because the maps are static and immutable after initialization, and using unmodifiable wrappers is safer and more performant than ConcurrentHashMap.",
+          "In Primitives(): change 'primitiveValues.put(double.class, 0D);' to 'primitiveValues.put(double.class, 0D);' (keep this fix) because it corrects the previous integer-to-double type mismatch."
+        ],
+        "problematic_lines": [
+          32,
+          33,
+          34,
+          35,
+          67
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2635,
+        "candidate_tokens": 364,
+        "total_tokens": 2999,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport java.util.HashMap;\nimport java.util.Map;\n\n@SuppressWarnings(\"unchecked\")\npublic class Primitives {\n    \n    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {\n        if(clazz.isPrimitive()) {\n            return clazz;\n        }\n        return (Class<T>) primitiveTypes.get(clazz);\n    }\n\n    public static boolean isPrimitiveWrapper(Class<?> type) {\n        return wrapperReturnValues.containsKey(type);\n    }\n\n    public static <T> T primitiveWrapperOf(Class<T> type) {\n        return (T) wrapperReturnValues.get(type);\n    }\n\n    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {\n        return (T) primitiveValues.get(primitiveType);\n    }\n    private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();\n    private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();\n    private static Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();\n    private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();\n\n    static {\n        primitiveTypes.put(Boolean.class, Boolean.TYPE);\n        primitiveTypes.put(Character.class, Character.TYPE);\n        primitiveTypes.put(Byte.class, Byte.TYPE);\n        primitiveTypes.put(Short.class, Short.TYPE);\n        primitiveTypes.put(Integer.class, Integer.TYPE);\n        primitiveTypes.put(Long.class, Long.TYPE);\n        primitiveTypes.put(Float.class, Float.TYPE);\n        primitiveTypes.put(Double.class, Double.TYPE);\n    }\n\n    static {\n        wrapperReturnValues.put(Boolean.class, false);\n        wrapperReturnValues.put(Character.class, '\\u0000');\n        wrapperReturnValues.put(Byte.class, (byte) 0);\n        wrapperReturnValues.put(Short.class, (short) 0);\n        wrapperReturnValues.put(Integer.class, 0);\n        wrapperReturnValues.put(Long.class, 0L);\n        wrapperReturnValues.put(Float.class, 0F);\n        wrapperReturnValues.put(Double.class, 0D);\n    }\n\n    static {\n        primitiveValues.put(boolean.class, false);\n        primitiveValues.put(char.class, '\\u0000');\n        primitiveValues.put(byte.class, (byte) 0);\n        primitiveValues.put(short.class, (short) 0);\n        primitiveValues.put(int.class, 0);\n        primitiveValues.put(long.class, 0L);\n        primitiveValues.put(float.class, 0F);\n        primitiveValues.put(double.class, 0D);\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.8451240062713623,
+        "line_count": 67,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 78,
+        "prompt_tokens": 6229,
+        "total_tokens": 6307,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch correctly fixes a type inconsistency for the double primitive value, but it introduces a regression in a concurrent test. The static initialization of the maps is not thread-safe. While the patch changes a value, the underlying issue in the failing test is likely related to the fact that these static maps are being accessed or modified in a way that is not safe for concurrent execution, or the change in type triggered a subtle behavior change in how the JVM handles the map initialization/access under load.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.812030792236328,
+        "issues": [
+          "The static maps are initialized using non-thread-safe HashMap instances.",
+          "The regression in ConcurrentModificationExceptionOnMultiThreadedVerificationTest suggests that the static initialization or access pattern is not thread-safe."
+        ],
+        "suggestions": [
+          "In Primitives(): change 'new HashMap<Class<?>, Object>()' to 'new ConcurrentHashMap<Class<?>, Object>()' for all static maps because the class is accessed concurrently and the current implementation is not thread-safe."
+        ],
+        "problematic_lines": [
+          30,
+          31,
+          32,
+          33
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2147,
+        "candidate_tokens": 261,
+        "total_tokens": 2408,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.util;\n\nimport java.util.HashMap;\nimport java.util.Map;\n\n@SuppressWarnings(\"unchecked\")\npublic class Primitives {\n    \n    public static <T> Class<T> primitiveTypeOf(Class<T> clazz) {\n        if(clazz.isPrimitive()) {\n            return clazz;\n        }\n        return (Class<T>) primitiveTypes.get(clazz);\n    }\n\n    public static boolean isPrimitiveWrapper(Class<?> type) {\n        return wrapperReturnValues.containsKey(type);\n    }\n\n    public static <T> T primitiveWrapperOf(Class<T> type) {\n        return (T) wrapperReturnValues.get(type);\n    }\n\n    public static <T> T primitiveValueOrNullFor(Class<T> primitiveType) {\n        return (T) primitiveValues.get(primitiveType);\n    }\n    private static Map<Class<?>, Class<?>> wrapperTypes = new HashMap<Class<?>, Class<?>>();\n    private static Map<Class<?>, Class<?>> primitiveTypes = new HashMap<Class<?>, Class<?>>();\n    private static Map<Class<?>, Object> wrapperReturnValues = new HashMap<Class<?>, Object>();\n    private static Map<Class<?>, Object> primitiveValues = new HashMap<Class<?>, Object>();\n\n    static {\n        primitiveTypes.put(Boolean.class, Boolean.TYPE);\n        primitiveTypes.put(Character.class, Character.TYPE);\n        primitiveTypes.put(Byte.class, Byte.TYPE);\n        primitiveTypes.put(Short.class, Short.TYPE);\n        primitiveTypes.put(Integer.class, Integer.TYPE);\n        primitiveTypes.put(Long.class, Long.TYPE);\n        primitiveTypes.put(Float.class, Float.TYPE);\n        primitiveTypes.put(Double.class, Double.TYPE);\n    }\n\n    static {\n        wrapperReturnValues.put(Boolean.class, false);\n        wrapperReturnValues.put(Character.class, '\\u0000');\n        wrapperReturnValues.put(Byte.class, (byte) 0);\n        wrapperReturnValues.put(Short.class, (short) 0);\n        wrapperReturnValues.put(Integer.class, 0);\n        wrapperReturnValues.put(Long.class, 0L);\n        wrapperReturnValues.put(Float.class, 0F);\n        wrapperReturnValues.put(Double.class, 0D);\n    }\n\n    static {\n        primitiveValues.put(boolean.class, false);\n        primitiveValues.put(char.class, '\\u0000');\n        primitiveValues.put(byte.class, (byte) 0);\n        primitiveValues.put(short.class, (short) 0);\n        primitiveValues.put(int.class, 0);\n        primitiveValues.put(long.class, 0L);\n        primitiveValues.put(float.class, 0F);\n        primitiveValues.put(double.class, 0D);\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 4.263721942901611,
+        "line_count": 67,
+        "token_budget": 20000,
+        "temperature_used": 0.75,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 78,
+        "prompt_tokens": 5909,
+        "total_tokens": 5987,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The patch correctly fixes a type inconsistency for the double primitive value, but it introduces a regression in a concurrent test. The static initialization of the Maps is not thread-safe. While the patch changes a value, the underlying issue in the failing test is likely related to the fact that these static maps are being accessed or modified in a way that is not thread-safe during class initialization or subsequent access, and the change in the static block might be triggering a different class loading or initialization sequence that exposes the race condition.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 15.530257940292358,
+        "issues": [
+          "The static maps are not thread-safe, leading to ConcurrentModificationException in multi-threaded environments.",
+          "The patch does not address the thread-safety of the static initialization or access patterns."
+        ],
+        "suggestions": [
+          "In Primitives(): change the static Map initializations to use ConcurrentHashMap or wrap them in a thread-safe initialization block because the current implementation is susceptible to race conditions during concurrent access in multi-threaded tests."
+        ],
+        "problematic_lines": [
+          66
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2147,
+        "candidate_tokens": 239,
+        "total_tokens": 2386,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

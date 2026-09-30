@@ -1,0 +1,223 @@
+{
+  "bug_id": "Mockito_28",
+  "status": "completed",
+  "verdict": "needs_revision",
+  "ablation": "full",
+  "plausible": false,
+  "baseline_failing_count": 1,
+  "accepted": false,
+  "plausible_patch": "",
+  "plausible_iteration": -1,
+  "reason": "The patch attempts to fix the sorting logic by adding strict inequality checks to the isAssignableFrom logic, but this change makes the comparator inconsistent. When field1Type and field2Type are the same, the original code returned 0, but the new logic also returns 0. However, by adding the !field2Type.isAssignableFrom(field1Type) check, the comparator may fail to establish a total ordering when dealing with complex class hierarchies or identical types, potentially leading to non-deterministic sorting behavior in Arrays.sort() which requires a consistent transitive comparison.",
+  "iterations": 4,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.configuration.injection.FinalMockCandidateFilter;\nimport org.mockito.internal.configuration.injection.MockCandidateFilter;\nimport org.mockito.internal.configuration.injection.NameBasedCandidateFilter;\nimport org.mockito.internal.configuration.injection.TypeBasedCandidateFilter;\nimport org.mockito.internal.util.reflection.FieldInitializer;\n\nimport java.lang.reflect.Field;\nimport java.util.Arrays;\nimport java.util.Comparator;\nimport java.util.HashSet;\nimport java.util.Set;\n\n/**\n * Initializes mock/spies dependencies for fields annotated with &#064;InjectMocks\n * <p/>\n * See {@link org.mockito.MockitoAnnotations}\n */\npublic class DefaultInjectionEngine {\n\n    private final MockCandidateFilter mockCandidateFilter = new TypeBasedCandidateFilter(new NameBasedCandidateFilter(new FinalMockCandidateFilter()));\n    private Comparator<Field> supertypesLast = new Comparator<Field>() {\n        public int compare(Field field1, Field field2) {\n            Class<?> field1Type = field1.getType();\n            Class<?> field2Type = field2.getType();\n\n            if(field1Type.isAssignableFrom(field2Type) && !field2Type.isAssignableFrom(field1Type)) {\n                return 1;\n            }\n            if(field2Type.isAssignableFrom(field1Type) && !field1Type.isAssignableFrom(field2Type)) {\n                return -1;\n            }\n            return 0;\n        }\n    };\n\n    /**\n     * Inject mocks in injectMocksFields, and initialize them if needed.\n     *\n     * <p>\n     * <u>Algorithm :<br></u>\n     * for each field annotated by @InjectMocks\n     *   <ul>\n     *   <li>copy mocks set\n     *   <li>initialize field annotated by @InjectMocks\n     *   <li>for each field in @InjectMocks type ordered from sub-type to super-type\n     *     <ul>\n     *     <li>find mock candidate by type\n     *     <li>if more than *one* candidate find mock candidate on name\n     *     <li>if one mock candidate then\n     *       <ul>\n     *       <li>set mock by property setter if possible\n     *       <li>else set mock by field injection\n     *       </ul>\n     *     <li>remove mock from mocks copy (mocks are just injected once)\n     *     <li>else don't fail, user will then provide dependencies\n     *     </ul>\n     *   </ul>\n     * </p>\n     *\n     * @param injectMocksFields Fields annotated by @InjectMocks\n     * @param mocks Mocks\n     * @param testClassInstance The test class instance\n     */\n    public void injectMocksOnFields(Set<Field> injectMocksFields, Set<Object> mocks, Object testClassInstance) {\n        for (Field field : injectMocksFields) {\n            Set<Object> mocksToBeInjected = new HashSet<Object>(mocks);\n            Object injectMocksFieldInstance = null;\n            try {\n                injectMocksFieldInstance = new FieldInitializer(testClassInstance, field).initialize();\n            } catch (MockitoException e) {\n                new Reporter().cannotInitializeForInjectMocksAnnotation(field.getName(), e);\n            }\n\n            // for each field in the class hierarchy\n            Class<?> fieldClass = injectMocksFieldInstance.getClass();\n            while (fieldClass != Object.class) {\n                injectMockCandidate(fieldClass, mocksToBeInjected, injectMocksFieldInstance);\n                fieldClass = fieldClass.getSuperclass();\n            }\n        }\n    }\n\n    private void injectMockCandidate(Class<?> awaitingInjectionClazz, Set<Object> mocks, Object fieldInstance) {\n        for(Field field : orderedInstanceFieldsFrom(awaitingInjectionClazz)) {\n            mockCandidateFilter.filterCandidate(mocks, field, fieldInstance).thenInject();\n        }\n    }\n\n    private Field[] orderedInstanceFieldsFrom(Class<?> awaitingInjectionClazz) {\n        Field[] declaredFields = awaitingInjectionClazz.getDeclaredFields();\n        Arrays.sort(declaredFields, supertypesLast);\n        return declaredFields;\n    }\n\n}\n",
+  "per_file_patches": "{\"DefaultInjectionEngine.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 258.41,
+  "total_tokens": 26571,
+  "estimated_usd": 0.0093,
+  "failing_tests": "org.mockitousage.bugs.InjectionByTypeShouldFirstLookForExactTypeThenAncestorTest::mock_should_be_injected_once_and_in_the_best_matching_type",
+  "modified_classes": "org.mockito.internal.configuration.DefaultInjectionEngine",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.configuration.injection.FinalMockCandidateFilter;\nimport org.mockito.internal.configuration.injection.MockCandidateFilter;\nimport org.mockito.internal.configuration.injection.NameBasedCandidateFilter;\nimport org.mockito.internal.configuration.injection.TypeBasedCandidateFilter;\nimport org.mockito.internal.util.reflection.FieldInitializer;\n\nimport java.lang.reflect.Field;\nimport java.util.Arrays;\nimport java.util.Comparator;\nimport java.util.HashSet;\nimport java.util.Set;\n\n/**\n * Initializes mock/spies dependencies for fields annotated with &#064;InjectMocks\n * <p/>\n * See {@link org.mockito.MockitoAnnotations}\n */\npublic class DefaultInjectionEngine {\n\n    private final MockCandidateFilter mockCandidateFilter = new TypeBasedCandidateFilter(new NameBasedCandidateFilter(new FinalMockCandidateFilter()));\n    private Comparator<Field> supertypesLast = new Comparator<Field>() {\n        public int compare(Field field1, Field field2) {\n            Class<?> field1Type = field1.getType();\n            Class<?> field2Type = field2.getType();\n\n            if(field1Type.isAssignableFrom(field2Type)) {\n                return 1;\n            }\n            if(field2Type.isAssignableFrom(field1Type)) {\n                return -1;\n            }\n            return field1.getName().compareTo(field2.getName());\n        }\n    };\n\n    /**\n     * Inject mocks in injectMocksFields, and initialize them if needed.\n     *\n     * <p>\n     * <u>Algorithm :<br></u>\n     * for each field annotated by @InjectMocks\n     *   <ul>\n     *   <li>copy mocks set\n     *   <li>initialize field annotated by @InjectMocks\n     *   <li>for each field in @InjectMocks type ordered from sub-type to super-type\n     *     <ul>\n     *     <li>find mock candidate by type\n     *     <li>if more than *one* candidate find mock candidate on name\n     *     <li>if one mock candidate then\n     *       <ul>\n     *       <li>set mock by property setter if possible\n     *       <li>else set mock by field injection\n     *       </ul>\n     *     <li>remove mock from mocks copy (mocks are just injected once)\n     *     <li>else don't fail, user will then provide dependencies\n     *     </ul>\n     *   </ul>\n     * </p>\n     *\n     * @param injectMocksFields Fields annotated by @InjectMocks\n     * @param mocks Mocks\n     * @param testClassInstance The test class instance\n     */\n    public void injectMocksOnFields(Set<Field> injectMocksFields, Set<Object> mocks, Object testClassInstance) {\n        for (Field field : injectMocksFields) {\n            Set<Object> mocksToBeInjected = new HashSet<Object>(mocks);\n            Object injectMocksFieldInstance = null;\n            try {\n                injectMocksFieldInstance = new FieldInitializer(testClassInstance, field).initialize();\n            } catch (MockitoException e) {\n                new Reporter().cannotInitializeForInjectMocksAnnotation(field.getName(), e);\n            }\n\n            // for each field in the class hierarchy\n            Class<?> fieldClass = injectMocksFieldInstance.getClass();\n            while (fieldClass != Object.class) {\n                injectMockCandidate(fieldClass, mocksToBeInjected, injectMocksFieldInstance);\n                fieldClass = fieldClass.getSuperclass();\n            }\n        }\n    }\n\n    private void injectMockCandidate(Class<?> awaitingInjectionClazz, Set<Object> mocks, Object fieldInstance) {\n        for(Field field : orderedInstanceFieldsFrom(awaitingInjectionClazz)) {\n            mockCandidateFilter.filterCandidate(mocks, field, fieldInstance).thenInject();\n        }\n    }\n\n    private Field[] orderedInstanceFieldsFrom(Class<?> awaitingInjectionClazz) {\n        Field[] declaredFields = awaitingInjectionClazz.getDeclaredFields();\n        Arrays.sort(declaredFields, supertypesLast);\n        return declaredFields;\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 12.818698167800903,
+        "line_count": 103,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 126,
+        "prompt_tokens": 1712,
+        "total_tokens": 1838,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch introduces a deterministic ordering for fields of the same type by using their names, which is generally good practice. However, the test failure indicates that this change alters the injection order in a way that breaks the specific expectation of the 'mock_should_be_injected_once_and_in_the_best_matching_type' test. The test likely relies on a specific, non-deterministic, or different field ordering to satisfy its dependency injection requirements.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.377973794937134,
+        "issues": [
+          "The change to the Comparator introduces a lexicographical sort for fields of the same type, which conflicts with the existing test expectations for injection order."
+        ],
+        "suggestions": [
+          "In compare(): change 'return field1.getName().compareTo(field2.getName());' to 'return 0;' because the test expects the original non-deterministic or specific order to maintain compatibility with existing injection logic."
+        ],
+        "problematic_lines": [
+          37
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2623,
+        "candidate_tokens": 224,
+        "total_tokens": 2847,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.configuration.injection.FinalMockCandidateFilter;\nimport org.mockito.internal.configuration.injection.MockCandidateFilter;\nimport org.mockito.internal.configuration.injection.NameBasedCandidateFilter;\nimport org.mockito.internal.configuration.injection.TypeBasedCandidateFilter;\nimport org.mockito.internal.util.reflection.FieldInitializer;\n\nimport java.lang.reflect.Field;\nimport java.util.Arrays;\nimport java.util.Comparator;\nimport java.util.HashSet;\nimport java.util.Set;\n\n/**\n * Initializes mock/spies dependencies for fields annotated with &#064;InjectMocks\n * <p/>\n * See {@link org.mockito.MockitoAnnotations}\n */\npublic class DefaultInjectionEngine {\n\n    private final MockCandidateFilter mockCandidateFilter = new TypeBasedCandidateFilter(new NameBasedCandidateFilter(new FinalMockCandidateFilter()));\n    private Comparator<Field> supertypesLast = new Comparator<Field>() {\n        public int compare(Field field1, Field field2) {\n            Class<?> field1Type = field1.getType();\n            Class<?> field2Type = field2.getType();\n\n            if(field1Type.isAssignableFrom(field2Type) && !field2Type.isAssignableFrom(field1Type)) {\n                return 1;\n            }\n            if(field2Type.isAssignableFrom(field1Type) && !field1Type.isAssignableFrom(field2Type)) {\n                return -1;\n            }\n            return 0;\n        }\n    };\n\n    /**\n     * Inject mocks in injectMocksFields, and initialize them if needed.\n     *\n     * <p>\n     * <u>Algorithm :<br></u>\n     * for each field annotated by @InjectMocks\n     *   <ul>\n     *   <li>copy mocks set\n     *   <li>initialize field annotated by @InjectMocks\n     *   <li>for each field in @InjectMocks type ordered from sub-type to super-type\n     *     <ul>\n     *     <li>find mock candidate by type\n     *     <li>if more than *one* candidate find mock candidate on name\n     *     <li>if one mock candidate then\n     *       <ul>\n     *       <li>set mock by property setter if possible\n     *       <li>else set mock by field injection\n     *       </ul>\n     *     <li>remove mock from mocks copy (mocks are just injected once)\n     *     <li>else don't fail, user will then provide dependencies\n     *     </ul>\n     *   </ul>\n     * </p>\n     *\n     * @param injectMocksFields Fields annotated by @InjectMocks\n     * @param mocks Mocks\n     * @param testClassInstance The test class instance\n     */\n    public void injectMocksOnFields(Set<Field> injectMocksFields, Set<Object> mocks, Object testClassInstance) {\n        for (Field field : injectMocksFields) {\n            Set<Object> mocksToBeInjected = new HashSet<Object>(mocks);\n            Object injectMocksFieldInstance = null;\n            try {\n                injectMocksFieldInstance = new FieldInitializer(testClassInstance, field).initialize();\n            } catch (MockitoException e) {\n                new Reporter().cannotInitializeForInjectMocksAnnotation(field.getName(), e);\n            }\n\n            // for each field in the class hierarchy\n            Class<?> fieldClass = injectMocksFieldInstance.getClass();\n            while (fieldClass != Object.class) {\n                injectMockCandidate(fieldClass, mocksToBeInjected, injectMocksFieldInstance);\n                fieldClass = fieldClass.getSuperclass();\n            }\n        }\n    }\n\n    private void injectMockCandidate(Class<?> awaitingInjectionClazz, Set<Object> mocks, Object fieldInstance) {\n        for(Field field : orderedInstanceFieldsFrom(awaitingInjectionClazz)) {\n            mockCandidateFilter.filterCandidate(mocks, field, fieldInstance).thenInject();\n        }\n    }\n\n    private Field[] orderedInstanceFieldsFrom(Class<?> awaitingInjectionClazz) {\n        Field[] declaredFields = awaitingInjectionClazz.getDeclaredFields();\n        Arrays.sort(declaredFields, supertypesLast);\n        return declaredFields;\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.2679800987243652,
+        "line_count": 103,
+        "token_budget": 20000,
+        "temperature_used": 0.25,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 4,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 141,
+        "prompt_tokens": 3626,
+        "total_tokens": 3767,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to fix a non-deterministic sorting issue in the comparator by adding mutual exclusivity checks, but it fails to address the underlying requirement of the failing test. The test 'mock_should_be_injected_once_and_in_the_best_matching_type' expects a specific injection order that is likely disrupted by the current sorting logic, which treats classes that are not assignable to each other as equal (returning 0). When the comparator returns 0, the sort order is unstable, leading to inconsistent injection behavior.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.4146721363067627,
+        "issues": [
+          "The comparator returns 0 for unrelated types, which makes the sort order unstable and dependent on the JVM's implementation of Arrays.sort.",
+          "The logic does not explicitly handle the case where types are identical, which is a common scenario in field injection."
+        ],
+        "suggestions": [
+          "In supertypesLast.compare(): change the return 0 to return field1.getName().compareTo(field2.getName()) because providing a consistent tie-breaker for unrelated types ensures deterministic behavior across different JVMs."
+        ],
+        "problematic_lines": [
+          39
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2725,
+        "candidate_tokens": 268,
+        "total_tokens": 2993,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.configuration.injection.FinalMockCandidateFilter;\nimport org.mockito.internal.configuration.injection.MockCandidateFilter;\nimport org.mockito.internal.configuration.injection.NameBasedCandidateFilter;\nimport org.mockito.internal.configuration.injection.TypeBasedCandidateFilter;\nimport org.mockito.internal.util.reflection.FieldInitializer;\n\nimport java.lang.reflect.Field;\nimport java.util.Arrays;\nimport java.util.Comparator;\nimport java.util.HashSet;\nimport java.util.Set;\n\n/**\n * Initializes mock/spies dependencies for fields annotated with &#064;InjectMocks\n * <p/>\n * See {@link org.mockito.MockitoAnnotations}\n */\npublic class DefaultInjectionEngine {\n\n    private final MockCandidateFilter mockCandidateFilter = new TypeBasedCandidateFilter(new NameBasedCandidateFilter(new FinalMockCandidateFilter()));\n    private Comparator<Field> supertypesLast = new Comparator<Field>() {\n        public int compare(Field field1, Field field2) {\n            Class<?> field1Type = field1.getType();\n            Class<?> field2Type = field2.getType();\n\n            if(field1Type.isAssignableFrom(field2Type) && !field2Type.isAssignableFrom(field1Type)) {\n                return 1;\n            }\n            if(field2Type.isAssignableFrom(field1Type) && !field1Type.isAssignableFrom(field2Type)) {\n                return -1;\n            }\n            return field1.getName().compareTo(field2.getName());\n        }\n    };\n\n    /**\n     * Inject mocks in injectMocksFields, and initialize them if needed.\n     *\n     * <p>\n     * <u>Algorithm :<br></u>\n     * for each field annotated by @InjectMocks\n     *   <ul>\n     *   <li>copy mocks set\n     *   <li>initialize field annotated by @InjectMocks\n     *   <li>for each field in @InjectMocks type ordered from sub-type to super-type\n     *     <ul>\n     *     <li>find mock candidate by type\n     *     <li>if more than *one* candidate find mock candidate on name\n     *     <li>if one mock candidate then\n     *       <ul>\n     *       <li>set mock by property setter if possible\n     *       <li>else set mock by field injection\n     *       </ul>\n     *     <li>remove mock from mocks copy (mocks are just injected once)\n     *     <li>else don't fail, user will then provide dependencies\n     *     </ul>\n     *   </ul>\n     * </p>\n     *\n     * @param injectMocksFields Fields annotated by @InjectMocks\n     * @param mocks Mocks\n     * @param testClassInstance The test class instance\n     */\n    public void injectMocksOnFields(Set<Field> injectMocksFields, Set<Object> mocks, Object testClassInstance) {\n        for (Field field : injectMocksFields) {\n            Set<Object> mocksToBeInjected = new HashSet<Object>(mocks);\n            Object injectMocksFieldInstance = null;\n            try {\n                injectMocksFieldInstance = new FieldInitializer(testClassInstance, field).initialize();\n            } catch (MockitoException e) {\n                new Reporter().cannotInitializeForInjectMocksAnnotation(field.getName(), e);\n            }\n\n            // for each field in the class hierarchy\n            Class<?> fieldClass = injectMocksFieldInstance.getClass();\n            while (fieldClass != Object.class) {\n                injectMockCandidate(fieldClass, mocksToBeInjected, injectMocksFieldInstance);\n                fieldClass = fieldClass.getSuperclass();\n            }\n        }\n    }\n\n    private void injectMockCandidate(Class<?> awaitingInjectionClazz, Set<Object> mocks, Object fieldInstance) {\n        for(Field field : orderedInstanceFieldsFrom(awaitingInjectionClazz)) {\n            mockCandidateFilter.filterCandidate(mocks, field, fieldInstance).thenInject();\n        }\n    }\n\n    private Field[] orderedInstanceFieldsFrom(Class<?> awaitingInjectionClazz) {\n        Field[] declaredFields = awaitingInjectionClazz.getDeclaredFields();\n        Arrays.sort(declaredFields, supertypesLast);\n        return declaredFields;\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.5314099788665771,
+        "line_count": 103,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 6,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 150,
+        "prompt_tokens": 4114,
+        "total_tokens": 4264,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to improve the field ordering logic by adding a deterministic tie-breaker (field name) and refining the type comparison, but it fails the specific test case 'mock_should_be_injected_once_and_in_the_best_matching_type'. This suggests that the new sorting logic interferes with the expected injection order, likely because the original implementation relied on a stable but non-deterministic sort or a specific order that the test depends on for 'best matching' resolution.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 43.7975492477417,
+        "issues": [
+          "The introduction of field name comparison as a tie-breaker changes the order of fields with identical types or unrelated types, which breaks the dependency resolution order expected by the failing test.",
+          "The logic for 'best matching' type injection is sensitive to the order in which fields are processed; by forcing a name-based sort, the engine may be attempting to inject into a field that is not the most specific match first."
+        ],
+        "suggestions": [
+          "In supertypesLast(): change 'return field1.getName().compareTo(field2.getName());' to 'return 0;' because the test requires the original non-deterministic or specific order for fields that are not assignable to each other, and adding a name-based tie-breaker alters the injection sequence."
+        ],
+        "problematic_lines": [
+          39
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2759,
+        "candidate_tokens": 306,
+        "total_tokens": 3065,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.configuration;\n\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.exceptions.base.MockitoException;\nimport org.mockito.internal.configuration.injection.FinalMockCandidateFilter;\nimport org.mockito.internal.configuration.injection.MockCandidateFilter;\nimport org.mockito.internal.configuration.injection.NameBasedCandidateFilter;\nimport org.mockito.internal.configuration.injection.TypeBasedCandidateFilter;\nimport org.mockito.internal.util.reflection.FieldInitializer;\n\nimport java.lang.reflect.Field;\nimport java.util.Arrays;\nimport java.util.Comparator;\nimport java.util.HashSet;\nimport java.util.Set;\n\n/**\n * Initializes mock/spies dependencies for fields annotated with &#064;InjectMocks\n * <p/>\n * See {@link org.mockito.MockitoAnnotations}\n */\npublic class DefaultInjectionEngine {\n\n    private final MockCandidateFilter mockCandidateFilter = new TypeBasedCandidateFilter(new NameBasedCandidateFilter(new FinalMockCandidateFilter()));\n    private Comparator<Field> supertypesLast = new Comparator<Field>() {\n        public int compare(Field field1, Field field2) {\n            Class<?> field1Type = field1.getType();\n            Class<?> field2Type = field2.getType();\n\n            if(field1Type.isAssignableFrom(field2Type) && !field2Type.isAssignableFrom(field1Type)) {\n                return 1;\n            }\n            if(field2Type.isAssignableFrom(field1Type) && !field1Type.isAssignableFrom(field2Type)) {\n                return -1;\n            }\n            return 0;\n        }\n    };\n\n    /**\n     * Inject mocks in injectMocksFields, and initialize them if needed.\n     *\n     * <p>\n     * <u>Algorithm :<br></u>\n     * for each field annotated by @InjectMocks\n     *   <ul>\n     *   <li>copy mocks set\n     *   <li>initialize field annotated by @InjectMocks\n     *   <li>for each field in @InjectMocks type ordered from sub-type to super-type\n     *     <ul>\n     *     <li>find mock candidate by type\n     *     <li>if more than *one* candidate find mock candidate on name\n     *     <li>if one mock candidate then\n     *       <ul>\n     *       <li>set mock by property setter if possible\n     *       <li>else set mock by field injection\n     *       </ul>\n     *     <li>remove mock from mocks copy (mocks are just injected once)\n     *     <li>else don't fail, user will then provide dependencies\n     *     </ul>\n     *   </ul>\n     * </p>\n     *\n     * @param injectMocksFields Fields annotated by @InjectMocks\n     * @param mocks Mocks\n     * @param testClassInstance The test class instance\n     */\n    public void injectMocksOnFields(Set<Field> injectMocksFields, Set<Object> mocks, Object testClassInstance) {\n        for (Field field : injectMocksFields) {\n            Set<Object> mocksToBeInjected = new HashSet<Object>(mocks);\n            Object injectMocksFieldInstance = null;\n            try {\n                injectMocksFieldInstance = new FieldInitializer(testClassInstance, field).initialize();\n            } catch (MockitoException e) {\n                new Reporter().cannotInitializeForInjectMocksAnnotation(field.getName(), e);\n            }\n\n            // for each field in the class hierarchy\n            Class<?> fieldClass = injectMocksFieldInstance.getClass();\n            while (fieldClass != Object.class) {\n                injectMockCandidate(fieldClass, mocksToBeInjected, injectMocksFieldInstance);\n                fieldClass = fieldClass.getSuperclass();\n            }\n        }\n    }\n\n    private void injectMockCandidate(Class<?> awaitingInjectionClazz, Set<Object> mocks, Object fieldInstance) {\n        for(Field field : orderedInstanceFieldsFrom(awaitingInjectionClazz)) {\n            mockCandidateFilter.filterCandidate(mocks, field, fieldInstance).thenInject();\n        }\n    }\n\n    private Field[] orderedInstanceFieldsFrom(Class<?> awaitingInjectionClazz) {\n        Field[] declaredFields = awaitingInjectionClazz.getDeclaredFields();\n        Arrays.sort(declaredFields, supertypesLast);\n        return declaredFields;\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.1144280433654785,
+        "line_count": 103,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 4,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 141,
+        "prompt_tokens": 4635,
+        "total_tokens": 4776,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 3,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch attempts to fix the sorting logic by adding strict inequality checks to the isAssignableFrom logic, but this change makes the comparator inconsistent. When field1Type and field2Type are the same, the original code returned 0, but the new logic also returns 0. However, by adding the !field2Type.isAssignableFrom(field1Type) check, the comparator may fail to establish a total ordering when dealing with complex class hierarchies or identical types, potentially leading to non-deterministic sorting behavior in Arrays.sort() which requires a consistent transitive comparison.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.4813601970672607,
+        "issues": [
+          "The comparator logic is now potentially non-transitive when comparing identical types or types that share a complex hierarchy, which violates the contract of Comparator and can cause IllegalArgumentException in some JVM implementations of Arrays.sort().",
+          "The patch does not address the underlying requirement of the failing test, which expects a specific injection order that the current sorting logic fails to provide."
+        ],
+        "suggestions": [
+          "In supertypesLast(): change the comparator logic to explicitly handle equality of types first, then use a more robust strategy for ordering fields based on class hierarchy depth or specific Mockito injection requirements instead of relying solely on isAssignableFrom."
+        ],
+        "problematic_lines": [
+          34,
+          37
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2725,
+        "candidate_tokens": 296,
+        "total_tokens": 3021,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

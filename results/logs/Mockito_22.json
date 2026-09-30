@@ -1,0 +1,168 @@
+{
+  "bug_id": "Mockito_22",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 2,
+  "accepted": true,
+  "plausible_patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.matchers;\n\nimport java.lang.reflect.Array;\n\n//stolen from hamcrest because I didn't want to have more dependency than Matcher class \npublic class Equality {\n\n    public static boolean areEqual(Object o1, Object o2) {\n        if (o1 == null || o2 == null) {\n            return o1 == null && o2 == null;\n        } else if (isArray(o1)) {\n            return isArray(o2) && areArraysEqual(o1, o2);\n        } else {\n            try {\n                return o1.equals(o2);\n            } catch (RuntimeException e) {\n                return o1 == o2;\n            }\n        }\n    }\n\n    static boolean areArraysEqual(Object o1, Object o2) {\n        return areArrayLengthsEqual(o1, o2)\n                && areArrayElementsEqual(o1, o2);\n    }\n\n    static boolean areArrayLengthsEqual(Object o1, Object o2) {\n        return Array.getLength(o1) == Array.getLength(o2);\n    }\n\n    static boolean areArrayElementsEqual(Object o1, Object o2) {\n        for (int i = 0; i < Array.getLength(o1); i++) {\n            if (!areEqual(Array.get(o1, i), Array.get(o2, i))) return false;\n        }\n        return true;\n    }\n\n    static boolean isArray(Object o) {\n        return o.getClass().isArray();\n    }\n}",
+  "plausible_iteration": 2,
+  "reason": "The patch introduces a safety mechanism to handle objects that throw RuntimeExceptions during their equals() implementation. This is a robust defensive programming practice for a library like Mockito, which often interacts with user-provided objects that may have poorly implemented or unstable equals methods. The change ensures that Mockito does not crash when encountering such objects, falling back to reference equality as a safe default.",
+  "iterations": 3,
+  "has_patch": true,
+  "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.matchers;\n\nimport java.lang.reflect.Array;\n\n//stolen from hamcrest because I didn't want to have more dependency than Matcher class \npublic class Equality {\n\n    public static boolean areEqual(Object o1, Object o2) {\n        if (o1 == null || o2 == null) {\n            return o1 == null && o2 == null;\n        } else if (isArray(o1)) {\n            return isArray(o2) && areArraysEqual(o1, o2);\n        } else {\n            try {\n                return o1.equals(o2);\n            } catch (RuntimeException e) {\n                return o1 == o2;\n            }\n        }\n    }\n\n    static boolean areArraysEqual(Object o1, Object o2) {\n        return areArrayLengthsEqual(o1, o2)\n                && areArrayElementsEqual(o1, o2);\n    }\n\n    static boolean areArrayLengthsEqual(Object o1, Object o2) {\n        return Array.getLength(o1) == Array.getLength(o2);\n    }\n\n    static boolean areArrayElementsEqual(Object o1, Object o2) {\n        for (int i = 0; i < Array.getLength(o1); i++) {\n            if (!areEqual(Array.get(o1, i), Array.get(o2, i))) return false;\n        }\n        return true;\n    }\n\n    static boolean isArray(Object o) {\n        return o.getClass().isArray();\n    }\n}",
+  "per_file_patches": "{\"Equality.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 288.78,
+  "total_tokens": 13090,
+  "estimated_usd": 0.0046,
+  "failing_tests": "org.mockito.internal.matchers.EqualityTest::shouldKnowIfObjectsAreEqual",
+  "modified_classes": "org.mockito.internal.matchers.Equality",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.matchers;\n\nimport java.lang.reflect.Array;\n\n//stolen from hamcrest because I didn't want to have more dependency than Matcher class \npublic class Equality {\n\n    public static boolean areEqual(Object o1, Object o2) {\n        if (o1 == null || o2 == null) {\n            return o1 == null && o2 == null;\n        }\n        if (o1 == o2) {\n            return true;\n        }\n        if (isArray(o1)) {\n            return isArray(o2) && areArraysEqual(o1, o2);\n        } else {\n            return o1.equals(o2);\n        }\n    }\n\n    static boolean areArraysEqual(Object o1, Object o2) {\n        return areArrayLengthsEqual(o1, o2)\n                && areArrayElementsEqual(o1, o2);\n    }\n\n    static boolean areArrayLengthsEqual(Object o1, Object o2) {\n        return Array.getLength(o1) == Array.getLength(o2);\n    }\n\n    static boolean areArrayElementsEqual(Object o1, Object o2) {\n        for (int i = 0; i < Array.getLength(o1); i++) {\n            if (!areEqual(Array.get(o1, i), Array.get(o2, i))) return false;\n        }\n        return true;\n    }\n\n    static boolean isArray(Object o) {\n        return o.getClass().isArray();\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.1212010383605957,
+        "line_count": 40,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 6,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 227,
+        "prompt_tokens": 1198,
+        "total_tokens": 1425,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch introduces an identity check (o1 == o2) before the array check. While this is a common optimization, it causes a regression in concurrent verification scenarios where Mockito relies on deep equality checks for objects that might be reference-identical but require specific state validation, or where the identity check interferes with the expected behavior of custom matchers or proxy objects used in multi-threaded verification.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 6.771957874298096,
+        "issues": [
+          "The identity check (o1 == o2) is too aggressive and bypasses necessary logic for certain Mockito internal objects or proxies.",
+          "The regression in ConcurrentModificationExceptionOnMultiThreadedVerificationTest suggests that reference equality is not sufficient for the objects being compared during concurrent verification."
+        ],
+        "suggestions": [
+          "In areEqual(): change the added block 'if (o1 == o2) { return true; }' to 'if (o1 == o2) { return true; }' only if the objects are not instances of specific Mockito internal types that require deep inspection, or remove the identity check entirely if it cannot be safely applied to all object types handled by this utility."
+        ],
+        "problematic_lines": [
+          15,
+          16,
+          17
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 1522,
+        "candidate_tokens": 285,
+        "total_tokens": 1807,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.matchers;\n\nimport java.lang.reflect.Array;\n\n//stolen from hamcrest because I didn't want to have more dependency than Matcher class \npublic class Equality {\n\n    public static boolean areEqual(Object o1, Object o2) {\n        if (o1 == null || o2 == null) {\n            return o1 == null && o2 == null;\n        } else if (isArray(o1)) {\n            return isArray(o2) && areArraysEqual(o1, o2);\n        } else {\n            return o1 == o2 || o1.equals(o2);\n        }\n    }\n\n    static boolean areArraysEqual(Object o1, Object o2) {\n        return areArrayLengthsEqual(o1, o2)\n                && areArrayElementsEqual(o1, o2);\n    }\n\n    static boolean areArrayLengthsEqual(Object o1, Object o2) {\n        return Array.getLength(o1) == Array.getLength(o2);\n    }\n\n    static boolean areArrayElementsEqual(Object o1, Object o2) {\n        for (int i = 0; i < Array.getLength(o1); i++) {\n            if (!areEqual(Array.get(o1, i), Array.get(o2, i))) return false;\n        }\n        return true;\n    }\n\n    static boolean isArray(Object o) {\n        return o.getClass().isArray();\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.1267280578613281,
+        "line_count": 40,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 117,
+        "prompt_tokens": 3230,
+        "total_tokens": 3347,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch introduces a regression in a concurrent test environment. While adding 'o1 == o2' is a common optimization, it appears to interfere with how Mockito handles object identity or proxy equality in multi-threaded verification scenarios, likely due to side effects or specific expectations regarding the equals() contract in the test suite.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 11.831439018249512,
+        "issues": [
+          "The addition of 'o1 == o2' causes a regression in 'ConcurrentModificationExceptionOnMultiThreadedVerificationTest', suggesting that the identity check is either bypassing necessary logic or interacting poorly with concurrent proxy objects."
+        ],
+        "suggestions": [
+          "In areEqual(): change 'return o1 == o2 || o1.equals(o2);' to 'return o1.equals(o2);' because the identity check is causing a regression in concurrent verification tests and the original implementation is safer for Mockito's internal proxy equality requirements."
+        ],
+        "problematic_lines": [
+          18
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 1451,
+        "candidate_tokens": 229,
+        "total_tokens": 1680,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.matchers;\n\nimport java.lang.reflect.Array;\n\n//stolen from hamcrest because I didn't want to have more dependency than Matcher class \npublic class Equality {\n\n    public static boolean areEqual(Object o1, Object o2) {\n        if (o1 == null || o2 == null) {\n            return o1 == null && o2 == null;\n        } else if (isArray(o1)) {\n            return isArray(o2) && areArraysEqual(o1, o2);\n        } else {\n            try {\n                return o1.equals(o2);\n            } catch (RuntimeException e) {\n                return o1 == o2;\n            }\n        }\n    }\n\n    static boolean areArraysEqual(Object o1, Object o2) {\n        return areArrayLengthsEqual(o1, o2)\n                && areArrayElementsEqual(o1, o2);\n    }\n\n    static boolean areArrayLengthsEqual(Object o1, Object o2) {\n        return Array.getLength(o1) == Array.getLength(o2);\n    }\n\n    static boolean areArrayElementsEqual(Object o1, Object o2) {\n        for (int i = 0; i < Array.getLength(o1); i++) {\n            if (!areEqual(Array.get(o1, i), Array.get(o2, i))) return false;\n        }\n        return true;\n    }\n\n    static boolean isArray(Object o) {\n        return o.getClass().isArray();\n    }\n}",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.4587831497192383,
+        "line_count": 40,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 6,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 232,
+        "prompt_tokens": 3150,
+        "total_tokens": 3382,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch introduces a safety mechanism to handle objects that throw RuntimeExceptions during their equals() implementation. This is a robust defensive programming practice for a library like Mockito, which often interacts with user-provided objects that may have poorly implemented or unstable equals methods. The change ensures that Mockito does not crash when encountering such objects, falling back to reference equality as a safe default.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.4388139247894287,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 1335,
+        "candidate_tokens": 114,
+        "total_tokens": 1449,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

@@ -1,0 +1,169 @@
+{
+  "bug_id": "Lang_6",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 1,
+  "accepted": true,
+  "plausible_patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.StringWriter;\nimport java.io.Writer;\nimport java.util.Locale;\n\n/**\n * An API for translating text. \n * Its core use is to escape and unescape text. Because escaping and unescaping \n * is completely contextual, the API does not present two separate signatures.\n * \n * @since 3.0\n * @version $Id$\n */\npublic abstract class CharSequenceTranslator {\n\n    /**\n     * Translate a set of codepoints, represented by an int index into a CharSequence, \n     * into another set of codepoints. The number of codepoints consumed must be returned, \n     * and the only IOExceptions thrown must be from interacting with the Writer so that \n     * the top level API may reliable ignore StringWriter IOExceptions. \n     *\n     * @param input CharSequence that is being translated\n     * @param index int representing the current point of translation\n     * @param out Writer to translate the text to\n     * @return int count of codepoints consumed\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public abstract int translate(CharSequence input, int index, Writer out) throws IOException;\n\n    /**\n     * Helper for non-Writer usage. \n     * @param input CharSequence to be translated\n     * @return String output of translation\n     */\n    public final String translate(CharSequence input) {\n        if (input == null) {\n            return null;\n        }\n        try {\n            StringWriter writer = new StringWriter(input.length() * 2);\n            translate(input, writer);\n            return writer.toString();\n        } catch (IOException ioe) {\n            // this should never ever happen while writing to a StringWriter\n            throw new RuntimeException(ioe);\n        }\n    }\n\n    /**\n     * Translate an input onto a Writer. This is intentionally final as its algorithm is \n     * tightly coupled with the abstract method of this class. \n     *\n     * @param input CharSequence that is being translated\n     * @param out Writer to translate the text to\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public final void translate(CharSequence input, Writer out) throws IOException {\n        if (out == null) {\n            throw new IllegalArgumentException(\"The Writer must not be null\");\n        }\n        if (input == null) {\n            return;\n        }\n        int pos = 0;\n        int len = input.length();\n        while (pos < len) {\n            int consumed = translate(input, pos, out);\n            if (consumed == 0) {\n                char[] c = Character.toChars(Character.codePointAt(input, pos));\n                out.write(c);\n                pos+= c.length;\n                continue;\n            }\n//          // contract with translators is that they have to understand codepoints \n//          // and they just took care of a surrogate pair\n            for (int pt = 0; pt < consumed; pt++) {\n                if (pos < len) {\n                    pos += Character.charCount(Character.codePointAt(input, pos));\n                }\n            }\n        }\n    }\n\n    /**\n     * Helper method to create a merger of this translator with another set of \n     * translators. Useful in customizing the standard functionality.\n     *\n     * @param translators CharSequenceTranslator array of translators to merge with this one\n     * @return CharSequenceTranslator merging this translator with the others\n     */\n    public final CharSequenceTranslator with(CharSequenceTranslator... translators) {\n        CharSequenceTranslator[] newArray = new CharSequenceTranslator[translators.length + 1];\n        newArray[0] = this;\n        System.arraycopy(translators, 0, newArray, 1, translators.length);\n        return new AggregateTranslator(newArray);\n    }\n\n    /**\n     * <p>Returns an upper case hexadecimal <code>String</code> for the given\n     * character.</p>\n     *\n     * @param codepoint The codepoint to convert.\n     * @return An upper case hexadecimal <code>String</code>\n     */\n    public static String hex(int codepoint) {\n        return Integer.toHexString(codepoint).toUpperCase(Locale.ENGLISH);\n    }\n\n}\n",
+  "plausible_iteration": 2,
+  "reason": "The patch adds a bounds check within the loop that advances the position pointer after a translation. This prevents an IndexOutOfBoundsException or incorrect behavior when a translator reports consuming more codepoints than are actually available in the remaining CharSequence, which is a robust defensive programming practice.",
+  "iterations": 3,
+  "has_patch": true,
+  "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.StringWriter;\nimport java.io.Writer;\nimport java.util.Locale;\n\n/**\n * An API for translating text. \n * Its core use is to escape and unescape text. Because escaping and unescaping \n * is completely contextual, the API does not present two separate signatures.\n * \n * @since 3.0\n * @version $Id$\n */\npublic abstract class CharSequenceTranslator {\n\n    /**\n     * Translate a set of codepoints, represented by an int index into a CharSequence, \n     * into another set of codepoints. The number of codepoints consumed must be returned, \n     * and the only IOExceptions thrown must be from interacting with the Writer so that \n     * the top level API may reliable ignore StringWriter IOExceptions. \n     *\n     * @param input CharSequence that is being translated\n     * @param index int representing the current point of translation\n     * @param out Writer to translate the text to\n     * @return int count of codepoints consumed\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public abstract int translate(CharSequence input, int index, Writer out) throws IOException;\n\n    /**\n     * Helper for non-Writer usage. \n     * @param input CharSequence to be translated\n     * @return String output of translation\n     */\n    public final String translate(CharSequence input) {\n        if (input == null) {\n            return null;\n        }\n        try {\n            StringWriter writer = new StringWriter(input.length() * 2);\n            translate(input, writer);\n            return writer.toString();\n        } catch (IOException ioe) {\n            // this should never ever happen while writing to a StringWriter\n            throw new RuntimeException(ioe);\n        }\n    }\n\n    /**\n     * Translate an input onto a Writer. This is intentionally final as its algorithm is \n     * tightly coupled with the abstract method of this class. \n     *\n     * @param input CharSequence that is being translated\n     * @param out Writer to translate the text to\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public final void translate(CharSequence input, Writer out) throws IOException {\n        if (out == null) {\n            throw new IllegalArgumentException(\"The Writer must not be null\");\n        }\n        if (input == null) {\n            return;\n        }\n        int pos = 0;\n        int len = input.length();\n        while (pos < len) {\n            int consumed = translate(input, pos, out);\n            if (consumed == 0) {\n                char[] c = Character.toChars(Character.codePointAt(input, pos));\n                out.write(c);\n                pos+= c.length;\n                continue;\n            }\n//          // contract with translators is that they have to understand codepoints \n//          // and they just took care of a surrogate pair\n            for (int pt = 0; pt < consumed; pt++) {\n                if (pos < len) {\n                    pos += Character.charCount(Character.codePointAt(input, pos));\n                }\n            }\n        }\n    }\n\n    /**\n     * Helper method to create a merger of this translator with another set of \n     * translators. Useful in customizing the standard functionality.\n     *\n     * @param translators CharSequenceTranslator array of translators to merge with this one\n     * @return CharSequenceTranslator merging this translator with the others\n     */\n    public final CharSequenceTranslator with(CharSequenceTranslator... translators) {\n        CharSequenceTranslator[] newArray = new CharSequenceTranslator[translators.length + 1];\n        newArray[0] = this;\n        System.arraycopy(translators, 0, newArray, 1, translators.length);\n        return new AggregateTranslator(newArray);\n    }\n\n    /**\n     * <p>Returns an upper case hexadecimal <code>String</code> for the given\n     * character.</p>\n     *\n     * @param codepoint The codepoint to convert.\n     * @return An upper case hexadecimal <code>String</code>\n     */\n    public static String hex(int codepoint) {\n        return Integer.toHexString(codepoint).toUpperCase(Locale.ENGLISH);\n    }\n\n}\n",
+  "per_file_patches": "{\"CharSequenceTranslator.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 70.59,
+  "total_tokens": 41175,
+  "estimated_usd": 0.0144,
+  "failing_tests": "org.apache.commons.lang3.StringUtilsTest::testEscapeSurrogatePairs",
+  "modified_classes": "org.apache.commons.lang3.text.translate.CharSequenceTranslator",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.StringWriter;\nimport java.io.Writer;\nimport java.util.Locale;\n\n/**\n * An API for translating text. \n * Its core use is to escape and unescape text. Because escaping and unescaping \n * is completely contextual, the API does not present two separate signatures.\n * \n * @since 3.0\n * @version $Id$\n */\npublic abstract class CharSequenceTranslator {\n\n    /**\n     * Translate a set of codepoints, represented by an int index into a CharSequence, \n     * into another set of codepoints. The number of codepoints consumed must be returned, \n     * and the only IOExceptions thrown must be from interacting with the Writer so that \n     * the top level API may reliable ignore StringWriter IOExceptions. \n     *\n     * @param input CharSequence that is being translated\n     * @param index int representing the current point of translation\n     * @param out Writer to translate the text to\n     * @return int count of codepoints consumed\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public abstract int translate(CharSequence input, int index, Writer out) throws IOException;\n\n    /**\n     * Helper for non-Writer usage. \n     * @param input CharSequence to be translated\n     * @return String output of translation\n     */\n    public final String translate(CharSequence input) {\n        if (input == null) {\n            return null;\n        }\n        try {\n            StringWriter writer = new StringWriter(input.length() * 2);\n            translate(input, writer);\n            return writer.toString();\n        } catch (IOException ioe) {\n            // this should never ever happen while writing to a StringWriter\n            throw new RuntimeException(ioe);\n        }\n    }\n\n    /**\n     * Translate an input onto a Writer. This is intentionally final as its algorithm is \n     * tightly coupled with the abstract method of this class. \n     *\n     * @param input CharSequence that is being translated\n     * @param out Writer to translate the text to\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public final void translate(CharSequence input, Writer out) throws IOException {\n        if (out == null) {\n            throw new IllegalArgumentException(\"The Writer must not be null\");\n        }\n        if (input == null) {\n            return;\n        }\n        int pos = 0;\n        int len = input.length();\n        while (pos < len) {\n            int consumed = translate(input, pos, out);\n            if (consumed == 0) {\n                char[] c = Character.toChars(Character.codePointAt(input, pos));\n                out.write(c);\n                pos+= c.length;\n                continue;\n            }\n//          // contract with translators is that they have to understand codepoints \n//          // and they just took care of a surrogate pair\n            for (int pt = 0; pt < consumed; pt++) {\n                pos += Character.charCount(Character.codePointAt(input, pos));\n            }\n        }\n    }\n\n    /**\n     * Helper method to create a merger of this translator with another set of \n     * translators. Useful in customizing the standard functionality.\n     *\n     * @param translators CharSequenceTranslator array of translators to merge with this one\n     * @return CharSequenceTranslator merging this translator with the others\n     */\n    public final CharSequenceTranslator with(CharSequenceTranslator... translators) {\n        CharSequenceTranslator[] newArray = new CharSequenceTranslator[translators.length + 1];\n        newArray[0] = this;\n        System.arraycopy(translators, 0, newArray, 1, translators.length);\n        return new AggregateTranslator(newArray);\n    }\n\n    /**\n     * <p>Returns an upper case hexadecimal <code>String</code> for the given\n     * character.</p>\n     *\n     * @param codepoint The codepoint to convert.\n     * @return An upper case hexadecimal <code>String</code>\n     */\n    public static String hex(int codepoint) {\n        return Integer.toHexString(codepoint).toUpperCase(Locale.ENGLISH);\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 12.667431116104126,
+        "line_count": 125,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 3,
+        "blocks_applied": 1,
+        "changed_lines": 0,
+        "drift_suspected": false,
+        "noop_detected": true,
+        "generation_rejected": "model returned the original file unchanged",
+        "prompt_tokens": 5829,
+        "total_tokens": 6090,
+        "candidate_tokens": 261,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The provided patch is identical to the original file, meaning no changes were made to address the failing test case 'testEscapeSurrogatePairs'. The failure in this test typically indicates that the translation logic in 'translate(CharSequence, Writer)' does not correctly handle surrogate pairs when the translator returns a non-zero value, leading to an incorrect advancement of the 'pos' index.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 5.050513029098511,
+        "issues": [
+          "The patch is empty and does not modify the source code.",
+          "The logic in the 'translate' method's loop for advancing 'pos' based on 'consumed' codepoints is likely flawed when dealing with surrogate pairs."
+        ],
+        "suggestions": [
+          "In translate(CharSequence, Writer): change 'pos += Character.charCount(Character.codePointAt(input, pos));' to 'pos += Character.charCount(Character.codePointAt(input, pos));' inside the loop, but ensure the logic correctly accounts for the fact that 'consumed' refers to the number of codepoints, not the number of chars, and that 'Character.codePointAt' might need to be called carefully to avoid index out of bounds or incorrect character counting."
+        ],
+        "problematic_lines": [
+          86
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2879,
+        "candidate_tokens": 286,
+        "total_tokens": 3165,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.StringWriter;\nimport java.io.Writer;\nimport java.util.Locale;\n\n/**\n * An API for translating text. \n * Its core use is to escape and unescape text. Because escaping and unescaping \n * is completely contextual, the API does not present two separate signatures.\n * \n * @since 3.0\n * @version $Id$\n */\npublic abstract class CharSequenceTranslator {\n\n    /**\n     * Translate a set of codepoints, represented by an int index into a CharSequence, \n     * into another set of codepoints. The number of codepoints consumed must be returned, \n     * and the only IOExceptions thrown must be from interacting with the Writer so that \n     * the top level API may reliable ignore StringWriter IOExceptions. \n     *\n     * @param input CharSequence that is being translated\n     * @param index int representing the current point of translation\n     * @param out Writer to translate the text to\n     * @return int count of codepoints consumed\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public abstract int translate(CharSequence input, int index, Writer out) throws IOException;\n\n    /**\n     * Helper for non-Writer usage. \n     * @param input CharSequence to be translated\n     * @return String output of translation\n     */\n    public final String translate(CharSequence input) {\n        if (input == null) {\n            return null;\n        }\n        try {\n            StringWriter writer = new StringWriter(input.length() * 2);\n            translate(input, writer);\n            return writer.toString();\n        } catch (IOException ioe) {\n            // this should never ever happen while writing to a StringWriter\n            throw new RuntimeException(ioe);\n        }\n    }\n\n    /**\n     * Translate an input onto a Writer. This is intentionally final as its algorithm is \n     * tightly coupled with the abstract method of this class. \n     *\n     * @param input CharSequence that is being translated\n     * @param out Writer to translate the text to\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public final void translate(CharSequence input, Writer out) throws IOException {\n        if (out == null) {\n            throw new IllegalArgumentException(\"The Writer must not be null\");\n        }\n        if (input == null) {\n            return;\n        }\n        int pos = 0;\n        int len = input.length();\n        while (pos < len) {\n            int consumed = translate(input, pos, out);\n            if (consumed == 0) {\n                char[] c = Character.toChars(Character.codePointAt(input, pos));\n                out.write(c);\n                pos+= c.length;\n                continue;\n            }\n//          // contract with translators is that they have to understand codepoints \n//          // and they just took care of a surrogate pair\n            for (int pt = 0; pt < consumed; pt++) {\n                pos += Character.charCount(Character.codePointAt(input, pos));\n            }\n        }\n    }\n\n    /**\n     * Helper method to create a merger of this translator with another set of \n     * translators. Useful in customizing the standard functionality.\n     *\n     * @param translators CharSequenceTranslator array of translators to merge with this one\n     * @return CharSequenceTranslator merging this translator with the others\n     */\n    public final CharSequenceTranslator with(CharSequenceTranslator... translators) {\n        CharSequenceTranslator[] newArray = new CharSequenceTranslator[translators.length + 1];\n        newArray[0] = this;\n        System.arraycopy(translators, 0, newArray, 1, translators.length);\n        return new AggregateTranslator(newArray);\n    }\n\n    /**\n     * <p>Returns an upper case hexadecimal <code>String</code> for the given\n     * character.</p>\n     *\n     * @param codepoint The codepoint to convert.\n     * @return An upper case hexadecimal <code>String</code>\n     */\n    public static String hex(int codepoint) {\n        return Integer.toHexString(codepoint).toUpperCase(Locale.ENGLISH);\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 8.153065204620361,
+        "line_count": 125,
+        "token_budget": 20000,
+        "temperature_used": 0.45,
+        "edit_mode": "search_replace",
+        "generation_attempts": 3,
+        "blocks_applied": 1,
+        "changed_lines": 0,
+        "drift_suspected": false,
+        "noop_detected": true,
+        "generation_rejected": "model returned the original file unchanged",
+        "prompt_tokens": 12159,
+        "total_tokens": 12420,
+        "candidate_tokens": 261,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "incorrect",
+      "reason": "The provided patch is identical to the original file, meaning it does not address the failing test case 'testEscapeSurrogatePairs'. The logic in the 'translate' method's loop for handling surrogate pairs and codepoint consumption is likely flawed, as it fails to correctly advance the 'pos' index when a translator consumes multiple codepoints, leading to incorrect output or infinite loops when dealing with supplementary characters.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.921340227127075,
+        "issues": [
+          "The patch is a no-op and does not fix the failing test.",
+          "The loop logic for advancing 'pos' based on 'consumed' codepoints is potentially incorrect if the translator logic does not align with the 'pos += Character.charCount(...)' increment strategy."
+        ],
+        "suggestions": [
+          "In translate(): change 'pos += Character.charCount(Character.codePointAt(input, pos));' to 'pos += Character.charCount(Character.codePointAt(input, pos));' inside the loop, but ensure the loop correctly handles the case where 'consumed' refers to the number of codepoints rather than the number of characters, as the current implementation assumes 'consumed' maps directly to character offsets."
+        ],
+        "problematic_lines": [
+          85
+        ],
+        "test_status_observed": "FAIL",
+        "prompt_tokens": 2879,
+        "candidate_tokens": 287,
+        "total_tokens": 3166,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.StringWriter;\nimport java.io.Writer;\nimport java.util.Locale;\n\n/**\n * An API for translating text. \n * Its core use is to escape and unescape text. Because escaping and unescaping \n * is completely contextual, the API does not present two separate signatures.\n * \n * @since 3.0\n * @version $Id$\n */\npublic abstract class CharSequenceTranslator {\n\n    /**\n     * Translate a set of codepoints, represented by an int index into a CharSequence, \n     * into another set of codepoints. The number of codepoints consumed must be returned, \n     * and the only IOExceptions thrown must be from interacting with the Writer so that \n     * the top level API may reliable ignore StringWriter IOExceptions. \n     *\n     * @param input CharSequence that is being translated\n     * @param index int representing the current point of translation\n     * @param out Writer to translate the text to\n     * @return int count of codepoints consumed\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public abstract int translate(CharSequence input, int index, Writer out) throws IOException;\n\n    /**\n     * Helper for non-Writer usage. \n     * @param input CharSequence to be translated\n     * @return String output of translation\n     */\n    public final String translate(CharSequence input) {\n        if (input == null) {\n            return null;\n        }\n        try {\n            StringWriter writer = new StringWriter(input.length() * 2);\n            translate(input, writer);\n            return writer.toString();\n        } catch (IOException ioe) {\n            // this should never ever happen while writing to a StringWriter\n            throw new RuntimeException(ioe);\n        }\n    }\n\n    /**\n     * Translate an input onto a Writer. This is intentionally final as its algorithm is \n     * tightly coupled with the abstract method of this class. \n     *\n     * @param input CharSequence that is being translated\n     * @param out Writer to translate the text to\n     * @throws IOException if and only if the Writer produces an IOException\n     */\n    public final void translate(CharSequence input, Writer out) throws IOException {\n        if (out == null) {\n            throw new IllegalArgumentException(\"The Writer must not be null\");\n        }\n        if (input == null) {\n            return;\n        }\n        int pos = 0;\n        int len = input.length();\n        while (pos < len) {\n            int consumed = translate(input, pos, out);\n            if (consumed == 0) {\n                char[] c = Character.toChars(Character.codePointAt(input, pos));\n                out.write(c);\n                pos+= c.length;\n                continue;\n            }\n//          // contract with translators is that they have to understand codepoints \n//          // and they just took care of a surrogate pair\n            for (int pt = 0; pt < consumed; pt++) {\n                if (pos < len) {\n                    pos += Character.charCount(Character.codePointAt(input, pos));\n                }\n            }\n        }\n    }\n\n    /**\n     * Helper method to create a merger of this translator with another set of \n     * translators. Useful in customizing the standard functionality.\n     *\n     * @param translators CharSequenceTranslator array of translators to merge with this one\n     * @return CharSequenceTranslator merging this translator with the others\n     */\n    public final CharSequenceTranslator with(CharSequenceTranslator... translators) {\n        CharSequenceTranslator[] newArray = new CharSequenceTranslator[translators.length + 1];\n        newArray[0] = this;\n        System.arraycopy(translators, 0, newArray, 1, translators.length);\n        return new AggregateTranslator(newArray);\n    }\n\n    /**\n     * <p>Returns an upper case hexadecimal <code>String</code> for the given\n     * character.</p>\n     *\n     * @param codepoint The codepoint to convert.\n     * @return An upper case hexadecimal <code>String</code>\n     */\n    public static String hex(int codepoint) {\n        return Integer.toHexString(codepoint).toUpperCase(Locale.ENGLISH);\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.9737508296966553,
+        "line_count": 125,
+        "token_budget": 20000,
+        "temperature_used": 0.75,
+        "edit_mode": "search_replace",
+        "generation_attempts": 3,
+        "blocks_applied": 1,
+        "changed_lines": 4,
+        "drift_suspected": false,
+        "noop_detected": true,
+        "generation_rejected": "",
+        "prompt_tokens": 13029,
+        "total_tokens": 13302,
+        "candidate_tokens": 273,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 2,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch adds a bounds check within the loop that advances the position pointer after a translation. This prevents an IndexOutOfBoundsException or incorrect behavior when a translator reports consuming more codepoints than are actually available in the remaining CharSequence, which is a robust defensive programming practice.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.6557278633117676,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [
+          95
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2935,
+        "candidate_tokens": 97,
+        "total_tokens": 3032,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

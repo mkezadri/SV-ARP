@@ -1,0 +1,71 @@
+{
+  "bug_id": "Lang_4",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 1,
+  "accepted": true,
+  "plausible_patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.Writer;\nimport java.util.HashMap;\n\n/**\n * Translates a value using a lookup table.\n *\n * @since 3.0\n * @version $Id$\n */\npublic class LookupTranslator extends CharSequenceTranslator {\n\n    private final HashMap<CharSequence, CharSequence> lookupMap;\n    private final int shortest;\n    private final int longest;\n\n    /**\n     * Define the lookup table to be used in translation\n     *\n     * Note that, as of Lang 3.1, the key to the lookup table is converted to a \n     * java.lang.String, while the value remains as a java.lang.CharSequence. \n     * This is because we need the key to support hashCode and equals(Object), \n     * allowing it to be the key for a HashMap. See LANG-882.\n     *\n     * @param lookup CharSequence[][] table of size [*][2]\n     */\n    public LookupTranslator(final CharSequence[]... lookup) {\n        lookupMap = new HashMap<CharSequence, CharSequence>();\n        int _shortest = Integer.MAX_VALUE;\n        int _longest = 0;\n        if (lookup != null) {\n            for (final CharSequence[] seq : lookup) {\n                this.lookupMap.put(seq[0].toString(), seq[1]);\n                final int sz = seq[0].length();\n                if (sz < _shortest) {\n                    _shortest = sz;\n                }\n                if (sz > _longest) {\n                    _longest = sz;\n                }\n            }\n        }\n        shortest = _shortest;\n        longest = _longest;\n    }\n\n    /**\n     * {@inheritDoc}\n     */\n    @Override\n    public int translate(final CharSequence input, final int index, final Writer out) throws IOException {\n        int max = longest;\n        if (index + longest > input.length()) {\n            max = input.length() - index;\n        }\n        // descend so as to get a greedy algorithm\n        for (int i = max; i >= shortest; i--) {\n            final CharSequence subSeq = input.subSequence(index, index + i);\n            final CharSequence result = lookupMap.get(subSeq);\n            if (result != null) {\n                out.write(result.toString());\n                return i;\n            }\n        }\n        return 0;\n    }\n}\n",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly addresses the issue described in the class Javadoc regarding the requirement for keys in the lookup map to support hashCode and equals. By calling .toString() on the key, it ensures that the CharSequence key is converted to a String, which provides a reliable implementation of these methods, preventing potential lookup failures when using custom CharSequence implementations as keys.",
+  "iterations": 1,
+  "has_patch": true,
+  "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.Writer;\nimport java.util.HashMap;\n\n/**\n * Translates a value using a lookup table.\n *\n * @since 3.0\n * @version $Id$\n */\npublic class LookupTranslator extends CharSequenceTranslator {\n\n    private final HashMap<CharSequence, CharSequence> lookupMap;\n    private final int shortest;\n    private final int longest;\n\n    /**\n     * Define the lookup table to be used in translation\n     *\n     * Note that, as of Lang 3.1, the key to the lookup table is converted to a \n     * java.lang.String, while the value remains as a java.lang.CharSequence. \n     * This is because we need the key to support hashCode and equals(Object), \n     * allowing it to be the key for a HashMap. See LANG-882.\n     *\n     * @param lookup CharSequence[][] table of size [*][2]\n     */\n    public LookupTranslator(final CharSequence[]... lookup) {\n        lookupMap = new HashMap<CharSequence, CharSequence>();\n        int _shortest = Integer.MAX_VALUE;\n        int _longest = 0;\n        if (lookup != null) {\n            for (final CharSequence[] seq : lookup) {\n                this.lookupMap.put(seq[0].toString(), seq[1]);\n                final int sz = seq[0].length();\n                if (sz < _shortest) {\n                    _shortest = sz;\n                }\n                if (sz > _longest) {\n                    _longest = sz;\n                }\n            }\n        }\n        shortest = _shortest;\n        longest = _longest;\n    }\n\n    /**\n     * {@inheritDoc}\n     */\n    @Override\n    public int translate(final CharSequence input, final int index, final Writer out) throws IOException {\n        int max = longest;\n        if (index + longest > input.length()) {\n            max = input.length() - index;\n        }\n        // descend so as to get a greedy algorithm\n        for (int i = max; i >= shortest; i--) {\n            final CharSequence subSeq = input.subSequence(index, index + i);\n            final CharSequence result = lookupMap.get(subSeq);\n            if (result != null) {\n                out.write(result.toString());\n                return i;\n            }\n        }\n        return 0;\n    }\n}\n",
+  "per_file_patches": "{\"LookupTranslator.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 15.52,
+  "total_tokens": 3982,
+  "estimated_usd": 0.0014,
+  "failing_tests": "org.apache.commons.lang3.text.translate.LookupTranslatorTest::testLang882",
+  "modified_classes": "org.apache.commons.lang3.text.translate.LookupTranslator",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.Writer;\nimport java.util.HashMap;\n\n/**\n * Translates a value using a lookup table.\n *\n * @since 3.0\n * @version $Id$\n */\npublic class LookupTranslator extends CharSequenceTranslator {\n\n    private final HashMap<CharSequence, CharSequence> lookupMap;\n    private final int shortest;\n    private final int longest;\n\n    /**\n     * Define the lookup table to be used in translation\n     *\n     * Note that, as of Lang 3.1, the key to the lookup table is converted to a \n     * java.lang.String, while the value remains as a java.lang.CharSequence. \n     * This is because we need the key to support hashCode and equals(Object), \n     * allowing it to be the key for a HashMap. See LANG-882.\n     *\n     * @param lookup CharSequence[][] table of size [*][2]\n     */\n    public LookupTranslator(final CharSequence[]... lookup) {\n        lookupMap = new HashMap<CharSequence, CharSequence>();\n        int _shortest = Integer.MAX_VALUE;\n        int _longest = 0;\n        if (lookup != null) {\n            for (final CharSequence[] seq : lookup) {\n                this.lookupMap.put(seq[0].toString(), seq[1]);\n                final int sz = seq[0].length();\n                if (sz < _shortest) {\n                    _shortest = sz;\n                }\n                if (sz > _longest) {\n                    _longest = sz;\n                }\n            }\n        }\n        shortest = _shortest;\n        longest = _longest;\n    }\n\n    /**\n     * {@inheritDoc}\n     */\n    @Override\n    public int translate(final CharSequence input, final int index, final Writer out) throws IOException {\n        int max = longest;\n        if (index + longest > input.length()) {\n            max = input.length() - index;\n        }\n        // descend so as to get a greedy algorithm\n        for (int i = max; i >= shortest; i--) {\n            final CharSequence subSeq = input.subSequence(index, index + i);\n            final CharSequence result = lookupMap.get(subSeq);\n            if (result != null) {\n                out.write(result.toString());\n                return i;\n            }\n        }\n        return 0;\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.365314245223999,
+        "line_count": 85,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 335,
+        "prompt_tokens": 1459,
+        "total_tokens": 1794,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly addresses the issue described in the class Javadoc regarding the requirement for keys in the lookup map to support hashCode and equals. By calling .toString() on the key, it ensures that the CharSequence key is converted to a String, which provides a reliable implementation of these methods, preventing potential lookup failures when using custom CharSequence implementations as keys.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.3090829849243164,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [
+          51
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2075,
+        "candidate_tokens": 113,
+        "total_tokens": 2188,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

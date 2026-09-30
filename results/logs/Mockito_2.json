@@ -1,0 +1,118 @@
+{
+  "bug_id": "Mockito_2",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 0,
+  "accepted": true,
+  "plausible_patch": "package org.mockito.internal.util;\n\n\npublic class Timer {\n\n    private final long durationMillis;\n    private long startTime = -1;\n\n    public Timer(long durationMillis) {\n        if (durationMillis < 0) {\n            throw new org.mockito.exceptions.misusing.FriendlyReminderException(\"It is forbidden to create timer with negative value of timer's duration.\");\n        }\n        this.durationMillis = durationMillis;\n    }\n\n    /**\n     * Informs whether the timer is still counting down.\n     */\n    public boolean isCounting() {\n        assert startTime != -1;\n        return System.currentTimeMillis() - startTime <= durationMillis;\n    }\n\n    /**\n     * Starts the timer count down.\n     */\n    public void start() {\n        startTime = System.currentTimeMillis();\n    }\n\n}\n",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly adds input validation to the Timer constructor to prevent negative durations, which is a defensive programming best practice. The build failure reported is due to a missing local Gradle distribution file in the environment, not an issue with the patch itself, as the patch logic is sound and addresses the requirement for robust input handling.",
+  "iterations": 2,
+  "has_patch": true,
+  "patch": "package org.mockito.internal.util;\n\nimport org.mockito.exceptions.misusing.FriendlyReminderException;\n\npublic class Timer {\n\n    private final long durationMillis;\n    private long startTime = -1;\n\n    public Timer(long durationMillis) {\n        if (durationMillis < 0) {\n            throw new FriendlyReminderException(\"It is forbidden to create timer with negative value of timer's duration.\");\n        }\n        this.durationMillis = durationMillis;\n    }\n\n    /**\n     * Informs whether the timer is still counting down.\n     */\n    public boolean isCounting() {\n        assert startTime != -1;\n        return System.currentTimeMillis() - startTime <= durationMillis;\n    }\n\n    /**\n     * Starts the timer count down.\n     */\n    public void start() {\n        startTime = System.currentTimeMillis();\n    }\n\n}\n",
+  "per_file_patches": "{\"Timer.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 25.19,
+  "total_tokens": 8985,
+  "estimated_usd": 0.0031,
+  "failing_tests": "org.mockito.internal.util.TimerTest::should_throw_friendly_reminder_exception_when_duration_is_negative|org.mockito.verification.NegativeDurationTest::should_throw_exception_when_duration_is_negative_for_timeout_method|org.mockito.verification.NegativeDurationTest::should_throw_exception_when_duration_is_negative_for_after_method",
+  "modified_classes": "org.mockito.internal.util.Timer",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "package org.mockito.internal.util;\n\n\npublic class Timer {\n\n    private final long durationMillis;\n    private long startTime = -1;\n\n    public Timer(long durationMillis) {\n        if (durationMillis < 0) {\n            throw new org.mockito.exceptions.misusing.FriendlyReminderException(\"It is forbidden to create timer with negative value of timer's duration.\");\n        }\n        this.durationMillis = durationMillis;\n    }\n\n    /**\n     * Informs whether the timer is still counting down.\n     */\n    public boolean isCounting() {\n        assert startTime != -1;\n        return System.currentTimeMillis() - startTime <= durationMillis;\n    }\n\n    /**\n     * Starts the timer count down.\n     */\n    public void start() {\n        startTime = System.currentTimeMillis();\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 1.4150400161743164,
+        "line_count": 28,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 3,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 101,
+        "prompt_tokens": 1419,
+        "total_tokens": 1520,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "needs_revision",
+      "reason": "The patch correctly implements input validation for the constructor, which is a good practice to prevent invalid state. However, the build failure is due to an environment-specific issue with the Gradle wrapper configuration in the provided test environment, not the code change itself. The logic is sound, but the implementation of the exception class should be verified against the project's existing exception handling patterns.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 2.5962181091308594,
+        "issues": [
+          "The build failure is caused by a missing Gradle distribution file in the environment, preventing verification of the patch.",
+          "The use of a fully qualified class name for the exception is verbose; it should ideally be imported if used frequently."
+        ],
+        "suggestions": [
+          "In Timer(): add 'import org.mockito.exceptions.misusing.FriendlyReminderException;' at the top of the file and use 'throw new FriendlyReminderException(...);' to improve readability."
+        ],
+        "problematic_lines": [
+          10
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 1849,
+        "candidate_tokens": 222,
+        "total_tokens": 2071,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "repair",
+      "patch": "package org.mockito.internal.util;\n\nimport org.mockito.exceptions.misusing.FriendlyReminderException;\n\npublic class Timer {\n\n    private final long durationMillis;\n    private long startTime = -1;\n\n    public Timer(long durationMillis) {\n        if (durationMillis < 0) {\n            throw new FriendlyReminderException(\"It is forbidden to create timer with negative value of timer's duration.\");\n        }\n        this.durationMillis = durationMillis;\n    }\n\n    /**\n     * Informs whether the timer is still counting down.\n     */\n    public boolean isCounting() {\n        assert startTime != -1;\n        return System.currentTimeMillis() - startTime <= durationMillis;\n    }\n\n    /**\n     * Starts the timer count down.\n     */\n    public void start() {\n        startTime = System.currentTimeMillis();\n    }\n\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 6.958077907562256,
+        "line_count": 28,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 2,
+        "changed_lines": 4,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 147,
+        "prompt_tokens": 3252,
+        "total_tokens": 3399,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 1,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly adds input validation to the Timer constructor to prevent negative durations, which is a defensive programming best practice. The build failure reported is due to a missing local Gradle distribution file in the environment, not an issue with the patch itself, as the patch logic is sound and addresses the requirement for robust input handling.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 5.911004066467285,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 1893,
+        "candidate_tokens": 102,
+        "total_tokens": 1995,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

@@ -1,0 +1,69 @@
+{
+  "bug_id": "Lang_28",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 1,
+  "accepted": true,
+  "plausible_patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.Writer;\n\n/**\n * Translate XML numeric entities of the form &#[xX]?\\d+; to \n * the specific codepoint.\n * \n * @author Apache Software Foundation\n * @since 3.0\n */\npublic class NumericEntityUnescaper extends CharSequenceTranslator {\n\n    /**\n     * {@inheritDoc}\n     */\n    @Override\n    public int translate(CharSequence input, int index, Writer out) throws IOException {\n        // TODO: Protect from ArrayIndexOutOfBounds\n        if(input.charAt(index) == '&' && input.charAt(index + 1) == '#') {\n            int start = index + 2;\n            boolean isHex = false;\n\n            char firstChar = input.charAt(start);\n            if(firstChar == 'x' || firstChar == 'X') {\n                start++;\n                isHex = true;\n            }\n\n            int end = start;\n            while(input.charAt(end) != ';') {\n                end++;\n            }\n\n            int entityValue;\n            try {\n                if(isHex) {\n                    entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 16);\n                } else {\n                    entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 10);\n                }\n            } catch(NumberFormatException nfe) {\n                return 0;\n            }\n\n            if(entityValue > 0xFFFF) {\n                out.write(Character.toChars(entityValue));\n            } else {\n                out.write(entityValue);\n            }\n            return 2 + (end - start) + (isHex ? 1 : 0) + 1;\n        }\n        return 0;\n    }\n}\n",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly addresses the limitation of the original code, which only handled characters within the Basic Multilingual Plane (BMP). By using Character.toChars(entityValue) for values exceeding 0xFFFF, the unescaper now correctly supports supplementary characters (Unicode codepoints above U+FFFF) by converting them into the appropriate surrogate pairs for the Writer.",
+  "iterations": 1,
+  "has_patch": true,
+  "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.Writer;\n\n/**\n * Translate XML numeric entities of the form &#[xX]?\\d+; to \n * the specific codepoint.\n * \n * @author Apache Software Foundation\n * @since 3.0\n */\npublic class NumericEntityUnescaper extends CharSequenceTranslator {\n\n    /**\n     * {@inheritDoc}\n     */\n    @Override\n    public int translate(CharSequence input, int index, Writer out) throws IOException {\n        // TODO: Protect from ArrayIndexOutOfBounds\n        if(input.charAt(index) == '&' && input.charAt(index + 1) == '#') {\n            int start = index + 2;\n            boolean isHex = false;\n\n            char firstChar = input.charAt(start);\n            if(firstChar == 'x' || firstChar == 'X') {\n                start++;\n                isHex = true;\n            }\n\n            int end = start;\n            while(input.charAt(end) != ';') {\n                end++;\n            }\n\n            int entityValue;\n            try {\n                if(isHex) {\n                    entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 16);\n                } else {\n                    entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 10);\n                }\n            } catch(NumberFormatException nfe) {\n                return 0;\n            }\n\n            if(entityValue > 0xFFFF) {\n                out.write(Character.toChars(entityValue));\n            } else {\n                out.write(entityValue);\n            }\n            return 2 + (end - start) + (isHex ? 1 : 0) + 1;\n        }\n        return 0;\n    }\n}\n",
+  "per_file_patches": "{\"NumericEntityUnescaper.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 21.08,
+  "total_tokens": 3383,
+  "estimated_usd": 0.0012,
+  "failing_tests": "org.apache.commons.lang3.text.translate.NumericEntityUnescaperTest::testSupplementaryUnescaping",
+  "modified_classes": "org.apache.commons.lang3.text.translate.NumericEntityUnescaper",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n * \n *      http://www.apache.org/licenses/LICENSE-2.0\n * \n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.lang3.text.translate;\n\nimport java.io.IOException;\nimport java.io.Writer;\n\n/**\n * Translate XML numeric entities of the form &#[xX]?\\d+; to \n * the specific codepoint.\n * \n * @author Apache Software Foundation\n * @since 3.0\n */\npublic class NumericEntityUnescaper extends CharSequenceTranslator {\n\n    /**\n     * {@inheritDoc}\n     */\n    @Override\n    public int translate(CharSequence input, int index, Writer out) throws IOException {\n        // TODO: Protect from ArrayIndexOutOfBounds\n        if(input.charAt(index) == '&' && input.charAt(index + 1) == '#') {\n            int start = index + 2;\n            boolean isHex = false;\n\n            char firstChar = input.charAt(start);\n            if(firstChar == 'x' || firstChar == 'X') {\n                start++;\n                isHex = true;\n            }\n\n            int end = start;\n            while(input.charAt(end) != ';') {\n                end++;\n            }\n\n            int entityValue;\n            try {\n                if(isHex) {\n                    entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 16);\n                } else {\n                    entityValue = Integer.parseInt(input.subSequence(start, end).toString(), 10);\n                }\n            } catch(NumberFormatException nfe) {\n                return 0;\n            }\n\n            if(entityValue > 0xFFFF) {\n                out.write(Character.toChars(entityValue));\n            } else {\n                out.write(entityValue);\n            }\n            return 2 + (end - start) + (isHex ? 1 : 0) + 1;\n        }\n        return 0;\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 3.0126709938049316,
+        "line_count": 68,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 4,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "candidate_tokens": 289,
+        "prompt_tokens": 1228,
+        "total_tokens": 1517,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly addresses the limitation of the original code, which only handled characters within the Basic Multilingual Plane (BMP). By using Character.toChars(entityValue) for values exceeding 0xFFFF, the unescaper now correctly supports supplementary characters (Unicode codepoints above U+FFFF) by converting them into the appropriate surrogate pairs for the Writer.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 8.45298981666565,
+        "issues": [],
+        "suggestions": [],
+        "problematic_lines": [],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 1755,
+        "candidate_tokens": 111,
+        "total_tokens": 1866,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}

@@ -1,0 +1,75 @@
+{
+  "bug_id": "Math_70",
+  "status": "completed",
+  "verdict": "correct",
+  "ablation": "full",
+  "plausible": true,
+  "baseline_failing_count": 1,
+  "accepted": true,
+  "plausible_patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.math.analysis.solvers;\n\nimport org.apache.commons.math.FunctionEvaluationException;\nimport org.apache.commons.math.MaxIterationsExceededException;\nimport org.apache.commons.math.analysis.UnivariateRealFunction;\n\n/**\n * Implements the <a href=\"http://mathworld.wolfram.com/Bisection.html\">\n * bisection algorithm</a> for finding zeros of univariate real functions.\n * <p>\n * The function should be continuous but not necessarily smooth.</p>\n *\n * @version $Revision$ $Date$\n */\npublic class BisectionSolver extends UnivariateRealSolverImpl {\n\n    /**\n     * Construct a solver for the given function.\n     *\n     * @param f function to solve.\n     * @deprecated as of 2.0 the function to solve is passed as an argument\n     * to the {@link #solve(UnivariateRealFunction, double, double)} or\n     * {@link UnivariateRealSolverImpl#solve(UnivariateRealFunction, double, double, double)}\n     * method.\n     */\n    @Deprecated\n    public BisectionSolver(UnivariateRealFunction f) {\n        super(f, 100, 1E-6);\n    }\n\n    /**\n     * Construct a solver.\n     *\n     */\n    public BisectionSolver() {\n        super(100, 1E-6);\n    }\n\n    /** {@inheritDoc} */\n    @Deprecated\n    public double solve(double min, double max, double initial)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    @Deprecated\n    public double solve(double min, double max)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    public double solve(final UnivariateRealFunction f, double min, double max, double initial)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    public double solve(final UnivariateRealFunction f, double min, double max)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n\n        clearResult();\n        verifyInterval(min,max);\n        double m;\n        double fm;\n        double fmin;\n\n        int i = 0;\n        while (i < maximalIterationCount) {\n            m = UnivariateRealSolverUtils.midpoint(min, max);\n           fmin = f.value(min);\n           fm = f.value(m);\n\n            if (fm * fmin > 0.0) {\n                // max and m bracket the root.\n                min = m;\n            } else {\n                // min and m bracket the root.\n                max = m;\n            }\n\n            if (Math.abs(max - min) <= absoluteAccuracy) {\n                m = UnivariateRealSolverUtils.midpoint(min, max);\n                setResult(m, i);\n                return m;\n            }\n            ++i;\n        }\n\n        throw new MaxIterationsExceededException(maximalIterationCount);\n    }\n}\n",
+  "plausible_iteration": 0,
+  "reason": "The patch correctly fixes a bug in the solve(UnivariateRealFunction, double, double, double) method where it was incorrectly calling the two-argument solve method (which uses the class-level field 'f') instead of the provided function argument 'f'. This ensures that the solver correctly uses the function passed as an argument, maintaining consistency with the API contract.",
+  "iterations": 1,
+  "has_patch": true,
+  "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.math.analysis.solvers;\n\nimport org.apache.commons.math.FunctionEvaluationException;\nimport org.apache.commons.math.MaxIterationsExceededException;\nimport org.apache.commons.math.analysis.UnivariateRealFunction;\n\n/**\n * Implements the <a href=\"http://mathworld.wolfram.com/Bisection.html\">\n * bisection algorithm</a> for finding zeros of univariate real functions.\n * <p>\n * The function should be continuous but not necessarily smooth.</p>\n *\n * @version $Revision$ $Date$\n */\npublic class BisectionSolver extends UnivariateRealSolverImpl {\n\n    /**\n     * Construct a solver for the given function.\n     *\n     * @param f function to solve.\n     * @deprecated as of 2.0 the function to solve is passed as an argument\n     * to the {@link #solve(UnivariateRealFunction, double, double)} or\n     * {@link UnivariateRealSolverImpl#solve(UnivariateRealFunction, double, double, double)}\n     * method.\n     */\n    @Deprecated\n    public BisectionSolver(UnivariateRealFunction f) {\n        super(f, 100, 1E-6);\n    }\n\n    /**\n     * Construct a solver.\n     *\n     */\n    public BisectionSolver() {\n        super(100, 1E-6);\n    }\n\n    /** {@inheritDoc} */\n    @Deprecated\n    public double solve(double min, double max, double initial)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    @Deprecated\n    public double solve(double min, double max)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    public double solve(final UnivariateRealFunction f, double min, double max, double initial)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    public double solve(final UnivariateRealFunction f, double min, double max)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n\n        clearResult();\n        verifyInterval(min,max);\n        double m;\n        double fm;\n        double fmin;\n\n        int i = 0;\n        while (i < maximalIterationCount) {\n            m = UnivariateRealSolverUtils.midpoint(min, max);\n           fmin = f.value(min);\n           fm = f.value(m);\n\n            if (fm * fmin > 0.0) {\n                // max and m bracket the root.\n                min = m;\n            } else {\n                // min and m bracket the root.\n                max = m;\n            }\n\n            if (Math.abs(max - min) <= absoluteAccuracy) {\n                m = UnivariateRealSolverUtils.midpoint(min, max);\n                setResult(m, i);\n                return m;\n            }\n            ++i;\n        }\n\n        throw new MaxIterationsExceededException(maximalIterationCount);\n    }\n}\n",
+  "per_file_patches": "{\"BisectionSolver.java\": \"unchanged\"}",
+  "is_multi_file": false,
+  "strategy": "V5-single-file",
+  "time_seconds": 38.16,
+  "total_tokens": 4353,
+  "estimated_usd": 0.0015,
+  "failing_tests": "org.apache.commons.math.analysis.solvers.BisectionSolverTest::testMath369",
+  "modified_classes": "org.apache.commons.math.analysis.solvers.BisectionSolver",
+  "oscillation_abort": false,
+  "history": [
+    {
+      "iteration": 0,
+      "action": "repair",
+      "patch": "/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.math.analysis.solvers;\n\nimport org.apache.commons.math.FunctionEvaluationException;\nimport org.apache.commons.math.MaxIterationsExceededException;\nimport org.apache.commons.math.analysis.UnivariateRealFunction;\n\n/**\n * Implements the <a href=\"http://mathworld.wolfram.com/Bisection.html\">\n * bisection algorithm</a> for finding zeros of univariate real functions.\n * <p>\n * The function should be continuous but not necessarily smooth.</p>\n *\n * @version $Revision$ $Date$\n */\npublic class BisectionSolver extends UnivariateRealSolverImpl {\n\n    /**\n     * Construct a solver for the given function.\n     *\n     * @param f function to solve.\n     * @deprecated as of 2.0 the function to solve is passed as an argument\n     * to the {@link #solve(UnivariateRealFunction, double, double)} or\n     * {@link UnivariateRealSolverImpl#solve(UnivariateRealFunction, double, double, double)}\n     * method.\n     */\n    @Deprecated\n    public BisectionSolver(UnivariateRealFunction f) {\n        super(f, 100, 1E-6);\n    }\n\n    /**\n     * Construct a solver.\n     *\n     */\n    public BisectionSolver() {\n        super(100, 1E-6);\n    }\n\n    /** {@inheritDoc} */\n    @Deprecated\n    public double solve(double min, double max, double initial)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    @Deprecated\n    public double solve(double min, double max)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    public double solve(final UnivariateRealFunction f, double min, double max, double initial)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n        return solve(f, min, max);\n    }\n\n    /** {@inheritDoc} */\n    public double solve(final UnivariateRealFunction f, double min, double max)\n        throws MaxIterationsExceededException, FunctionEvaluationException {\n\n        clearResult();\n        verifyInterval(min,max);\n        double m;\n        double fm;\n        double fmin;\n\n        int i = 0;\n        while (i < maximalIterationCount) {\n            m = UnivariateRealSolverUtils.midpoint(min, max);\n           fmin = f.value(min);\n           fm = f.value(m);\n\n            if (fm * fmin > 0.0) {\n                // max and m bracket the root.\n                min = m;\n            } else {\n                // min and m bracket the root.\n                max = m;\n            }\n\n            if (Math.abs(max - min) <= absoluteAccuracy) {\n                m = UnivariateRealSolverUtils.midpoint(min, max);\n                setResult(m, i);\n                return m;\n            }\n            ++i;\n        }\n\n        throw new MaxIterationsExceededException(maximalIterationCount);\n    }\n}\n",
+      "metadata": {
+        "ablation": "full",
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 9.456247806549072,
+        "line_count": 109,
+        "token_budget": 20000,
+        "temperature_used": 0.1,
+        "edit_mode": "search_replace",
+        "generation_attempts": 1,
+        "blocks_applied": 1,
+        "changed_lines": 2,
+        "drift_suspected": false,
+        "noop_detected": false,
+        "generation_rejected": "",
+        "total_tokens": 1749,
+        "prompt_tokens": 1644,
+        "candidate_tokens": 105,
+        "is_multi_file": false
+      }
+    },
+    {
+      "iteration": 0,
+      "action": "judge",
+      "verdict": "correct",
+      "reason": "The patch correctly fixes a bug in the solve(UnivariateRealFunction, double, double, double) method where it was incorrectly calling the two-argument solve method (which uses the class-level field 'f') instead of the provided function argument 'f'. This ensures that the solver correctly uses the function passed as an argument, maintaining consistency with the API contract.",
+      "metadata": {
+        "model": "gemini-3.1-flash-lite",
+        "time_seconds": 10.512212991714478,
+        "issues": [
+          "The method solve(UnivariateRealFunction, double, double, double) was ignoring the provided function argument and falling back to the deprecated class-level field 'f'."
+        ],
+        "suggestions": [
+          "In solve(): change \"return solve(min, max);\" to \"return solve(f, min, max);\" because the method should utilize the provided UnivariateRealFunction argument rather than the deprecated class-level field."
+        ],
+        "problematic_lines": [
+          72
+        ],
+        "test_status_observed": "PASS",
+        "prompt_tokens": 2391,
+        "candidate_tokens": 213,
+        "total_tokens": 2604,
+        "is_multi_file": false
+      }
+    }
+  ],
+  "error": ""
+}
