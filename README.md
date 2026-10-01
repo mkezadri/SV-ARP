@@ -231,13 +231,6 @@ python benchmark_runner.py --bug-list ../benchmark/versions.txt --resume
 | `binary_only` | yes | **no** | **no** (`TEST RESULT: FAIL` only) |
 | `no_judge` | **no** | n/a | yes |
 
-```bash
-APR_ABLATION=no_semantic APR_RESULTS_DIR=../results/no_semantic \
-  python benchmark_runner.py --bug-list ../benchmark/versions.txt
-```
-
-Use a separate `APR_RESULTS_DIR` per arm — `--resume` matches on bug ID alone,
-so a shared directory makes the second arm skip everything the first completed.
 
 ---
 
@@ -256,16 +249,8 @@ Results are written as timestamped CSVs, one row per bug:
 
 `plausible` and `accepted` are distinct, and neither equals *correct*. The
 `plausible` column is the harness's judgement, not ground truth; the paper
-reports manually verified plausibility, which is lower.
+reports verified plausibility, which is lower.
 
-```bash
-python verification/check_verification.py verification/verification_full.csv
-```
-
-This confirms the labels reproduce every figure in the paper. A second assessor
-independently labelled all 388 bugs of the full configuration: agreement is
-99.2% overall (Cohen's κ = 0.983) and 98.5% on the 195 verified plausible
-patches (κ = 0.962). Both sets of labels are included.
 
 ---
 
