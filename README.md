@@ -38,12 +38,12 @@ fixes is not statistically significant (*z* = −0.51, *p* = 0.607).
 
 ### Component ablation (all 388 bugs, McNemar exact test)
 
-| Configuration | Logged | **Verified** | Accepted | Vetoed | *p* vs full |
+| Configuration | Logged | **Verified** | 
 |---|---|---|---|---|---|
-| Full system | 215 | **195** | 182 | 13 | — |
-| − semantic feedback (Judge still gates) | 211 | 160 | 160 | 0 | 3.3 × 10⁻⁶ |
-| Binary pass/fail feedback only | 211 | 154 | 154 | 0 | 6.9 × 10⁻⁷ |
-| − Judge Agent entirely | 203 | 158 | 158 | 0 | 6.5 × 10⁻⁶ |
+| Full system | 215 | **195** | 
+| − semantic feedback (Judge still gates) | 211 | 160 |
+| Binary pass/fail feedback only | 211 | 154 | 
+| − Judge Agent entirely | 203 | 158 |
 
 Verified plausible per project:
 
