@@ -38,8 +38,8 @@ fixes is not statistically significant (*z* = −0.51, *p* = 0.607).
 
 ### Component ablation (all 388 bugs, McNemar exact test)
 
-| Configuration | Logged | **Verified** | 
-|---|---|---|---|---|---|
+| Configuration | Logged plausible | **Verified plausible** | 
+|---|---|---|
 | Full system | 215 | **195** | 
 | − semantic feedback (Judge still gates) | 211 | 160 |
 | Binary pass/fail feedback only | 211 | 154 | 
