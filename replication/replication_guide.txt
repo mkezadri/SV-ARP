@@ -11,7 +11,7 @@ This guide walks through reproducing the paper's main results from scratch.
 | Python | 3.10 – 3.12 | Earlier versions untested |
 | Java | 11 | Required; JAVA_HOME/bin must be on PATH |
 | Defects4J | 3.0.1 | See installation below |
-| Google Gemini API key | — | gemini-3.1-flash-lite used in the paper |
+| Google Gemini API key | — | gemini-3.5-flash-lite used in the paper |
 | Disk space | ~25 GB | Checkout cache for 388 bugs |
 
 ---
@@ -60,7 +60,7 @@ means the locale flag is not in effect, and every Closure result will be wrong.
 ## Step 2 — Install SV-ARP
 
 ```bash
-git clone https://github.com/SV-ARP/SV-ARP.git
+git clone https://github.com/mkezadri/SV-ARP.git
 cd SV-ARP
 
 python -m venv .venv
@@ -74,10 +74,10 @@ pip install -r requirements.txt
 ## Step 3 — Configure environment
 
 ```bash
-export GEMINI_API_KEY=<your-key>
+export GEMINI_API_KEY=<your-key>          # read from the environment only
 export D4J_HOME=/path/to/defects4j
-export WORK_DIR=/tmp/d4j_benchmark   # checkout cache
-export RESULTS_DIR=results_run1
+export APR_WORK_DIR=/tmp/d4j_benchmark    # checkout scratch space
+export APR_MAPPING_FILE=benchmark/mapping.csv
 ```
 
 ---
@@ -85,49 +85,64 @@ export RESULTS_DIR=results_run1
 ## Step 4 — Run the benchmark (388 active V1.2 bugs)
 
 ```bash
-cd src
-python benchmark_runner.py --bug-list ../benchmark/versions.txt
+APR_RESULTS_DIR=results_arm_full \
+  python src/run_benchmark.py --bug-list benchmark/versions.txt --resume
 ```
 
-Expected runtime: 1–2 days. Test execution, not API latency, is the bottleneck.
-The run consumes roughly 2,300 API requests.
+Expected runtime: about one day per configuration on a laptop. Test execution,
+not API latency, is the bottleneck. The Full configuration makes about 2,000
+API requests (one Repair Agent call and one Judge call per tested candidate).
+`--resume` continues an interrupted run.
 
-The runner writes results incrementally. If interrupted, resume with:
+For unattended runs use the supervisor, which restarts after network drops,
+hung API calls and reboots:
 
 ```bash
-python benchmark_runner.py --bug-list ../benchmark/versions.txt --resume
+nohup ./run_all.sh > supervisor.log 2>&1 &     # all four configurations
+./run_all.sh --status
+touch STOP                                     # stop after the current bug
 ```
 
 ---
 
-## Step 5 — Ablation configurations
+## Step 5 — Ablation configurations and the resampling control
 
-Four configurations separate the Judge Agent's gating role from its advisory
-role. Use a separate results directory per arm: `--resume` matches on bug ID
-alone, so a shared directory makes the second arm skip the first arm's work.
+Use a separate results directory per configuration: `--resume` matches on the
+bug id alone. `run_all.sh` does this for you (`results_arm_<name>`).
 
 ```bash
-APR_ABLATION=no_semantic APR_RESULTS_DIR=../results/no_semantic \
-  python benchmark_runner.py --bug-list ../benchmark/versions.txt
+./run_all.sh no_semantic      # Judge runs, its rationale and suggestions withheld
+./run_all.sh binary_only      # test output replaced by "TEST RESULT: FAIL"
+./run_all.sh no_judge         # no Judge; acceptance by the tests alone
 
-APR_ABLATION=binary_only APR_RESULTS_DIR=../results/binary_only \
-  python benchmark_runner.py --bug-list ../benchmark/versions.txt
-
-APR_ABLATION=no_judge    APR_RESULTS_DIR=../results/no_judge \
-  python benchmark_runner.py --bug-list ../benchmark/versions.txt
+# resampling control: four independent single attempts per bug
+./run_all.sh sample_t010 sample_t045a sample_t045b sample_t085
 ```
 
 ---
 
-## Step 6 — Check the verification data
+## Step 6 — Regenerate the paper's numbers
+
+Put the `results_arm_*` directories into `data/` (yours, or the published ones
+unpacked from `data/results/`), then:
 
 ```bash
-python verification/check_verification.py verification/verification.csv
+for z in data/results/*.zip; do unzip -q -o "$z" -d data; done   # published results
+cp data/verification/*.csv data/
+python analysis/make_figures.py --raw data --rule first \
+    --bug-list benchmark/versions.txt \
+    --overrides data/overrides_all.csv \
+    --judge-swap data/offline_review/judge_swap_deepseek_v4_flash_semantic.csv \
+    --judge-swap data/offline_review/judge_swap_gemini_3_5_flash_lite_semantic.csv \
+    > report.md
 ```
 
-This confirms that the per-patch correctness classifications reproduce every
-figure reported in the paper: the per-project correct counts, the 139 total,
-73.8% acceptance precision, 96.3% rejection precision and 99.3% recall.
+With the published result files the output matches `analysis/report.md`:
+196 plausible and 170 verified-correct fixes for the Full configuration,
+194/161, 189/160 and 181/156 for the three reduced configurations, and 180/154
+for the resampling control. With your own result files the correctness labels
+apply only to patches whose text is identical to a labelled one; new patches
+are listed as pending.
 
 ---
 
@@ -140,7 +155,7 @@ Export the variable before running: `export GEMINI_API_KEY=<key>`.
 Set `D4J_HOME` to the absolute path of the Defects4J installation.
 
 **Rate limit errors (429)**
-The runner has exponential backoff built in (up to 120 s). If errors persist, reduce parallelism or upgrade your API quota tier.
+The runner retries with exponential backoff. If errors persist, upgrade your API quota tier.
 
 **Checkout fails for Closure bugs**
 Closure bugs require the Closure Compiler build dependencies. See the [Defects4J Closure setup notes](https://github.com/rjust/defects4j#projects).
@@ -151,7 +166,8 @@ Closure 2b checkout must report exactly one failing test. See Step 1b.
 
 **Results differ slightly from the paper**
 Gemini models are non-deterministic even at `temperature=0.1`. Across bugs
-executed more than once we observed roughly 15% changing outcome between runs,
-so per-project totals may vary by several bugs. This is why all ablation
+executed more than once we observed about 9% changing outcome between runs, and
+9% to 13% between the identical first attempts of two configurations, so
+per-project totals may vary by several bugs. This is why all ablation
 comparisons in the paper are paired on identical bug sets and evaluated with
 McNemar's exact test rather than by comparing point totals.
