@@ -3,15 +3,22 @@ SV-ARP: Self-Verifying Agentic Repair Pipeline
 =================================================
 Architecture
 ------------
-  RepairAgent  →  generates candidate patch (full file replacement)
-  TestRunner   →  executes Defects4J test suite against the patch
+  RepairAgent  →  generates a candidate patch as localised SEARCH/REPLACE edits
+  TestRunner   →  compiles and runs the Defects4J relevant tests against the patch
   JudgeAgent   →  structured code review: verdict + line-level suggestions
   LangGraph    →  orchestrates the repair → test → judge loop (≤ MAX_ITERATIONS)
 
-A patch is accepted only when it BOTH passes the test suite AND receives a
+A patch is accepted only when it BOTH passes the tests AND receives a
 `correct` verdict from the JudgeAgent. The JudgeAgent evaluates every candidate,
-including those whose tests pass, so it can reject plausible-but-incorrect
-patches.
+including those whose tests pass.
+
+Environment variables
+  GEMINI_API_KEY or APR_API_KEYS   API key(s); APR_DAILY_QUOTA caps requests per key
+  APR_ABLATION                     configuration switch, see the ABLATION section
+  APR_MAX_ITERATIONS               repair iterations per bug (default 4)
+  APR_TEMPERATURE                  initial sampling temperature (default 0.1)
+  APR_EDIT_MODE                    search_replace (default) or whole_file
+  D4J_HOME                         Defects4J installation (framework/bin/defects4j)
 
 Five adaptive warning mechanisms respond to distinct failure modes:
   1. Compile-error specialisation   — rules to avoid inventing non-existent symbols
@@ -28,6 +35,7 @@ import os
 import json
 import time
 import logging
+import threading
 import difflib
 import hashlib
 import re
@@ -60,48 +68,133 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
 )
-logger = logging.getLogger("V_apr")
+logger = logging.getLogger("sv_arp")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# API client
+# API keys. One key (GEMINI_API_KEY) is the normal case; several keys with
+# automatic rotation are supported for long unattended runs.
+#
+#   export APR_API_KEYS="key1,key2,key3"      # this process's keys
+#   export APR_DAILY_QUOTA=500                # per-key daily request cap
+#
+# Keys are used one at a time. A key is retired for the run when it reports
+# quota exhaustion (429 / RESOURCE_EXHAUSTED) or when this process has issued
+# APR_DAILY_QUOTA requests on it; the next key takes over. When every key is
+# exhausted the run stops cleanly rather than burning wall-clock on errors,
+# and --resume picks up where it left off the next day.
+#
+# When sharding across parallel worker processes, give each worker a DISJOINT
+# set of keys — the counter is per-process and cannot see sibling processes.
 # ─────────────────────────────────────────────────────────────────────────────
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-if not GEMINI_API_KEY:
-    raise ValueError("Set GEMINI_API_KEY before running.")
+_keys_env = os.environ.get("APR_API_KEYS", "").strip()
+GEMINI_API_KEYS = [k.strip() for k in _keys_env.split(",") if k.strip()] or \
+                  ([os.environ["GEMINI_API_KEY"]] if os.environ.get("GEMINI_API_KEY") else [])
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+if not GEMINI_API_KEYS:
+    raise ValueError(
+        "No API key. Set GEMINI_API_KEY (or APR_API_KEYS=key1,key2,...)."
+    )
+
+DAILY_QUOTA = int(os.environ.get("APR_DAILY_QUOTA", "500"))
+
+
+class KeyPool:
+    """Round-robin over API keys, retiring each as its quota is used up."""
+
+    def __init__(self, keys: List[str], quota: int):
+        self._keys    = list(keys)
+        self._quota   = quota
+        self._idx     = 0
+        self._counts  = [0] * len(keys)
+        self._dead    = [False] * len(keys)
+        self._clients = [genai.Client(api_key=k) for k in keys]
+        self._lock    = threading.Lock()
+
+    def client(self):
+        """Current client, or None when every key is exhausted."""
+        with self._lock:
+            for _ in range(len(self._keys)):
+                if not self._dead[self._idx] and self._counts[self._idx] < self._quota:
+                    self._counts[self._idx] += 1
+                    return self._clients[self._idx]
+                self._advance()
+            return None
+
+    def _advance(self):
+        prev = self._idx
+        self._idx = (self._idx + 1) % len(self._keys)
+        if prev != self._idx:
+            logger.info("KeyPool: switching to key #%d (used %d/%d on #%d)",
+                        self._idx + 1, self._counts[prev], self._quota, prev + 1)
+
+    def rotate(self, why: str = "backoff"):
+        """Move to the next key WITHOUT retiring the current one.
+
+        Used for per-minute rate limits: the key is fine, it just needs a rest.
+        """
+        with self._lock:
+            if len(self._keys) > 1:
+                logger.info("KeyPool: rotating away from key #%d (%s)",
+                            self._idx + 1, why)
+                self._advance()
+
+    def retire_current(self, why: str = "quota"):
+        with self._lock:
+            if not self._dead[self._idx]:
+                self._dead[self._idx] = True
+                logger.warning("KeyPool: key #%d retired (%s) after %d requests",
+                               self._idx + 1, why, self._counts[self._idx])
+            self._advance()
+
+    def exhausted(self) -> bool:
+        with self._lock:
+            return all(d or c >= self._quota
+                       for d, c in zip(self._dead, self._counts))
+
+    def summary(self) -> str:
+        with self._lock:
+            return "  ".join(
+                f"#{i+1}:{c}/{self._quota}{'✗' if d else ''}"
+                for i, (c, d) in enumerate(zip(self._counts, self._dead))
+            )
+
+
+KEY_POOL = KeyPool(GEMINI_API_KEYS, DAILY_QUOTA)
+logger.info("KeyPool: %d key(s), %d requests each = %d/day",
+            len(GEMINI_API_KEYS), DAILY_QUOTA, len(GEMINI_API_KEYS) * DAILY_QUOTA)
 
 
 class QuotaExhausted(RuntimeError):
-    """The API quota has been exhausted for the day."""
+    """Every key in this process has hit its cap."""
 
 
-available_models = [m.name for m in client.models.list()]
-if "models/gemini-2.5-flash" in available_models:
-    print("Model found!")
-else:
-    print("Model not found. Available names:", available_models)
-    
+class EmptyModelResponse(RuntimeError):
+    """The model returned no text: a transport failure, not a verdict."""
 
-REPAIR_MODEL = "gemini-3.1-flash-lite"
-JUDGE_MODEL  = "gemini-3.1-flash-lite"
 
-GENERATION_CONFIG = dict(temperature=0.1, top_p=0.95, top_k=40, max_output_tokens=20_000)
+REPAIR_MODEL = os.environ.get("APR_REPAIR_MODEL", "gemini-3.5-flash-lite")
+JUDGE_MODEL  = os.environ.get("APR_JUDGE_MODEL",  "gemini-3.5-flash-lite")
+
+GENERATION_CONFIG = dict(
+    temperature=float(os.environ.get("APR_TEMPERATURE", "0.1")),
+    top_p=0.95, top_k=40, max_output_tokens=20_000,
+)
 
 LARGE_FILE_LINE_THRESHOLD = 800
 LARGE_FILE_MAX_TOKENS     = 32_000
 
-MAX_ITERATIONS = 4
-
-MAX_ITERATIONS_BY_PROJECT: Dict[str, int] = {
-    "Closure": 4,
-    "Chart":   4,
-}
+MAX_ITERATIONS = int(os.environ.get("APR_MAX_ITERATIONS", "4"))
 
 OSCILLATION_SIMILARITY = 0.99
 OSCILLATION_WINDOW     = 3
 
-
+# ─────────────────────────────────────────────────────────────────────────────
+# EDIT MODE
+#   "search_replace" : the model emits localised SEARCH/REPLACE blocks which the
+#                      harness applies. Immune to echo, truncation and drift,
+#                      which matters for large files (Closure).
+#   "whole_file"     : the model re-emits the entire file.
+# Switchable so the two can be compared.
 # ─────────────────────────────────────────────────────────────────────────────
 EDIT_MODE = os.environ.get("APR_EDIT_MODE", "search_replace")
 
@@ -114,23 +207,28 @@ MAX_GENERATION_RETRIES = 2
 # flagged to the Judge as suspicious drift.
 DRIFT_LINE_THRESHOLD = 60
 
+# Price used for the cost estimate written to the results (USD per token,
+# applied to prompt and output tokens alike).
+USD_PER_TOKEN = float(os.environ.get("APR_USD_PER_TOKEN", "0.00000035"))
 
+# Acceptance gate: a patch is only accepted when the tests pass AND the Judge
+# agrees. Set False only to reproduce runs made without the gate.
 REQUIRE_TESTS_PASS_TO_ACCEPT = True
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [ABLATION] Component switches. Default = full system; each flag removes ONE
-# component so its contribution can be measured in isolation. All are read from
-# the environment so no code edit is needed between arms.
+# ABLATION. Configuration switches, read from the environment so that no code
+# edit is needed between configurations. Default = full system.
 #
 #   APR_ABLATION=full            all components active (default)
-#   APR_ABLATION=no_judge        accept on the test suite alone
-#   APR_ABLATION=no_semantic     Judge gates, but its prose/suggestions are
-#                                withheld from the repair prompt
+#   APR_ABLATION=no_judge        no Judge: accept on the tests alone
+#   APR_ABLATION=no_semantic     the Judge runs and gates, but its rationale and
+#                                suggestions are withheld from the repair prompt
+#   APR_ABLATION=binary_only     the test output shown to the Repair Agent is
+#                                replaced by the line "TEST RESULT: FAIL"
 #   APR_ABLATION=no_test_fb      test output withheld from the repair prompt
-#                                (the suite still decides acceptance)
-#   APR_ABLATION=whole_file      legacy whole-file regeneration (= FIX-A off)
-#   APR_ABLATION=no_baseline     strict zero-failure scoring (= FIX-F off);
-#                                measures the cost of the oracle defect
+#                                (the tests still decide acceptance)
+#   APR_ABLATION=whole_file      whole-file regeneration instead of SEARCH/REPLACE
+#   APR_ABLATION=no_baseline     ignore any baseline failing-test list
 #   APR_ABLATION=single_iter     one iteration, no feedback loop at all
 # ─────────────────────────────────────────────────────────────────────────────
 ABLATION = os.environ.get("APR_ABLATION", "full").strip().lower()
@@ -138,7 +236,7 @@ ABLATION = os.environ.get("APR_ABLATION", "full").strip().lower()
 _VALID_ABLATIONS = {
     "full", "no_judge", "no_semantic", "no_test_fb",
     "whole_file", "no_baseline", "single_iter",
-    "binary_only",                                    # ← add
+    "binary_only",
 }
 if ABLATION not in _VALID_ABLATIONS:
     raise SystemExit(
@@ -177,7 +275,7 @@ PROJECT_TEST_DIRS: Dict[str, List[str]] = {
     "Collections": ["src/test/java"],
 }
 
-NEEDS_COMPILE = {"Closure", "Chart"}
+NEEDS_COMPILE = {"Chart", "Closure", "Lang", "Math", "Mockito", "Time"}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -211,8 +309,8 @@ class RepairResult:
     history:         List[Dict]
     cost_estimate:   Dict[str, Any]
     execution_time:  float
-    # [FIX-D] the retained test-passing patch (may differ from final_patch).
-    # Defaulted fields must come last in a dataclass.
+    # the first test-passing patch (may differ from final_patch when the Judge
+    # withheld acceptance). Defaulted fields must come last in a dataclass.
     plausible_patch:     Optional[str] = None
     plausible_iteration: Optional[int] = None
 
@@ -281,6 +379,9 @@ def extract_focused_snippet(full_code: str, lines: List[int], context: int = 5) 
     return "\n\n".join(snippet_parts)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# LOCALISED EDIT SUPPORT + GENERATION GUARDS
+# ─────────────────────────────────────────────────────────────────────────────
 
 def normalise_source(s: str) -> str:
     """Whitespace-insensitive normalisation for equality checks."""
@@ -290,8 +391,7 @@ def normalise_source(s: str) -> str:
 def is_noop_patch(original: str, patched: str) -> bool:
     """True when the model returned the input unchanged (the 'echo' failure).
 
-    The legacy length guard (output < 70% of original) cannot detect this:
-    an exact copy is 100% of the original length.
+    A length guard cannot detect this: an exact copy has the original length.
     """
     if not patched:
         return True
@@ -376,7 +476,6 @@ def build_search_replace_instructions() -> str:
     )
 
 
-# Helper: detect compile-only failures
 def _is_compile_error(tr: Optional[TestResult]) -> bool:
     """Returns True when test runner reports a compile failure (no tests ran)."""
     if tr is None or tr.passed:
@@ -396,8 +495,8 @@ class TestRunner:
     @staticmethod
     def _d4j_cmd() -> str:
         d4j_home = os.environ.get("D4J_HOME", "")
-        cmd = os.path.join(d4j_home, "framework", "bin", "defects4j")
-        return cmd if os.path.exists(cmd) else "defects4j"
+        cmd = os.path.join(d4j_home, "framework", "bin", "defects4j") if d4j_home else ""
+        return cmd if cmd and os.path.exists(cmd) else "defects4j"
 
     @staticmethod
     def _detect_project(project_path: str) -> str:
@@ -449,7 +548,12 @@ class TestRunner:
                     capture_output=True, text=True, timeout=180, env=os.environ
                 )
                 out = r.stdout + r.stderr
-                if r.returncode != 0:
+                failed = (r.returncode != 0
+                          or "BUILD FAILED" in out
+                          or re.search(r"\berror:|cannot find symbol|"
+                                       r"incompatible types|method .* cannot be applied",
+                                       out))
+                if failed:
                     logger.error("Compile FAILED:\n%s", out[:800])
                     return TestResult(False, out, "Compilation failed", [])
                 logger.info("Compile OK")
@@ -465,12 +569,29 @@ class TestRunner:
             )
             output = r.stdout + r.stderr
 
-            if r.returncode == 0 and re.search(r"Failing tests:\s*0", output):
-                return TestResult(True, output, None, [])
-            if r.returncode == 0 and "Failing tests:" not in output:
+            # Defects4J prints "Failing tests: N" whenever the tests actually
+            # run. Its absence means the build or harness failed, not that
+            # every test passed; it must never be read as success.
+            m = re.search(r"Failing tests:\s*(\d+)", output)
+            if not m:
+                logger.error("No 'Failing tests:' line — suite did not run:\n%s",
+                             output[:800])
+                return TestResult(False, output,
+                                  "Build or test-harness failure", [])
+
+            declared    = int(m.group(1))
+            all_failing = cls._parse_failing_tests(output)
+
+            if declared == 0:
                 return TestResult(True, output, None, [])
 
-            all_failing = cls._parse_failing_tests(output)
+            if not all_failing:
+                return TestResult(False, output,
+                                  f"Parse failure: {declared} failing tests "
+                                  f"reported but none extracted", [])
+            if declared != len(all_failing):
+                logger.warning("Header says %d failing, parsed %d",
+                               declared, len(all_failing))
 
             if trigger_tests:
                 trigger_set    = set(trigger_tests)
@@ -491,13 +612,9 @@ class TestRunner:
                     passed        = len(effective_failing) == 0,
                     output        = filtered_output,
                     error_message = r.stderr or None,
-                    # [FIX-E fix] Return EVERY failing test, not just the
-                    # trigger subset. Previously, when the target test still
-                    # failed, `effective_failing` dropped the regressions before
-                    # anything downstream could see them — so the Judge was
-                    # never told the patch had broken other tests.
-                    # `passed` is unchanged: it is still driven by
-                    # effective_failing.
+                    # Return every failing test, not just the trigger subset,
+                    # so that regressions are visible downstream. `passed` is
+                    # driven by effective_failing.
                     failing_tests = all_failing,
                 )
 
@@ -681,7 +798,12 @@ class GeminiAgent:
                         "application/json" if expect_json else "text/plain"
                     ),
                 )
-                response = client.models.generate_content(
+                _cl = KEY_POOL.client()
+                if _cl is None:
+                    raise QuotaExhausted(
+                        "all API keys exhausted for today: " + KEY_POOL.summary()
+                    )
+                response = _cl.models.generate_content(
                     model=self.model_name, contents=prompt, config=cfg
                 )
                 if not response.candidates or not response.candidates[0].content.parts:
@@ -689,7 +811,25 @@ class GeminiAgent:
                         response.candidates[0].finish_reason
                         if response.candidates else "unknown"
                     )
-                    self.logger.error("No content. finish_reason=%s", finish)
+                    # A 200 with no content raises no exception, so the handler
+                    # below never sees it. Retry only when the cause could be
+                    # transient: MAX_TOKENS, SAFETY and RECITATION are
+                    # deterministic and would fail identically every time.
+                    permanent = any(
+                        k in str(finish).upper()
+                        for k in ("MAX_TOKEN", "SAFETY", "RECITATION",
+                                  "PROHIBITED", "BLOCKLIST", "SPII")
+                    )
+                    if not permanent and attempt < max_retries - 1:
+                        wait = min(300, (2 ** attempt) * 15 + random.uniform(1, 10))
+                        self.logger.warning(
+                            "Empty response (finish_reason=%s), attempt %d/%d, "
+                            "retrying in %.0f s", finish, attempt + 1,
+                            max_retries, wait,
+                        )
+                        time.sleep(wait)
+                        continue
+                    self.logger.error("No content (finish_reason=%s)", finish)
                     return "", {}
 
                 candidate = response.candidates[0]
@@ -706,6 +846,7 @@ class GeminiAgent:
 
                 if expect_json:
                     text = extract_json_block(text)
+                self._quota_strikes = 0          # healthy response
                 return text.strip(), usage
 
             except QuotaExhausted:
@@ -713,10 +854,11 @@ class GeminiAgent:
             except Exception as e:
                 err = str(e).lower()
                 if "429" in err or "too many requests" in err or "quota" in err:
-                    # Gemini returns RESOURCE_EXHAUSTED for BOTH the per-minute
-                    # rate limit and the per-day quota. Only the latter means
-                    # the run cannot continue. The quotaId in the error
-                    # distinguishes them, e.g.
+                    # Gemini returns RESOURCE_EXHAUSTED for BOTH the
+                    # per-minute rate limit and the per-day quota. Only the
+                    # latter means the key is finished for the day; treating
+                    # them alike retires healthy keys within minutes.
+                    # The quotaId in the error distinguishes them, e.g.
                     #   ...RequestsPerMinutePerProjectPerModel-FreeTier
                     #   ...RequestsPerDayPerProjectPerModel-FreeTier
                     is_daily = any(k in err for k in (
@@ -729,20 +871,54 @@ class GeminiAgent:
                         "requestsperminuteper", "per-minute",
                     ))
                     if is_daily and not is_minute:
-                        raise QuotaExhausted(
-                            "daily API quota exhausted; resume with --resume"
-                        )
+                        KEY_POOL.retire_current("daily quota reached")
+                        if KEY_POOL.exhausted():
+                            raise QuotaExhausted(
+                                "all API keys exhausted: " + KEY_POOL.summary()
+                            )
+                        continue
 
-                    # Ambiguous or per-minute: back off and retry.
+                    # Ambiguous or per-minute: back off, and only rotate after
+                    # several consecutive failures on the same key.
+                    self._quota_strikes = getattr(self, "_quota_strikes", 0) + 1
+                    if self._quota_strikes >= 3:
+                        KEY_POOL.rotate("3 consecutive rate-limit errors")
+                        self._quota_strikes = 0
                     wait = min(120, (2 ** attempt) * 10 + random.uniform(1, 5))
                     self.logger.warning(
-                        "Rate limited (%s) — waiting %.1f s (attempt %d/%d)",
-                        "per-minute" if is_minute else "unclassified",
-                        wait, attempt + 1, max_retries,
+                        "Rate limited (%s) — waiting %.1f s (attempt %d/%d)  keys: %s",
+                        "daily" if is_daily else "per-minute" if is_minute else "unclassified",
+                        wait, attempt + 1, max_retries, KEY_POOL.summary(),
                     )
                     time.sleep(wait)
                 else:
-                    self.logger.error("API error: %s", e)
+                    # Retry anything that is not provably permanent. The
+                    # permanent cases (bad request, bad key, unknown model)
+                    # are few and recognisable; every other error, including
+                    # DNS and connection failures, is worth another attempt.
+                    se = str(e)
+                    permanent = bool(
+                        re.match(r"^\s*(400|401|403|404)\b", se)
+                    ) or any(k in err for k in (
+                        "api key not valid", "api_key_invalid",
+                        "permission denied", "invalid_argument",
+                        "invalid argument", "unsupported", "model not found",
+                        "unregistered callers",
+                    ))
+                    if not permanent and attempt < max_retries - 1:
+                        wait = min(300, (2 ** attempt) * 15 + random.uniform(1, 10))
+                        self.logger.warning(
+                            "Transient API/network error (attempt %d/%d), "
+                            "retrying in %.0f s: %s",
+                            attempt + 1, max_retries, wait, se[:200],
+                        )
+                        time.sleep(wait)
+                        continue
+                    self.logger.error(
+                        "API error [%s]: %s",
+                        "permanent" if permanent else "retries exhausted",
+                        se[:300],
+                    )
                     return "", {}
         self.logger.error("Max retries reached")
         return "", {}
@@ -814,23 +990,21 @@ class RepairAgent(GeminiAgent):
             judge_reason  = feedback.get("judge_reason", "")
             suggestions   = feedback.get("suggestions", [])
             judge_verdict = feedback.get("judge_feedback", "needs_revision")
-
             test_output   = feedback.get("test_output", "")[:6000]
             diff_text     = feedback.get("diff", "")
 
-            # [ABLATION no_semantic] The Judge still gates acceptance, but its
-            # reasoning is withheld: the repair agent learns only that the
-            # patch was rejected, not why.
+            # no_semantic: the Judge still gates acceptance, but its reasoning
+            # is withheld; the Repair Agent sees only the verdict label.
             if ABL_NO_SEMANTIC_FB:
                 judge_reason = "(withheld: no_semantic ablation)"
                 suggestions  = []
             if ABL_BINARY_ONLY:
-                # The degenerate feedback the paper argues against: the model
-                # learns only that the suite still fails, with no detail.
+                # binary_only: the Repair Agent learns only that the tests
+                # still fail, with no detail.
                 test_output = "TEST RESULT: FAIL"
                 diff_text   = ""
-            # [ABLATION no_test_fb] Test output withheld. The suite still
-            # decides acceptance; the repair agent just cannot see it.
+            # no_test_fb: test output withheld; the tests still decide
+            # acceptance.
             if ABL_NO_TEST_FB:
                 test_output = "(withheld: no_test_fb ablation)"
 
@@ -912,8 +1086,8 @@ class RepairAgent(GeminiAgent):
 
         line_count = full_buggy_code.count("\n")
 
-        # [FIX-A] In search_replace mode the model emits a handful of edit
-        # lines, so the large-file token escalation is unnecessary.
+        # In search_replace mode the model emits a handful of edit lines, so
+        # the large-file token escalation is unnecessary.
         if EDIT_MODE == "search_replace":
             out_tokens = None
         else:
@@ -955,6 +1129,9 @@ class RepairAgent(GeminiAgent):
         reject_reason               = ""
         noop_detected               = False
 
+        # ── Generation loop. Failed *generations* (echo, unparseable edits,
+        #    non-matching SEARCH) are retried here and do NOT consume a repair
+        #    iteration: a repair iteration is one tested candidate. ───────────
         while attempts <= MAX_GENERATION_RETRIES:
             attempts += 1
             raw, usage = self._call(
@@ -1018,7 +1195,7 @@ class RepairAgent(GeminiAgent):
                             cleaned.count("\n"),
                         )
 
-            
+            # No-op / echo guard: the model returned the file unchanged.
             if is_noop_patch(full_buggy_code, cleaned):
                 noop_detected = True
                 reject_reason = "model returned the original file unchanged"
@@ -1086,10 +1263,8 @@ class JudgeAgent(GeminiAgent):
             test_output = "No test results provided."
         else:
             test_status = "PASS" if test_results.passed else "FAIL"
-
             test_output = test_results.output[:6000]
 
-        # Concrete judge suggestions — ban vague "investigate X" format
         prompt = (
             "You are a Principal Software Engineer reviewing an automated patch.\n\n"
             "══════════════════════════\nORIGINAL FILE\n══════════════════════════\n"
@@ -1105,7 +1280,6 @@ class JudgeAgent(GeminiAgent):
             "2. FAIL → 'incorrect' (wrong direction) or 'needs_revision' "
             "(right direction, structural problem).\n"
             "3. NOT_RUN → evaluate structural integrity only.\n\n"
-            # Concrete suggestion format — bans vague language
             "CRITICAL: Each 'suggestions' entry MUST follow EXACTLY this format:\n"
             "  'In [MethodName](): change [exact original code fragment] to "
             "[exact replacement code] because [specific reason]'\n"
@@ -1130,7 +1304,13 @@ class JudgeAgent(GeminiAgent):
         raw, usage = self._call(prompt, expect_json=True)
 
         if not raw:
-            return Verdict.ERROR, "Empty model response", {}
+            # Not a judgement: the API returned nothing after every retry, so
+            # the network is down. Abort this bug so it is recorded as failed
+            # and retried later, instead of spending the remaining iterations
+            # on empty feedback and being written down as "completed".
+            raise EmptyModelResponse(
+                "Judge returned no content after all retries (network or API failure)"
+            )
 
         try:
             result      = json.loads(raw)
@@ -1250,15 +1430,15 @@ class RepairState(TypedDict):
     _repetition_count: Optional[int]
     _single_oscillation_near: Optional[bool]
     _problematic_lines: Optional[List[int]]
-    # Track consecutive no-op streak
+    # consecutive near-identical candidates
     _noop_streak:      int
-    # [FIX-D] First patch that passed the suite, kept even if the Judge vetoes it
+    # first patch that passed the tests, kept even if the Judge withholds acceptance
     plausible_patch:     Optional[str]
     plausible_per_file:  Optional[Dict[str, str]]
     plausible_iteration: Optional[int]
-    # [FIX-F] tests failing before any patch was applied
+    # tests failing before any patch was applied (empty unless the caller passes one)
     baseline_failing:      Optional[List[str]]
-    # [FIX-E] Failure breakdown
+    # failure breakdown
     _regressions:          Optional[List[str]]
     _failing_target_tests: Optional[List[str]]
     _preexisting_failures: Optional[List[str]]
@@ -1287,7 +1467,7 @@ def repair_node(state: RepairState) -> RepairState:
     feedback      = state.get("feedback")
 
     if is_multi_file:
-        # ── V6 multi-file path ───────────────────────────────────────────────
+        # ── multi-file path ───────────────────────────────────────────────────
         logger.info("  Multi-file path (%d files)", len(per_file_sources))
         per_file_patches: Dict[str, str] = {}
         all_metadata: List[Dict]         = []
@@ -1340,7 +1520,7 @@ def repair_node(state: RepairState) -> RepairState:
         state["current_patch"]    = primary_patch
 
     else:
-        # ── V5 single-file path ─────────────────────────────────────────────
+        # ── single-file path ─────────────────────────────────────────────────
         logger.info("  Single-file path")
 
         prev_repairs   = [h for h in state.get("history", []) if h["action"] == "repair"]
@@ -1349,14 +1529,13 @@ def repair_node(state: RepairState) -> RepairState:
         noop_warning   = ""
         temperature    = None
 
-        # Update noop_streak and reset if not applicable
         noop_streak = state.get("_noop_streak", 0)
 
         if feedback:
             tested_patch = feedback.get("previous_patch", "")
             tested_fp    = patch_fingerprint(tested_patch)
 
-            # ── Compile error specialisation ─────────────────────────────────
+            # ── Compile-error specialisation ─────────────────────────────────
             tr = state.get("test_result")
             if _is_compile_error(tr):
                 compile_output = (tr.output or "")[:5000]
@@ -1378,7 +1557,7 @@ def repair_node(state: RepairState) -> RepairState:
                 noop_warning = compile_warning + noop_warning
                 logger.warning("Compile error detected — compile warning injected")
 
-            # ── Regression detection and scoping ──────────────────────────────
+            # ── Regression detection and scoping ─────────────────────────────
             trigger_set = set(state.get("trigger_tests", []))
             if tr and tr.failing_tests and trigger_set:
                 non_trigger_failing = [
@@ -1407,7 +1586,7 @@ def repair_node(state: RepairState) -> RepairState:
                         "regression_warning injected", len(non_trigger_failing)
                     )
 
-            # ── Stuck-patch detection (rules A–E) ─────────────────────────────
+            # ── Cycle and near-duplicate detection ───────────────────────────
             seen_fps = {patch_fingerprint(h["patch"]) for h in prev_repairs[:-1]}
 
             if tested_fp in seen_fps:
@@ -1543,7 +1722,7 @@ def repair_node(state: RepairState) -> RepairState:
                 )
                 feedback["focus_snippet"] = snippet
 
-            # ── Surgical mode after 3+ consecutive no-ops ─────────────────────
+            # ── Surgical mode after 3+ consecutive no-ops ────────────────────
             if noop_streak >= 3:
                 all_judge_suggestions: List[str] = []
                 for j in prev_judges:
@@ -1587,7 +1766,6 @@ def repair_node(state: RepairState) -> RepairState:
                     "Surgical mode activated (noop_streak=%d, temp=0.85)", noop_streak
                 )
 
-        # Persist updated streak
         state["_noop_streak"] = noop_streak
 
         patch, metadata = repair_agent.generate_fix(
@@ -1672,6 +1850,9 @@ def test_node(state: RepairState) -> RepairState:
 
     state["test_result"] = tr
 
+    # ── Retain the first test-passing patch ─────────────────────────────────
+    # If the Judge withholds acceptance and the loop continues, the passing
+    # candidate is kept so that plausibility is recorded and auditable.
     if tr.passed and not state.get("plausible_patch"):
         state["plausible_patch"]     = state.get("current_patch")
         state["plausible_per_file"]  = dict(state.get("per_file_patches") or {})
@@ -1681,9 +1862,15 @@ def test_node(state: RepairState) -> RepairState:
             state.get("iteration", 0),
         )
 
-
+    # ── Separate the target failure from regressions ────────────────────────
+    # A bare PASS/FAIL cannot tell "did not fix it" from "fixed it but broke
+    # something else"; both lists are available, so report both.
+    #
+    # `baseline_failing` is empty unless the caller passes a list of tests
+    # that already fail on the unpatched checkout. run_benchmark.py does not
+    # pass one, so in the benchmark a candidate is plausible only when no
+    # relevant test fails at all.
     triggers  = {t.strip() for t in (trigger_tests or []) if t.strip()}
-
     baseline  = set() if ABL_NO_BASELINE_SUB else {
         t.strip() for t in (state.get("baseline_failing") or []) if t.strip()
     }
@@ -1693,7 +1880,8 @@ def test_node(state: RepairState) -> RepairState:
         t for t in failing
         if any(t.startswith(x) or x.startswith(t) for x in triggers)
     ]
-
+    # A regression is a test that passed on the buggy checkout and fails now;
+    # tests listed in the baseline are not charged to the patch.
     regressions = [
         t for t in failing
         if t not in still_failing_targets and t not in baseline
@@ -1704,9 +1892,23 @@ def test_node(state: RepairState) -> RepairState:
     ]
     state["_preexisting_failures"] = preexisting
 
-    baseline_relative_pass = (not still_failing_targets) and (not regressions)
+    # Plausibility: every trigger test passes and the patch broke nothing that
+    # previously worked. A build, compile or harness failure yields an EMPTY
+    # failing-test list, which would otherwise read as "all trigger tests
+    # fixed, no regressions", so a candidate is promoted to PASS only when the
+    # tests actually ran.
+    suite_ran = not (tr.error_message or "").strip()
+
+    baseline_relative_pass = (
+        suite_ran and (not still_failing_targets) and (not regressions)
+    )
     state["baseline_relative_pass"] = baseline_relative_pass
-    if baseline_relative_pass and not tr.passed:
+
+    if not suite_ran:
+        logger.warning(
+            "Not promoting to PASS: the suite did not run (%s)", tr.error_message,
+        )
+    elif baseline_relative_pass and not tr.passed:
         logger.info(
             "Baseline-relative PASS: all %d trigger test(s) fixed, 0 regressions, "
             "%d pre-existing failure(s) ignored", len(triggers), len(preexisting),
@@ -1743,8 +1945,7 @@ def test_node(state: RepairState) -> RepairState:
 
 
 def judge_node(state: RepairState) -> RepairState:
-    # [ABLATION no_judge] Skip the LLM judge; the test suite alone decides.
-    # This is the classic test-only APR configuration.
+    # no_judge: skip the LLM judge; the tests alone decide.
     if ABL_SKIP_JUDGE:
         tr = state.get("test_result")
         ok = bool(tr is not None and tr.passed)
@@ -1967,36 +2168,17 @@ def decide_next(
     verdict   = state.get("judge_verdict", "error")
     iteration = state.get("iteration", 0)
 
+    # ── Acceptance gate: a passing test run AND a correct verdict ───────────
     if verdict == "correct":
         tr = state.get("test_result")
         if tr is not None and tr.passed:
             return "accept"
-        logger.error("Gate reached decide_next — judge_node should have "
-                     "downgraded this; rejecting to avoid a loop")
+        logger.error("Gate reached decide_next with a failing test run; "
+                     "judge_node should have downgraded this. Rejecting.")
         return "reject"
-        
-        tests_ok = bool(tr is not None and tr.passed)
-        if tests_ok or not REQUIRE_TESTS_PASS_TO_ACCEPT:
-            return "accept"
-        logger.warning(
-            "Judge returned 'correct' but the suite is FAILING (%s) — "
-            "not accepting. Failing: %s",
-            state.get("project_name", ""),
-            (tr.failing_tests[:3] if tr else []),
-        )
-        # Downgrade and keep going: the Judge's own stated rule is that a
-        # failing suite cannot yield "correct".
-        state["judge_verdict"] = "needs_revision"
-        state["judge_reason"]  = (
-            "Overridden by acceptance gate: the Judge returned 'correct' but "
-            "the test suite is still failing. "
-            + (state.get("judge_reason") or "")
-        )
-        state["iteration"] = state.get("iteration", 0) + 1
-        verdict = "needs_revision"
 
     project_name = state.get("project_name", "")
-    max_iter     = MAX_ITERATIONS_BY_PROJECT.get(project_name, MAX_ITERATIONS)
+    max_iter     = MAX_ITERATIONS
     if state.get("iteration", 0) >= max_iter:
         logger.info(
             "Max iterations reached for %s (%d/%d)",
@@ -2170,11 +2352,13 @@ class AgenticRepairSystem:
             "_single_oscillation_near": False,
             "_problematic_lines":       [],
             "_noop_streak":             0,
+            # tests already failing on the unpatched checkout, if the caller
+            # supplies them (the benchmark runner does not)
             "baseline_failing":         list(baseline_failing or []),
-            "plausible_patch":          None,   # [FIX-D]
+            "plausible_patch":          None,
             "plausible_per_file":       None,
             "plausible_iteration":      None,
-            "_regressions":             [],     # [FIX-E]
+            "_regressions":             [],
             "_preexisting_failures":    [],
             "baseline_relative_pass":   False,
             "_failing_target_tests":    [],
@@ -2191,6 +2375,8 @@ class AgenticRepairSystem:
         iterations     = len([h for h in history if h["action"] == "repair"])
 
         test_res = final_state.get("test_result")
+        # plausible if the tests passed at ANY iteration, not only the last
+        # one: the Judge may have withheld acceptance and the loop continued.
         retained_patch     = final_state.get("plausible_patch")
         retained_iteration = final_state.get("plausible_iteration")
         plausible = bool(
@@ -2220,11 +2406,12 @@ class AgenticRepairSystem:
             history         = history,
             cost_estimate   = {
                 "total_tokens":  total_tokens,
-                "estimated_usd": round(total_tokens * 0.00000035, 4),
+                # flat list price applied to all tokens, input and output alike
+                "estimated_usd": round(total_tokens * USD_PER_TOKEN, 4),
             },
             execution_time  = time.time() - t0,
-            plausible_patch     = retained_patch,      # [FIX-D]
-            plausible_iteration = retained_iteration,  # [FIX-D]
+            plausible_patch     = retained_patch,
+            plausible_iteration = retained_iteration,
         )
 
 
