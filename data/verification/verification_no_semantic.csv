@@ -1,0 +1,374 @@
+Bug_id,Project,Bug_number,Logged plausible by the suite,Verified plausible,llm judge verdict,Reviewer Semantic verdict,Reviewer notes
+Chart_1,Chart,1,Yes,Yes,correct,Correct,Identical to the developer fix (return early when dataset == null).
+Chart_2,Chart,2,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Chart_3,Chart,3,Yes,Yes,correct,Correct,Resets copy.minY/maxY to NaN in createCopy exactly as the developer (statement order differs only).
+Chart_4,Chart,4,Yes,Yes,correct,Correct,Identical to the developer fix (renderer annotations only collected when r != null).
+Chart_5,Chart,5,Yes,Yes,correct,Correct,"Keeps the 'index >= 0 && !allowDuplicateXValues' test but fixes the autoSort insertion when a duplicate x exists (insert after the existing equal x values instead of at a negative index). The developer instead delegates to add(x, y), whose autoSort branch performs the same 'insert after duplicates' logic; item-count trimming, change notification and the null return value are identical."
+Chart_6,Chart,6,Yes,Yes,correct,Correct,"Replaces super.equals with an element-wise ShapeUtilities.equal comparison like the developer. Adds a size check first: this makes equals symmetric (the developer/AbstractObjectList version ignores extra trailing elements of the other list) but also reports lists that differ only by trailing null slots as unequal - an edge-case difference, not a regression of the reported bug."
+Chart_7,Chart,7,Yes,Yes,correct,Correct,"Uses maxMiddleIndex for both start and end of the max-middle item, identical to the developer fix."
+Chart_8,Chart,8,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Chart_9,Chart,9,Yes,Yes,correct,Correct,"Restructures the empty-range test: empty if startIndex == size, endIndex < 0, or endIndex < startIndex. This is logically the same condition as the developer's (endIndex < 0 || endIndex < startIndex) together with the existing start-after-last-item check."
+Chart_10,Chart,10,Yes,Yes,correct,Correct,Same as the developer fix (tool-tip text passed through ImageMapUtilities.htmlEscape); only trailing whitespace differs.
+Chart_11,Chart,11,Yes,Yes,correct,Correct,Identical to the developer fix (second iterator taken from p2).
+Chart_12,Chart,12,Yes,Yes,correct,Correct,Constructor now registers the plot as a change listener on the dataset (the essence of the developer's setDataset(dataset) call). Minor difference: setDataset also calls setDatasetGroup(dataset.getGroup()) and fires a datasetChanged event; with no listeners at construction time only the (rarely used) dataset group stays unset.
+Chart_13,Chart,13,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Chart_14,Chart,14,Yes,Yes,correct,Correct,"Adds the developer's 'markers == null => return false' guard to all four remove*Marker methods. In XYPlot it also switches the local type to Collection, calls marker.removeChangeListener(this) after removal (a no-op, since markers are not registered as listeners in this version) and adds an IllegalArgumentException for a null marker in removeDomainMarker (the developer version would return false)."
+Chart_15,Chart,15,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Chart_16,Chart,16,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Chart_17,Chart,17,Yes,Yes,correct,Correct,clone() rewritten exactly as the developer (super.clone() + deep copy of data list) instead of createCopy().
+Chart_18,Chart,18,No,No,incorrect,N/A (not plausible),Suite still failing after 2 iteration(s); judge observed FAIL/n/a.
+Chart_19,Chart,19,Yes,Yes,correct,Correct,Identical to the developer fix (null-argument checks in getDomainAxisIndex/getRangeAxisIndex).
+Chart_20,Chart,20,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Chart_21,Chart,21,Yes,Yes,correct,Correct,"Re-implements updateBounds() as a full recomputation over all items (the missing part of the buggy version). The developer additionally wraps the incremental update in add() in an else-branch; in the LLM version the incremental update still runs after a full recomputation but can no longer change the result, so the final bounds are the same. A second one-line edit (most likely the constructor initialising rangeBounds to null instead of Range(0,0)) could only change getRangeBounds() of an empty dataset, which is documented as 'possibly null'."
+Chart_22,Chart,22,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Chart_23,Chart,23,Yes,Yes,correct,Correct,"Adds the same equals() override as the developer (plotLines, groupPaint, groupStroke, super.equals)."
+Chart_24,Chart,24,Yes,Yes,correct,Correct,Code identical to the developer fix (uses the clamped value v instead of value); verified against the developer patch lines and the matching upstream jfreechart revision (only JCommon import/header noise differs).
+Chart_25,Chart,25,Yes,Yes,correct,Correct,"Same null guards as the developer: returns early when the mean is null and draws the standard-deviation lines only when the std-dev value is non-null, in both the vertical and horizontal paths (variable renamed n -> sDelta)."
+Chart_26,Chart,26,Yes,Yes,correct,Correct,Identical to the developer fix (owner null check before reading the entity collection).
+Closure_1,Closure,1,Yes,Yes,correct,Correct,Identical guard to the developer patch (unused function parameters only removed when removeGlobals is set).
+Closure_2,Closure,2,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_3,Closure,3,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_4,Closure,4,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_5,Closure,5,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_6,Closure,6,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_7,Closure,7,Yes,Yes,correct,Correct,"Identical logic to the developer patch, written as a nested ternary."
+Closure_8,Closure,8,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_9,Closure,9,Yes,Yes,correct,Correct,"Adds the developer's backslash-to-slash normalisation, which is the actual fix for the module-name bug. It keeps the pre-existing double normalisation guessCJSModuleName(normalizeSourceName(...)) in visitScript that the developer also removed; that only matters for paths that start with the prefix twice (e.g. prefix 'lib/' and 'lib/lib/a.js'), where the declared module name would differ from the one used for exports - a rare pre-existing edge case unrelated to the reported bug."
+Closure_10,Closure,10,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_11,Closure,11,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_12,Closure,12,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_13,Closure,13,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_14,Closure,14,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_15,Closure,15,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_16,Closure,16,Yes,Yes,correct,Correct,"Resolves transitive aliases eagerly by repeatedly expanding the root through the alias map, giving the same expanded type name the developer obtains by applying the (already rewritten) alias definition lazily. Only a nonsensical self-referential alias (var x = x.y) would behave differently."
+Closure_17,Closure,17,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_18,Closure,18,Yes,Yes,correct,Correct,"Same change as the developer (dependency sorting no longer requires closurePass). Additionally drops closurePass from the equivalent check in hoistExterns, which only lets the extern-hoisting scan skip inputs that declare provides/requires - a consistent, benign extension."
+Closure_19,Closure,19,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_20,Closure,20,Yes,Yes,correct,Correct,"Identical conditions to the developer patch (single immutable argument), only nested differently."
+Closure_21,Closure,21,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_22,Closure,22,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_23,Closure,23,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_24,Closure,24,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_25,Closure,25,Yes,Yes,correct,Correct,"Adds backwardsInferenceFromCallSite for constructors and, after the arguments are traversed, re-runs updateTypeOfParameters, so object-literal/argument property inference ends up as in the developer version (which traverses all children first). The re-run is repeated once per argument (redundant, idempotent) and is also applied to non-constructor function types used with new - inefficient but not behaviourally harmful."
+Closure_26,Closure,26,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_27,Closure,27,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_28,Closure,28,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_29,Closure,29,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_30,Closure,30,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_31,Closure,31,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_32,Closure,32,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_33,Closure,33,Yes,Yes,correct,Correct,"The guard only returns early for named, non-record types when the constraint is a record type; since the method does nothing for non-record constraints and RecordType instances never have a reference name, this is equivalent to the developer's 'if (hasReferenceName()) return'."
+Closure_34,Closure,34,No,No,incorrect,N/A (not plausible),Suite still failing after 3 iteration(s); judge observed FAIL/FAIL/n/a.
+Closure_35,Closure,35,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_36,Closure,36,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_37,Closure,37,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_38,Closure,38,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_39,Closure,39,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_40,Closure,40,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_41,Closure,41,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_42,Closure,42,Yes,Yes,correct,Correct,"Reports the same 'unsupported language extension: for each' parse error. It then still builds a FOR node instead of the developer's placeholder EXPR_RESULT, but compilation stops on the reported error, so the observable outcome is the same."
+Closure_43,Closure,43,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_44,Closure,44,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_45,Closure,45,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_46,Closure,46,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_47,Closure,47,No,No,incorrect,N/A (not plausible),Suite still failing after 3 iteration(s); judge observed FAIL/FAIL/n/a.
+Closure_48,Closure,48,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_49,Closure,49,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_50,Closure,50,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_51,Closure,51,Yes,Yes,correct,Correct,"String.valueOf(x).equals(""-0.0"") is true exactly for negative zero, equivalent to the developer's isNegativeZero(x)."
+Closure_52,Closure,52,Yes,Yes,correct,Correct,"Rejects numeric keys with a leading zero (e.g. '010') like the developer; the only difference is that the key '0' itself is still printed as the number 0 instead of the string ""0"", which is the same property in JavaScript."
+Closure_53,Closure,53,Yes,Yes,correct,Correct,"When no assignments remain, the replacement is the single TRUE node - same result as the developer's empty-list branch; otherwise identical comma-tree construction."
+Closure_54,Closure,54,No,No,incorrect,N/A (not plausible),Suite still failing after 2 iteration(s); judge observed FAIL/n/a.
+Closure_55,Closure,55,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_56,Closure,56,Yes,Yes,correct,Correct,Equivalent to the developer patch (last line without trailing newline is returned; null only at end of file).
+Closure_57,Closure,57,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_58,Closure,58,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_59,Closure,59,Yes,Yes,correct,Overfitting,"Respects an explicit 'disable' of GLOBAL_THIS like the developer, but additionally forces CheckLevel.ERROR whenever the group is enabled. Because the guard added last wins, a user's --jscomp_warning=globalThis is escalated to an error; the developer only skips applying checkGlobalThisLevel when the group is disabled."
+Closure_60,Closure,60,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_61,Closure,61,Yes,Yes,correct,Correct,Identical to the developer patch (calls on the Math namespace are side-effect free).
+Closure_62,Closure,62,Yes,Yes,correct,Correct,"Allows the caret at charno == line length as the developer does. Also prints a caret (space padded) when charno exceeds the line length, where the developer prints none - a cosmetic difference in error-message formatting only."
+Closure_64,Closure,64,Yes,Yes,correct,Overfitting,"Implements the developer's 'use strict only for the first input' change, but also deletes builder.setLineLengthThreshold(options.lineLengthThreshold) from toSource, so the user's line-length threshold option is silently ignored in all output."
+Closure_65,Closure,65,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_66,Closure,66,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_67,Closure,67,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_68,Closure,68,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_69,Closure,69,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_70,Closure,70,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_71,Closure,71,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_72,Closure,72,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_73,Closure,73,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_74,Closure,74,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_75,Closure,75,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed n/a/FAIL/FAIL/FAIL.
+Closure_76,Closure,76,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_77,Closure,77,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_78,Closure,78,No,No (no-op: patched file identical to buggy file),needs_revision,N/A (not plausible),The final patch does not change the buggy file at all. Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_79,Closure,79,No,No,incorrect,N/A (not plausible),Suite still failing after 3 iteration(s); judge observed FAIL/FAIL/n/a.
+Closure_80,Closure,80,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_81,Closure,81,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_82,Closure,82,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_83,Closure,83,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_84,Closure,84,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_85,Closure,85,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_86,Closure,86,Yes,Yes,correct,Correct,"NEW now returns locals.apply(value) instead of the developer's constant false; every predicate passed to evaluatesToLocalValue in this code base (alwaysFalse and PureFunctionIdentifier's tainting predicate) returns false for a NEW node, so behaviour is identical."
+Closure_87,Closure,87,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_88,Closure,88,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_89,Closure,89,No,No,incorrect,N/A (not plausible),Suite still failing after 2 iteration(s); judge observed FAIL/n/a.
+Closure_90,Closure,90,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_91,Closure,91,Yes,Yes,correct,Correct,"Skips functions lent to a prototype like the developer. The LLM walks all ancestors for an @lends ...prototype annotation, whereas the developer only checks the object literal directly containing the key; the extra suppression only affects methods of an object literal nested inside a lent literal (a missed lint warning in a rare nesting)."
+Closure_92,Closure,92,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_94,Closure,94,Yes,Yes,correct,Overfitting,"Only ADD is added (which, by placement, also makes BITAND/BITOR/BITXOR check both operands). The developer also accepts SUB, MUL, DIV, MOD, shifts, comparisons (EQ/NE/LT/...) and unary POS; with the LLM patch @define initialisers such as 1 - 2, 2 * X or +1 are still rejected as illegal. The test only checks '+' and '&'."
+Closure_95,Closure,95,Yes,Yes,correct,Correct,Same hoisting of global-rooted qualified names into the global scope as the developer; the developer's '!scope.isGlobal()' test is implicit (in the global scope the target scope is unchanged) and the extra isQualifiedName() check is always true here.
+Closure_96,Closure,96,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_97,Closure,97,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_98,Closure,98,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_99,Closure,99,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_100,Closure,100,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_101,Closure,101,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_102,Closure,102,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_103,Closure,103,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/n/a.
+Closure_104,Closure,104,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_105,Closure,105,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_106,Closure,106,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_107,Closure,107,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_108,Closure,108,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_109,Closure,109,Yes,Yes,correct,Overfitting,"Accepts only '*' and '?' (plus plain type names) after this:/new:. The developer uses parseBasicTypeExpression, which also accepts union '(A|B)', record '{...}', array, function(...) and null/undefined context types; these still produce 'Bad type annotation' warnings with the LLM patch."
+Closure_110,Closure,110,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_111,Closure,111,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_112,Closure,112,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_113,Closure,113,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_114,Closure,114,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_115,Closure,115,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_116,Closure,116,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_117,Closure,117,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_118,Closure,118,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_119,Closure,119,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_120,Closure,120,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_121,Closure,121,No,No (no-op: patched file identical to buggy file),needs_revision,N/A (not plausible),The final patch does not change the buggy file at all. Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_122,Closure,122,Yes,Yes,correct,Overfitting,"Adds two more literal substrings (""\n *@"", ""\n   * @"") that match the new tests' exact indentation. The developer uses the regex (/|\n[ \t]*)\*[ \t]*@[a-zA-Z], which covers any indentation/tabs and '/*@'; other layouts (e.g. two or four spaces before '*', tabs, '/*@type') are still not warned about."
+Closure_123,Closure,123,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Closure_124,Closure,124,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_125,Closure,125,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_126,Closure,126,Yes,Yes,correct,Correct,"Equivalent to the developer patch: the finally-block minimisation is disabled (code commented out, empty if left behind)."
+Closure_127,Closure,127,Yes,Yes,correct,Correct,"Same 'do not remove jumps inside a finally block' rule as the developer. The LLM helper does not stop at function boundaries, so a redundant jump inside a function nested in a finally block is kept rather than removed - a missed optimisation only, never a behaviour change."
+Closure_128,Closure,128,Yes,Yes,correct,Correct,"Same predicate as the developer patch (""0"" is a simple number, other leading zeros are not)."
+Closure_129,Closure,129,Yes,Yes,correct,Overfitting,"Unwraps a single CAST with 'if' instead of the developer's 'while'. With nested casts, e.g. /** @type {A} */ (/** @type {B} */ (x.f))(), the call is still marked FREE_CALL and printed as (0,x.f)(), losing the 'this' binding."
+Closure_130,Closure,130,Yes,Yes,correct,Overfitting,"Instead of excluding extern names from alias inlining (developer: !name.inExterns), it switches off inlineAliases for every name whenever collapsePropertiesOnExternTypes is enabled - exactly the configuration the test uses. Output stays valid, but alias inlining (and the property collapsing that depends on it) is lost for all user code in that mode."
+Closure_131,Closure,131,Yes,Yes,correct,Overfitting,"Rewrites isJSIdentifier to accept only ASCII letters/digits/$/_ and reject every char > 0x7F. The developer only excludes identifier-ignorable characters and still accepts Unicode identifiers. With the LLM patch valid non-ASCII names are rejected, e.g. goog.provide('a.é') reports INVALID_PROVIDE_ERROR and such module names fail validation."
+Closure_132,Closure,132,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Closure_133,Closure,133,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_1,Lang,1,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_3,Lang,3,Yes,Yes,correct,Correct,"Equivalent to dev fix: Float/Double still parsed but only returned when numDecimals<=7 / <=16, otherwise falls through to Double/BigDecimal exactly as the developer's guards do (createFloat/createDouble have no side effects; NFE still caught)."
+Lang_4,Lang,4,Yes,Yes,correct,Overfitting,"Only the put() side is normalised (seq[0].toString()); the map is still HashMap<CharSequence,...> and the lookup still uses lookupMap.get(subSeq) without toString(). Works only when input.subSequence() returns a String (String/StringBuffer/StringBuilder, as in the test); for CharSequences such as CharBuffer the lookup still misses. Developer converts both key and lookup to String."
+Lang_5,Lang,5,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_6,Lang,6,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_7,Lang,7,Yes,Yes,correct,Correct,"createNumber now throws NFE for '--' prefixed input instead of returning null; developer instead lets the input fall through to createBigDecimal which throws. Observable behaviour of createNumber is the same (NFE). createBigDecimal('--x') is left to java.math.BigDecimal, which rejects it on all modern JDKs (testCreateBigDecimal '--' cases pass on the buggy version already)."
+Lang_8,Lang,8,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_9,Lang,9,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_10,Lang,10,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_11,Lang,11,Yes,Yes,correct,Correct,"end<=start check placed after the defaulting block instead of in an else-branch; when start==end==0 the defaults always make end>start (empty chars array is rejected earlier), so behaviour is identical. Message differs but contains 'start'/'end'."
+Lang_12,Lang,12,Yes,Yes,correct,Overfitting,"Only sets end=chars.length when letters==false && numbers==false. With a non-null chars array and letters or numbers true (start=end=0) the buggy defaults end='z'+1,start=' ' remain and chars[nextInt(gap)+start] still throws ArrayIndexOutOfBounds; the developer sets end=chars.length whenever chars!=null and adds an explicit empty-array check."
+Lang_13,Lang,13,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_14,Lang,14,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_15,Lang,15,No,No (no-op: patched file identical to buggy file),incorrect,N/A (not plausible),The final patch does not change the buggy file at all. Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_16,Lang,16,Yes,Yes,correct,Overfitting,"Adds the missing 0X/-0X prefixes like the developer, but also routes hex strings with more than 8 digits to createLong(), which uses Long.valueOf and cannot parse a 0x prefix. Zero-padded values that the developer version parses via Integer.decode (e.g. createNumber(""0x000000001"") -> 1, ""0x0000000FF"" -> 255) now throw NumberFormatException."
+Lang_17,Lang,17,Yes,Yes,correct,Correct,"Equivalent to the developer fix: len=input.length(); untranslated char written with its low surrogate when a valid pair is present (same as Character.toChars(codePointAt)), consumed>0 branch identical to developer code."
+Lang_19,Lang,19,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_20,Lang,20,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_21,Lang,21,Yes,Yes,correct,Correct,Comparing HOUR plus AM_PM is equivalent to comparing HOUR_OF_DAY.
+Lang_22,Lang,22,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_23,Lang,23,Yes,Yes,correct,Correct,Same equals()/hashCode() as the developer patch (literal 31 instead of HASH_SEED constant).
+Lang_24,Lang,24,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_26,Lang,26,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_27,Lang,27,Yes,Yes,correct,Correct,"Fixes the root cause (expPos computed as indexOf('e')+indexOf('E')+1) instead of guarding expPos>length. Identical for any input containing at most one of e/E; inputs containing both are never valid numbers and still end in NumberFormatException (switch default / createBigDecimal), which is what the developer guard produces."
+Lang_28,Lang,28,Yes,Yes,correct,Correct,Identical to the developer patch (only a local variable name differs).
+Lang_29,Lang,29,No,"No (logged failing, but patch is identical to the developer fix)",needs_revision,Identical to developer fix,"The patch is byte-identical to the developer fix, yet the suite logged the trigger test as failing. The fix changes the return type of toJavaVersionInt(String) from float to int; a harness that recompiles only the source classes and reuses test classes compiled against the old float signature would fail with NoSuchMethodError. Suspected harness false negative - re-run with test recompilation. Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL."
+Lang_30,Lang,30,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_31,Lang,31,Yes,Yes,correct,Correct,"Same surrogate-pair logic as the developer patch. Only divergence is malformed input where cs ends with a lone high surrogate matching a non-final high surrogate in searchChars (LLM: false, developer: true); the LLM answer is arguably more accurate and no specified behaviour depends on it."
+Lang_32,Lang,32,Yes,Yes,correct,Correct,"Same lazy ThreadLocal registry creation/removal as the developer patch; the developer's synchronized blocks are redundant for a ThreadLocal, so behaviour is equivalent."
+Lang_33,Lang,33,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_34,Lang,34,No,No (no-op: patched file identical to buggy file),needs_revision,N/A (not plausible),The final patch does not change the buggy file at all. Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_35,Lang,35,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_36,Lang,36,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_37,Lang,37,Yes,Yes,correct,Correct,Same try/catch around the second arraycopy with IllegalArgumentException for incompatible component types and rethrow otherwise (adds the cause; message wording differs).
+Lang_38,Lang,38,Yes,Yes,correct,Correct,"Forces field computation with getTime() on the clone before setTimeZone instead of on the caller's calendar before cloning; the clone carries the same unnormalised state and original zone, so the formatted result is identical (and the caller's calendar is not mutated)."
+Lang_39,Lang,39,Yes,Yes,correct,Correct,Identical null guard to the developer patch (operand order swapped).
+Lang_40,Lang,40,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_41,Lang,41,Yes,Yes,correct,Correct,"Same array-prefix and L...; stripping as the developer patch. The primitive-abbreviation lookup is applied only for array names (developer applies it to any name, so getShortClassName(""I"") differs); class names from Class.getName() never use abbreviations outside arrays, and the LLM placement is what later commons-lang3 releases use."
+Lang_42,Lang,42,Yes,Yes,correct,Correct,Equivalent to the developer fix: a valid high/low surrogate pair is emitted as one decimal code-point reference and the low surrogate skipped; all other characters handled as before.
+Lang_43,Lang,43,Yes,Yes,correct,Overfitting,"Contains the developer's next(pos) fix, but also changes the closing-QUOTE case to append(c, lastHold, pos-1-lastHold). In insertFormats() (escapingOn=false, pos on the quote) this now appends zero characters, so toPattern() silently drops every quote character for patterns that combine quotes with custom formats (e.g. ""it''s a {0,lower} ...""). The other edits sit in a branch that is unreachable. Not exercised by the tests."
+Lang_44,Lang,44,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_45,Lang,45,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_46,Lang,46,Yes,Yes,correct,Overfitting,"Only the String-returning helper gets escapeForwardSlash=escapeSingleQuotes; the Writer helper used by the public escapeJava(Writer,String) now hard-codes escapeForwardSlash=true, so escapeJava(Writer,..) still escapes '/' while escapeJava(String) does not. Developer threads the flag through both overloads (Java: no, JavaScript: yes)."
+Lang_47,Lang,47,Yes,Yes,correct,Correct,Equivalent to the developer fix (null nullText treated as empty string in both pad methods).
+Lang_49,Lang,49,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_50,Lang,50,Yes,Yes,correct,Correct,"Same change as the developer (null locale replaced by Locale.getDefault() before building the cache key) in getDateInstance and getDateTimeInstance; additionally applies the identical fix to getTimeInstance, which has the same latent stale-cache bug."
+Lang_51,Lang,51,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_52,Lang,52,Yes,Yes,correct,Correct,"Adds the missing '/' escape for JavaScript (escapeJavaScript now yields '<\/script>'). Unlike the developer patch it does not escape '/' in escapeJava; that divergence is the behaviour commons-lang later adopted as correct (LANG-421, see Lang_46), so the fix is valid but not strictly equivalent."
+Lang_53,Lang,53,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_54,Lang,54,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_55,Lang,55,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_56,Lang,56,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_57,Lang,57,Yes,Yes,correct,Correct,Eagerly initialises cAvailableLocaleSet in the static block (final field) so isAvailableLocale no longer sees null; contains() on the set is equivalent to the developer's contains() on the list.
+Lang_58,Lang,58,Yes,Yes,correct,Correct,"Same condition as the developer patch (startsWith(""-"") instead of charAt(0)=='-')."
+Lang_59,Lang,59,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_60,Lang,60,Yes,Yes,correct,Correct,"Identical to the developer patch (loops bounded by size in contains(char) and indexOf(char,int))."
+Lang_61,Lang,61,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Lang_62,Lang,62,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_63,Lang,63,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Lang_64,Lang,64,Yes,Yes,correct,Overfitting,"Adds the ClassCastException for different enum classes (what the test checks), but the cross-classloader branch returns c1Value(other) - c1Value(this), i.e. the opposite sign of the developer's iValue - otherValue and of the same-class path, so compareTo gives reversed ordering for same-named enums from another class loader."
+Lang_65,Lang,65,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_1,Math,1,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_2,Math,2,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_3,Math,3,Yes,Yes,correct,Correct,Identical to the developer patch (len==1 shortcut a[0]*b[0]).
+Math_4,Math,4,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_5,Math,5,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_6,Math,6,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_7,Math,7,Yes,Yes,correct,Overfitting,"Only the first part of the developer fix: all event states are advanced with stepAccepted, but reset() is still called only on currentEvent and the old 'remaining.stepAccepted' loops are kept. With simultaneous events the other pending states are never reset, so their eventOccurred() handlers are invoked again (duplicate calls) and their RESET_STATE/RESET_DERIVATIVES requests are ignored. Developer resets every state and removes the duplicate stepAccepted loops."
+Math_8,Math,8,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_9,Math,9,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_10,Math,10,Yes,Yes,correct,Overfitting,"Rewrites the branch conditions instead of overwriting the value with FastMath.atan2 as the developer does. Only the x == 0 cases are special-cased: atan2(+0.0, -1.0) still returns -pi instead of +pi (the (tmp2<=0 ? -pi : pi) choice picks -pi for y=+0), and infinite arguments such as atan2(+inf, 1) or atan2(+inf, +inf) give NaN instead of pi/2, pi/4. The 0/0 branch also invents a derivative of -1/x."
+Math_11,Math,11,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_12,Math,12,Yes,Yes,correct,Correct,Same as the developer patch (BitsStreamGenerator implements Serializable with the same serialVersionUID).
+Math_13,Math,13,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_14,Math,14,Yes,Yes,correct,Correct,Same as the developer patch in both files (Weight uses DiagonalMatrix; squareRoot has the DiagonalMatrix fast path).
+Math_15,Math,15,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_16,Math,16,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_17,Math,17,Yes,Yes,correct,Correct,"Same as the developer patch (multiplyFast only for 0<=x<RADIX, otherwise multiply(newInstance(x)))."
+Math_18,Math,18,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_19,Math,19,Yes,Yes,correct,Correct,Throws NumberIsTooLargeException when uB-lB overflows (>MAX_VALUE is the same condition as the developer's isInfinite for these finite-ordered bounds); exception arguments/context messages differ only.
+Math_20,Math,20,Yes,Yes,correct,Overfitting,"Always applies repair() (clamping to [0,1]) in repairAndDecode, dropping the developer's 'boundaries != null' guard. For unbounded problems decode() is the identity, so the returned optimum point is clamped to [0,1] in every coordinate - a regression the tests miss because their unbounded optima lie at 0 or 1."
+Math_21,Math,21,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_22,Math,22,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_23,Math,23,Yes,Yes,correct,Overfitting,"Introduces 'best' = initial point but never updates it, returning best(current, previous, initial). The developer tracks the best of every evaluated point; with the LLM version a point found several iterations before termination (Brent's x, typically the true minimum) is lost whenever the last two evaluations are worse. Only the 'keep initial guess' scenario of the test is fixed."
+Math_24,Math,24,Yes,Yes,correct,Overfitting,"Fixes only the default (Brent criterion) termination; when a user-supplied ConvergenceChecker triggers termination the method still returns 'current' instead of best(current, previous) as in the developer patch."
+Math_25,Math,25,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_26,Math,26,Yes,Yes,correct,Correct,"Adds the missing lower-bound overflow checks for a0, p2, q2 (x < Integer.MIN_VALUE instead of |x| > MAX_VALUE; differs only for exactly Integer.MIN_VALUE, which is still a representable numerator). Extra checks after the loop are redundant (duplicate maxIterations test, range checks that always hold) and do not change results."
+Math_27,Math,27,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_28,Math,28,Yes,Yes,correct,Correct,"Implements the developer's key change (Bland's rule only while iterations < maxIterations/2, otherwise top-most row). The developer's extra 'numArtificialVariables > 0' guard only skips an empty loop, so behaviour is equivalent."
+Math_29,Math,29,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_30,Math,30,Yes,Yes,correct,Correct,"Uses long instead of double for n1*n2. VarU = n1n2prod*(n1+n2+1) could in principle overflow long, but only when n1*n2 > 2^31, where the caller's own int product x.length*y.length already overflows in the developer version too; within the domain where the method is meaningful the result equals the developer's."
+Math_31,Math,31,Yes,Yes,correct,Correct,Same modified-Lentz rewrite as the developer patch; the extra 'hAndB' variable is computed but never used (dead code).
+Math_32,Math,32,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_33,Math,33,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_34,Math,34,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_35,Math,35,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_36,Math,36,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_37,Math,37,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_38,Math,38,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_39,Math,39,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_40,Math,40,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_41,Math,41,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_42,Math,42,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_43,Math,43,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_44,Math,44,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_45,Math,45,Yes,Yes,correct,Correct,Identical to the developer patch.
+Math_46,Math,46,Yes,Yes,correct,Correct,Identical to the developer patch (division by zero returns NaN in both divide methods).
+Math_47,Math,47,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_48,Math,48,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_49,Math,49,Yes,Yes,incorrect,Correct,"Removes the concurrent modification by iterating over indices 0..virtualSize instead of over res.entries (developer iterates over this.entries). Non-zero results are identical and zero results are not stored (setEntry drops default values). Differs from the developer only for IEEE special cases (0/0, 0*Inf, 0*NaN give NaN instead of 0), which is the behaviour Commons Math later adopted (MATH-803); cost is O(dimension) instead of O(nnz). The LLM judge rejected it on performance grounds only. [Plausible at iteration 3 but not accepted by the LLM judge (verdict at that iteration: incorrect).]"
+Math_50,Math,50,Yes,Yes,correct,Correct,"Replaces the x==x1 condition by f1==f0. In that switch branch f0 and f1 always have opposite signs (bracketing invariant; zero values return earlier), so the condition can never hold and the block is dead - behaviourally identical to the developer's removal of the block."
+Math_51,Math,51,Yes,Yes,correct,Correct,Adds the same REGULA_FALSI case (x==x1 => shrink x0 and re-evaluate f0) as the developer; only the unreachable default case does not throw MathInternalError.
+Math_52,Math,52,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_53,Math,53,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_54,Math,54,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_55,Math,55,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_56,Math,56,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_57,Math,57,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_58,Math,58,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_59,Math,59,Yes,Yes,correct,Correct,"max() now returns a when a>b, as in the developer fix. The added signed-zero sub-conditions are unreachable (a>b excludes a==b==0), so min() is unchanged and max() is equivalent."
+Math_60,Math,60,Yes,Yes,correct,Correct,Equivalent to the developer patch (explicit +/-40 sigma cut-offs returning 1/0 and removal of the exception-based fallback); NaN and infinite inputs behave the same.
+Math_61,Math,61,Yes,Yes,correct,Correct,"Same as the developer patch (throws NotStrictlyPositiveException(LocalizedFormats.MEAN, p))."
+Math_62,Math,62,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_63,Math,63,Yes,Yes,incorrect,Overfitting,"Replaces equals(double,double) with exact 'x == y'. The developer makes it equals(x, y, 1) (equal within 1 ulp, NaN never equal); the LLM version returns false for neighbouring doubles 1 ulp apart, which the documented contract treats as equal. Tests only check the NaN aspect. (The LLM judge also rejected it.) [Plausible at iteration 0 but not accepted by the LLM judge (verdict at that iteration: incorrect).]"
+Math_64,Math,64,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_65,Math,65,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_66,Math,66,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_67,Math,67,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_68,Math,68,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_69,Math,69,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_70,Math,70,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_71,Math,71,Yes,Yes,correct,Overfitting,"RungeKuttaIntegrator gets the developer's zero-size-step fix (yTmp=y, stepSize=0). In EmbeddedRungeKuttaIntegrator the dt~0 branch is left unchanged (full step still accepted, so the event at step start is overshot); instead a new 'accept if |stepSize|<=|dt|' shortcut avoids that branch only in the end-of-step scenario exercised by testMissedEndEvent."
+Math_72,Math,72,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_73,Math,73,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_74,Math,74,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_75,Math,75,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_76,Math,76,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_77,Math,77,Yes,Yes,correct,Correct,ArrayRealVector fix identical; for OpenMapRealVector the LLM corrects the overriding getLInfNorm to max(|v|) instead of deleting it (developer falls back to the inherited max(|v|) implementation) - same result.
+Math_78,Math,78,Yes,Yes,correct,Overfitting,"Re-implements the corner case with a loop guarded by 'ta <= tb'. For backward integration ta > tb from the start, so the loop never runs and the bracketing failure still occurs; the developer's version shifts ta by +/-0.25*convergence in both directions (max 4 tries) and fails loudly otherwise. The LLM loop also steps by a full convergence with no bound other than tb."
+Math_79,Math,79,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_80,Math,80,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_81,Math,81,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_82,Math,82,Yes,Yes,correct,Overfitting,"Contains the developer fix (entry > 0 strictly) but also replaces 'ratio < minRatio' by an absolute-epsilon comparison (1e-6). Ratios within 1e-6 are then treated as ties and the first row wins, so for small-magnitude ratios the minimum-ratio rule degenerates and can pivot on a non-minimal row (infeasible basis). Behaviour therefore differs from the developer patch beyond the bug fix. Example: constraints 1000x <= 1.0005 (listed first) and 1000x <= 1 give ratios 0.0010005 and 0.001, treated as a tie, so the first row is pivoted and x = 0.0010005 violates the second constraint."
+Math_83,Math,83,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_84,Math,84,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_85,Math,85,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_86,Math,86,Yes,Yes,correct,Correct,"Adds the developer's diagonal check inside the decomposition loop but keeps the original pre-check. Because elimination only decreases the diagonal, the pre-check is subsumed; the only difference is that a matrix that is both non-symmetric and has a non-positive diagonal may report NotPositiveDefinite instead of NotSymmetric."
+Math_87,Math,87,Yes,Yes,correct,Correct,Equivalent to the developer logic: a column is basic only if exactly one entry is ~1 and all others ~0 (a second ~1 entry returns null in both versions).
+Math_88,Math,88,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_89,Math,89,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_90,Math,90,Yes,Yes,correct,Correct,addValue(Object) now throws ClassCastException for non-Comparable values before touching the TreeMap; the developer achieves the same via a cast in a new addValue(Comparable) overload with the same body. Behaviour of the existing API is identical.
+Math_91,Math,91,Yes,Yes,correct,Correct,Same exact long cross-multiplication as the developer patch.
+Math_92,Math,92,Yes,Yes,needs_revision,Overfitting,"Plausible patch (iteration 1) makes binomialCoefficient(long) exact via the gcd-split multiplicative loop with mulAndCheck (equivalent to the developer's algorithm; overflow pre-check uses the approximate double, which can only misfire within ~1e5 of Long.MAX_VALUE). However binomialCoefficientDouble and binomialCoefficientLog keep the inexact exp(log) computation that caused the bug, e.g. binomialCoefficientDouble(48,22) still returns 27385657281647 instead of 27385657281648; the developer fixes those as well. Note: the LLM judge never evaluated this iteration (API failure); later iterations failed. [LLM judge call failed for the plausible iteration (logged verdict refers to a later, failing iteration).]"
+Math_93,Math,93,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_94,Math,94,Yes,Yes,correct,Correct,Identical to the developer patch.
+Math_95,Math,95,Yes,Yes,correct,Correct,Identical behaviour to the developer patch (initial domain 1.0 unless d > 2).
+Math_96,Math,96,Yes,Yes,correct,Correct,Same as the developer patch (== on real/imaginary parts; getReal()/getImaginary() return the same fields).
+Math_97,Math,97,Yes,Yes,correct,Correct,"Same handling as the developer for sign>0 (endpoint within functionValueAccuracy) and for exact zero endpoints; the LLM tests yMin==0/yMax==0 directly instead of sign==0 and also records the result via setResult (developer omits it). Differences only arise when yMin*yMax underflows to 0, a pathological case."
+Math_98,Math,98,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_99,Math,99,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_100,Math,100,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_101,Math,101,Yes,Yes,correct,Correct,Adds the bounds check before substring (endIndex > length covers the developer's two conditions since the imaginary character is non-empty). Also parses the imaginary part with getImaginaryFormat() instead of getRealFormat(); identical with default formats and consistent with format() when they differ.
+Math_102,Math,102,Yes,Yes,correct,Correct,"Rescales expected counts whenever the sums differ (exact comparison instead of the developer's 1e-5 tolerance), using the same ratio formula; results differ only by negligible rounding when sums differ by <1e-5, and the behaviour matches the documented contract."
+Math_103,Math,103,Yes,Yes,correct,Correct,"Catches MaxIterationsExceededException and returns 0/1 by side of the mean. The developer additionally rethrows when |x-mean| <= 20 sigma, but Erf converges well inside that range (non-convergence needs >100 sigma with 10,000 iterations), so observable behaviour is the same."
+Math_104,Math,104,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Math_105,Math,105,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Math_106,Math,106,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Mockito_12,Mockito,12,Yes,Yes,correct,Correct,Identical to the developer patch (raw type returned for nested ParameterizedType).
+Mockito_13,Mockito,13,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Mockito_14,Mockito,14,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Mockito_15,Mockito,15,Yes,Yes,correct,Correct,"Tries a public setter set<FieldName>(x) accepting the mock before falling back to field injection, like the developer's BeanPropertySetter. Setter resolution differs only in corner cases (developer uses java.beans Introspector with exact field type; LLM uses name convention and assignable parameter type), not for ordinary bean properties."
+Mockito_16,Mockito,16,Yes,Yes,correct,Overfitting,"The 3-arg mock() resets ongoing stubbing when asked but then delegates to the 2-arg mock(), which still resets unconditionally, so shouldResetOngoingStubbing=false is still ignored. The test passes only because the patch also redefines the public constant Mockito.RETURNS_MOCKS as new ReturnsSmartNulls(), changing its documented behaviour (returning mocks)."
+Mockito_17,Mockito,17,No,No,incorrect,N/A (not plausible),Suite still failing after 3 iteration(s); judge observed FAIL/FAIL/n/a.
+Mockito_22,Mockito,22,Yes,Yes,correct,Correct,Same identity short-cut (o1 == o2 => true) as the developer patch.
+Mockito_23,Mockito,23,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Mockito_24,Mockito,24,Yes,Yes,correct,Correct,Identical to the developer patch (compareTo on itself returns 0).
+Mockito_25,Mockito,25,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Mockito_26,Mockito,26,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Mockito_27,Mockito,27,Yes,Yes,correct,Correct,"Rebuilds the handler chain exactly like createMock()/the developer's newMethodInterceptorFilter: new MockHandler(old settings) wrapped in InvocationNotifierHandler and a filter using the original settings, so listeners and the default answer survive reset()."
+Mockito_28,Mockito,28,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Mockito_29,Mockito,29,Yes,Yes,correct,Correct,Equivalent to the developer patch: describeTo prints same(null) for a null wanted value (appendQuoting adds nothing for null).
+Mockito_30,Mockito,30,No,No,incorrect,N/A (not plausible),Suite still failing after 2 iteration(s); judge observed FAIL/n/a.
+Mockito_31,Mockito,31,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Mockito_32,Mockito,32,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Mockito_33,Mockito,33,Yes,Yes,correct,Correct,"Methods match when names and parameter types are identical (Arrays.equals on Class[] = identity, as in the developer loop); the fallback m1.equals(m2) can only be true when that condition already holds, so the result is identical to the developer's."
+Mockito_34,Mockito,34,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Mockito_35,Mockito,35,Yes,Yes,correct,Correct,Same as the developer patch (isA/eq/same return returnFor(type) instead of null).
+Mockito_36,Mockito,36,Yes,Yes,correct,Correct,"Throws a MockitoException when calling a real method of an interface, like the developer's Reporter.cannotCallRealMethodOnInterface(); only the message text differs."
+Mockito_37,Mockito,37,Yes,Yes,correct,Correct,"Same validation as the developer patch, inlined (CallsRealMethods on an interface method => reporter.cannotCallRealMethodOnInterface())."
+Mockito_38,Mockito,38,Yes,Yes,correct,Correct,"Null argument no longer causes an NPE. Developer compares the matcher description with ""null""; LLM returns false. This only changes the 'suspicious argument' hint in a failure message, and only for a matcher whose description is literally null that does not match null - practically unreachable."
+Time_1,Time,1,No,No,incorrect,N/A (not plausible),Suite still failing after 3 iteration(s); judge observed FAIL/FAIL/n/a.
+Time_2,Time,2,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_3,Time,3,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Time_4,Time,4,Yes,Yes,correct,Correct,"Uses the public validating constructor Partial(types, values, chrono) like the developer; the developer's extra chronology.validate() call is redundant because that constructor already validates."
+Time_5,Time,5,Yes,Yes,correct,Correct,"When the target PeriodType has no years field, years are folded into months (developer: totalMonths assigned to the supported fields, UnsupportedOperationException if something cannot be represented - the LLM version raises UnsupportedOperationException from withMonths/withYears in the same situations). Remaining difference: for mixed-sign input such as P2Y-1M with a years-supporting type the LLM keeps the original result (2y -1m) while the developer's rewrite yields 1y 11m; this is pre-existing behaviour outside the reported bug."
+Time_6,Time,6,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_7,Time,7,Yes,Yes,correct,Overfitting,"Removes the double time-zone offset by taking the year of instantMillis, but in the formatter-selected chronology instead of the instant's own chronology as the developer does. When the formatter overrides the zone (withZone), the default year is computed in that zone while the local fields come from the instant's zone, so near a year boundary the wrong default year (e.g. Feb 29 rejected) still occurs. (Conversely the LLM variant is better for a chronology override.)"
+Time_8,Time,8,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_9,Time,9,Yes,Yes,correct,Overfitting,"Adds the developer's hours range check in forOffsetHoursMinutes, but omits the developer's range validation in forOffsetMillis, which still accepts offsets of 24h or more despite its documented -23:59:59.999..+23:59:59.999 contract."
+Time_10,Time,10,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_11,Time,11,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_12,Time,12,Yes,Yes,correct,Correct,"fromCalendarFields converts BC year-of-era to proleptic year exactly like the developer. fromDateFields always goes through GregorianCalendar (developer only for negative millis and uses the deprecated Date getters otherwise); both read the same default-time-zone fields, so results are identical for all dates."
+Time_13,Time,13,Yes,Yes,correct,Overfitting,"Inserts '-' at buf.length()-1, i.e. before the last integer digit. Correct only when the seconds are printed as a single '0'; with minimumPrintedDigits>1 (e.g. ""00"") a period of -0.5s prints as ""0-0.500"" instead of ""-00.500"". The developer inserts the sign at the position recorded before printing the digits and also adjusts calculatePrintedLength."
+Time_14,Time,14,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_15,Time,15,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Time_16,Time,16,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_17,Time,17,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_18,Time,18,Yes,Yes,correct,Correct,"When the Gregorian computation rejects the date, the LLM tries the Julian chronology and rethrows if the result is not before the cutover. The only dates invalid in Gregorian yet valid in Julian are Feb 29 of century non-leap years, so behaviour matches the developer's Feb-29 special case (other invalid fields still throw IllegalFieldValueException). Also applied to the millisOfDay overload, which has the same latent bug."
+Time_19,Time,19,Yes,Yes,correct,Correct,Patch is identical to the developer fix (whitespace aside).
+Time_20,Time,20,Yes,Yes,correct,Correct,"Checks zone IDs in descending length order and takes the first prefix match, i.e. the longest match, which is exactly what the developer's best-match loop computes."
+Time_22,Time,22,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_23,Time,23,Yes,Yes,correct,Correct,Same mapping changes as the developer patch (WET/CET/MET/ECT/EET and renamed IDs); only the insertion order in the HashMap differs.
+Time_24,Time,24,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_25,Time,25,No,No,incorrect,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
+Time_26,Time,26,Yes,Yes,correct,Overfitting,"Applies the 'keep the original offset if still valid' rule only in ZonedDateTimeField.set(long,int) and LenientDateTimeField.set (the paths the 'with...' tests exercise). The developer applies it to every local->UTC conversion in ZonedDateTimeField (add, addWrapField, set(String), roundFloor, roundCeiling); e.g. plusDays() into a DST overlap still flips to the later offset with the LLM patch. The added 3-arg convertLocalToUTC has different semantics from the developer's and is never used."
+Time_27,Time,27,No,No,needs_revision,N/A (not plausible),Suite still failing after 4 iteration(s); judge observed FAIL/FAIL/FAIL/FAIL.
