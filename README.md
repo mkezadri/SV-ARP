@@ -59,7 +59,6 @@ SV-ARP/
 │   └── run_benchmark.py      # Defects4J benchmark driver
 ├── benchmark/
 │   ├── versions.txt                  # the 388 active Defects4J v1.2 bugs
-│   ├── versions_v1.2_and_v2.0.txt    # v1.2 and v2.0 bug ids (not used in the paper)
 │   └── mapping.csv                   # bug -> modified-class source path
 ├── scripts/
 │   ├── check_env.sh          # environment check; run this first
