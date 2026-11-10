@@ -3,107 +3,50 @@
 > **Paper**: *SV-ARP: A Self-Verifying Agentic Framework for Intelligent
 > Automated Program Repair through Collaborative LLM-Based Code Review*
 
-SV-ARP is an agentic framework for automated program repair that integrates
-structured LLM-based code review directly into the repair loop. Two specialised
-agents ( a **Repair Agent** and a **Judge Agent** ) collaborate iteratively: the
-Repair Agent generates candidate patches; the Judge Agent evaluates every
-candidate against test execution outcomes and returns line-level,
-action-oriented feedback. A patch is accepted only when it **both** passes the
-test suite **and** receives a `correct` verdict from the Judge.
+SV-ARP is a two-agent framework for automated program repair. A **Repair
+Agent** proposes localized `SEARCH/REPLACE` edits; a **Judge Agent** reviews
+every candidate against the diff and the test result and returns a verdict and
+line-level suggestions in a mandatory "change X to Y because Z" format. A patch
+is accepted when the relevant tests pass and the Judge's verdict is `correct`.
+
+This repository contains the framework, the benchmark runner, the supervisor
+script, the analysis script that regenerates every number in the paper, and
+the correctness labels of every plausible patch.
 
 ---
 
-## Key results
+## Results
 
-Defects4J V1.2, all 388 active bugs, Gemini 3.1 Flash Lite, ≤4 iterations.
+Defects4J v1.2 project set, 388 active bugs, 373 evaluable (15 Mockito bugs do
+not build under Java 11 and are excluded from every configuration),
+`gemini-3.5-flash-lite`, at most four tested candidates per bug.
 
-| Measure | Count | % of 388 |
-|---|---|---|
-| Logged plausible (reported by the test harness) | 215 | — |
-| **Verified plausible** (manual inspection of every patch) | **195** | 50.3% |
-| Accepted (verified plausible **and** Judge verdict `correct`) | 182 | 46.9% |
-| **Verified correct** (manual comparison with developer patch) | **138** | **35.6%** |
+| Configuration | Plausible | Verified correct | Precision | McNemar p vs Full (Holm) |
+|---|---|---|---|---|
+| Full | 196 | 170 | 86.7% | |
+| No-Semantic (Judge reasoning withheld) | 194 | 161 | 83.0% | 0.30 (0.47) |
+| Binary-Only (test output replaced by FAIL) | 189 | 160 | 84.7% | 0.24 (0.47) |
+| No-Judge | 181 | 156 | 86.2% | 0.070 (0.21) |
+| Resample-4 (four independent single attempts) | 180 | 154 | 85.6% | 0.064 |
 
-Per project:
+Per project, Full configuration (correct / plausible):
 
-| | Chart | Closure | Lang | Math | Mockito | Time | Total |
-|---|---|---|---|---|---|---|---|
-| Verified plausible | 19 | 40 | 37 | 60 | 29 | 10 | **195** |
-| Verified correct | 17 | 29 | 30 | 42 | 12 | 8 | **138** |
-
-For comparison, ReinFix (GPT-4o) reports 146 correct fixes using a search space
-of 45 candidates per bug; SV-ARP explores at most 4, and 71.1% of its accepted
-fixes are obtained at the first attempt (133/187). The difference in correct
-fixes is not statistically significant (*z* = −0.51, *p* = 0.607).
-
-### Component ablation (all 388 bugs, McNemar exact test)
-
-| Configuration | Logged plausible | **Verified plausible** | 
-|---|---|---|
-| Full system | 215 | **195** | 
-| − semantic feedback (Judge still gates) | 211 | 160 |
-| Binary pass/fail feedback only | 211 | 154 | 
-| − Judge Agent entirely | 203 | 158 |
-
-Verified plausible per project:
-
-| Configuration | Chart | Closure | Lang | Math | Mockito | Time |
+| Chart | Closure | Lang | Math | Mockito | Time | Total |
 |---|---|---|---|---|---|---|
-| Full system | 19 | 40 | 37 | 60 | 29 | 10 |
-| − semantic feedback | 18 | 40 | 33 | 50 | 9 | 10 |
-| Binary pass/fail only | 16 | 42 | 35 | 46 | 8 | 7 |
-| − Judge Agent | 18 | 36 | 29 | 46 | 24 | 5 |
+| 21/22 | 38/45 | 32/37 | 54/63 | 14/16 | 11/13 | **170/196** |
 
-Every ablated configuration is significantly worse than the full system. The
-three ablations differ little among themselves, so the data establish that
-feedback content affects repair outcomes without separating the contribution of
-semantic gating from that of structured feedback.
+What the measurements say:
 
-As a gate, the Judge Agent accepts 182 of the 195 verified plausible patches, of
-which 137 are correct (75.3% acceptance precision), and rejects 13, of which 12
-are incorrect (92.3% rejection precision), discarding one correct fix out of 138
-(99.3% recall).
+- 73% of plausible patches are found at the first attempt.
+- No configuration difference survives correction for multiple comparisons.
+- The Judge's acceptance gate is nominal: it withheld one test-passing
+  candidate in 196.
+- Four independent single attempts at the temperatures 0.1, 0.45, 0.45, 0.85
+  reproduce the loop without the Judge at half the tokens of the full system.
+- Two offline LLM reviewers, asked to detect overfitting patches without the
+  developer fix, perform at chance level.
 
----
-
-## Architecture
-
-```
-buggy file
-    │
-    ▼
-┌─────────────┐     full file + judge feedback
-│ Repair Agent│ ◄──────────────────────────────┐
-└──────┬──────┘                                 │
-       │ candidate patch                        │
-       ▼                                        │
-┌──────────────┐                                │
-│  Test Runner │  (defects4j test -r)           │
-└──────┬───────┘                                │
-       │ pass / fail + output                   │
-       ▼                                        │
-┌─────────────┐   verdict ∈ {correct,           │
-│ Judge Agent │     incorrect, needs_revision}  │
-└──────┬──────┘   + line-level suggestions      │
-       │                                        │
-       ├── pass AND correct ──► ACCEPT          │
-       ├── max iterations ────► REJECT          │
-       └── otherwise ─────────────────────────►─┘
-```
-
-The Judge Agent runs on **every** candidate, including patches whose test suite
-passes. This is what allows it to reject plausible-but-incorrect patches: 13 of
-195 in our evaluation, of which 12 are confirmed semantically incorrect.
-
-Five adaptive warning mechanisms handle distinct failure modes:
-
-| # | Mechanism | Trigger |
-|---|---|---|
-| 1 | Compile-error specialisation | Patch does not compile |
-| 2 | Concrete judge suggestions | Judge must output `In X(): change Y to Z because …` |
-| 3 | Regression scoping | Non-trigger tests break after a patch |
-| 4 | No-op / surgical mode | Patch similarity to original ≥ 0.992; escalates after 3 consecutive no-ops |
-| 5 | Oscillation / repetition guard | Same patch fingerprint within a 3-iteration window |
+Cost of the Full configuration: 44.8M tokens, an estimated $0.042 per bug.
 
 ---
 
@@ -112,159 +55,144 @@ Five adaptive warning mechanisms handle distinct failure modes:
 ```
 SV-ARP/
 ├── src/
-│   ├── sv_apr.py               # Core system (agents, LangGraph orchestration)
-│   └── benchmark_runner.py     # Defects4J benchmark driver
-│
+│   ├── agentic_apr.py        # agents, adaptive mechanisms, LangGraph loop
+│   └── run_benchmark.py      # Defects4J benchmark driver
 ├── benchmark/
-│   ├── versions.txt            # 388 active Defects4J V1.2 bugs
-│   └── mapping.csv             # bug -> modified-class source path
-│
-├── results/               # per-patch manual verification, all four arms
-│   ├── verification_full_388.csv
-│   └── logs
-│
+│   ├── versions.txt                  # the 388 active Defects4J v1.2 bugs
+│   ├── versions_v1.2_and_v2.0.txt    # v1.2 and v2.0 bug ids (not used in the paper)
+│   └── mapping.csv                   # bug -> modified-class source path
 ├── scripts/
-│   ├── check_env.sh            # environment verification (run this first)
-│   └── make_bug_list.sh        # regenerate versions.txt from your Defects4J
-│
-├── replication/
-│   └── replication_guide.txt   # step-by-step replication instructions
+│   ├── check_env.sh          # environment check; run this first
+│   ├── make_bug_list.sh      # regenerate the bug list from your Defects4J
+│   ├── fixed_baseline.py     # relevant tests on the developer-fixed versions
+│   └── judge_swap.py         # offline review of plausible patches by a second model
+├── run_all.sh                # supervisor for long unattended runs
+├── analysis/
+│   ├── make_figures.py       # regenerates every table and statistic
+│   └── report.md             # its output for the paper
+├── data/
+│   ├── verification/         # labels: 4 configurations + 4 resampling passes
+│   ├── second_verification/  # second, execution-based verification of the 4 configurations
+│   ├── overrides_all.csv     # label overrides with their reasons
+│   ├── offline_review/       # verdicts of the two offline reviewers
+│   ├── canonical/            # one row per bug and configuration
+│   └── results/              # raw result files, zipped (8 archives)
+├── replication/replication_guide.txt
 ├── .env.example
 └── requirements.txt
 ```
+
+The raw result files (one record per bug and execution, with every candidate
+patch, verdict, temperature and token count; about 400 MB unpacked) are in
+`data/results/`, one zip per configuration and per resampling pass.
 
 ---
 
 ## Installation
 
-Requires **Python ≥ 3.10**, **Java 11**, and
+Requires Python 3.10 or later, **Java 11**, and
 [Defects4J](https://github.com/rjust/defects4j).
 
 ```bash
 git clone https://github.com/mkezadri/SV-ARP
 cd SV-ARP
-
-python -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-cp .env.example .env           # then edit
+cp .env.example .env        # then edit; .env is git-ignored
 ```
-
-### Environment variables
 
 ```bash
 export JAVA_HOME=$(/usr/libexec/java_home -v 11)   # macOS; adjust on Linux
-export PATH="$JAVA_HOME/bin:$PATH"                 # JAVA_HOME alone is not enough
+export PATH="$JAVA_HOME/bin:$PATH"
 export TZ="America/Los_Angeles"
 export _JAVA_OPTIONS="-Duser.language=en -Duser.country=US"
-
 export D4J_HOME=/path/to/defects4j
 export PATH="$D4J_HOME/framework/bin:$PATH"
-
 export GEMINI_API_KEY=<your-key>
 
-./scripts/check_env.sh          # must print: Failing tests: 1
+./scripts/check_env.sh      # must report: Failing tests: 1
 ```
 
-Optional overrides: `APR_RESULTS_DIR`, `APR_WORK_DIR`, `APR_BUG_LIST`,
-`APR_EDIT_MODE`, `APR_ABLATION`.
+API keys are read from the environment only. Never commit one.
 
----
-## Read this before running
+### Read this before running
 
-**The JVM takes its default locale from operating-system settings, not from
-`LANG`.** On a non-English system, Defects4J tests that assert on formatted
-compiler diagnostics fail on *pristine, unpatched* checkouts. We measured this
-on 25 Closure bugs: 18 (72%) showed spurious baseline failures, median 11,
-maximum 28. Under a zero-failure plausibility criterion those bugs are
-unrepairable regardless of patch quality.
-
-```bash
-export _JAVA_OPTIONS="-Duser.language=en -Duser.country=US"
-```
-
-Verify with `./scripts/check_env.sh`: a clean Closure 2b checkout must report
-exactly **one** failing test. Fourteen means the flag is not in effect.
-
-**Plausibility must be verified, not trusted.** An earlier version of this
-pipeline recorded non-compiling patches as passing: when compilation fails,
-`defects4j test -r` emits no `Failing tests` line, an empty failing-test list
-was read as zero failures, and a baseline-relative comparison then promoted the
-result to a pass. This is fixed in `TestRunner.run_tests`, but every figure in
-the paper is based on manually verified plausibility rather than the harness
-alone. The per-patch records are in `verification/`.
+The JVM takes its default locale from operating-system settings, not from
+`LANG`. On a non-English system, Defects4J tests that assert on formatted
+compiler diagnostics fail on pristine, unpatched checkouts (18 of 25 Closure
+bugs in our measurement), and a candidate is plausible only if no relevant
+test fails, so those bugs become unrepairable. The `_JAVA_OPTIONS` line above
+is required; `check_env.sh` verifies it on Closure 2b.
 
 ---
 
 ## Running
 
-### Single bug (quick check)
-
 ```bash
-cd src
-python benchmark_runner.py --bug Lang_1
+# one bug
+python src/run_benchmark.py --bug Lang_33
+
+# the benchmark, resumable
+python src/run_benchmark.py --bug-list benchmark/versions.txt --resume
+
+# all four configurations, unattended (survives network drops and restarts)
+nohup ./run_all.sh > supervisor.log 2>&1 &
+./run_all.sh --status
+touch STOP                  # finishes the current bug, then exits
+
+# one configuration, or one resampling pass at temperature 0.45
+./run_all.sh no_judge
+./run_all.sh sample_t045a
 ```
 
-### Full benchmark
+Configuration is by environment variable:
 
-```bash
-cd src
-python benchmark_runner.py --bug-list ../benchmark/versions.txt
-```
+| Variable | Default | Meaning |
+|---|---|---|
+| `APR_ABLATION` | `full` | `full`, `no_semantic`, `binary_only`, `no_judge` |
+| `APR_REPAIR_MODEL`, `APR_JUDGE_MODEL` | `gemini-3.5-flash-lite` | model identifiers |
+| `APR_TEMPERATURE` | `0.1` | initial sampling temperature |
+| `APR_MAX_ITERATIONS` | `4` | tested candidates per bug |
+| `APR_RESULTS_DIR` | `results` | one directory per configuration |
+| `APR_WORK_DIR` | `/tmp/d4j_benchmark` | checkout scratch space |
+| `APR_MAPPING_FILE` | `mapping.csv` | optional; set to `benchmark/mapping.csv` |
+| `APR_USD_PER_TOKEN` | `0.00000035` | flat rate used for the cost estimate |
 
-A full run is roughly 2,300 API requests and 1–2 days of wall clock; test
-execution, not the API, is the bottleneck.
-
-### Resume an interrupted run
-
-```bash
-python benchmark_runner.py --bug-list ../benchmark/versions.txt --resume
-```
-
-### Ablation configurations
-
-| `APR_ABLATION` | Judge gates? | Judge reasoning in prompt? | Test output in prompt? |
-|---|---|---|---|
-| `full` (default) | yes | yes | yes |
-| `no_semantic` | yes | **no** | yes |
-| `binary_only` | yes | **no** | **no** (`TEST RESULT: FAIL` only) |
-| `no_judge` | **no** | n/a | yes |
-
+Use a separate results directory per configuration: `--resume` matches on the
+bug id alone.
 
 ---
 
-## Output
+## Regenerating the paper's numbers
 
-Results are written as timestamped CSVs, one row per bug:
+Unpack the raw results into `data/`, then run the script:
 
-| Column | Meaning |
-|---|---|
-| `plausible` | the harness reported a passing suite |
-| `accepted` | plausible **and** Judge verdict `correct` |
-| `verdict` | `correct`, `needs_revision`, `incorrect` |
-| `iterations` | iterations consumed (budget 4) |
-| `history` | per-iteration JSON: patches, verdicts, metadata |
-| `total_tokens`, `estimated_usd`, `time_seconds` | cost accounting |
+```bash
+for z in data/results/*.zip; do unzip -q -o "$z" -d data; done
+cp data/verification/*.csv data/
+python analysis/make_figures.py --raw data --rule first \
+    --bug-list benchmark/versions.txt \
+    --overrides data/overrides_all.csv \
+    --judge-swap data/offline_review/judge_swap_deepseek_v4_flash_semantic.csv \
+    --judge-swap data/offline_review/judge_swap_gemini_3_5_flash_lite_semantic.csv \
+    > report.md
+```
 
-`plausible` and `accepted` are distinct, and neither equals *correct*. The
-`plausible` column is the harness's judgement, not ground truth; the paper
-reports verified plausibility, which is lower.
+The output should match `analysis/report.md`.
 
+### How correctness was labelled
+
+Every plausible patch was compared with the Defects4J developer fix under an
+LLM-assisted protocol with author adjudication (Claude Opus 5.5 as the
+assistant). The Full configuration received two further blind passes; all four
+configurations were verified a second time with execution of the relevant
+tests and differential probes against the developer fix. Identical patch texts
+carry identical labels across configurations; `data/overrides_all.csv` records
+every label that was changed and why.
 
 ---
 
-## Reproducibility notes
+## License
 
-**Run-to-run variance.** LLM sampling is stochastic; across bugs executed more
-than once, roughly 15% change outcome between runs. Ablation comparisons are
-paired on identical bug sets and tested with McNemar's exact test.
+MIT. See `LICENSE`.
 
-**Deprecated bugs.** Seven V1.2 bugs no longer reproduce under current Java
-(Lang 2, 18, 25, 48; Time 21; Closure 63, 93), giving 388 active bugs of 395.
-Closure 111, 113 and 115 do not compile on a clean checkout.
-
-**Closure range.** Defects4J V1.2 Closure spans bugs 1–133.
-
-See [`replication/replication_guide.txt`](replication/replication_guide.txt) for
-a complete walkthrough.
