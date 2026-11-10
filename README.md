@@ -177,19 +177,6 @@ python analysis/make_figures.py --raw data --rule first \
     --judge-swap data/offline_review/judge_swap_gemini_3_5_flash_lite_semantic.csv \
     > report.md
 ```
-
-The output should match `analysis/report.md`.
-
-### How correctness was labelled
-
-Every plausible patch was compared with the Defects4J developer fix under an
-LLM-assisted protocol with author adjudication (Claude Opus 5.5 as the
-assistant). The Full configuration received two further blind passes; all four
-configurations were verified a second time with execution of the relevant
-tests and differential probes against the developer fix. Identical patch texts
-carry identical labels across configurations; `data/overrides_all.csv` records
-every label that was changed and why.
-
 ---
 
 ## License
