@@ -1,0 +1,374 @@
+Bug_id,Project,Bug_number,Logged plausible by the suite,Verified plausible,llm judge verdict,Reviewer Semantic verdict
+Chart_1,Chart,1,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_2,Chart,2,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Chart_3,Chart,3,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_4,Chart,4,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_5,Chart,5,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Chart_6,Chart,6,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_7,Chart,7,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_8,Chart,8,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_9,Chart,9,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_10,Chart,10,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_11,Chart,11,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_12,Chart,12,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_13,Chart,13,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Chart_14,Chart,14,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_15,Chart,15,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Chart_16,Chart,16,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Chart_17,Chart,17,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_18,Chart,18,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Chart_19,Chart,19,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_20,Chart,20,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_21,Chart,21,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_22,Chart,22,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Chart_23,Chart,23,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_24,Chart,24,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Chart_25,Chart,25,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Chart_26,Chart,26,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_1,Closure,1,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_2,Closure,2,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_3,Closure,3,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_4,Closure,4,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_5,Closure,5,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_6,Closure,6,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_7,Closure,7,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_8,Closure,8,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_9,Closure,9,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_10,Closure,10,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_11,Closure,11,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_12,Closure,12,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_13,Closure,13,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_14,Closure,14,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_15,Closure,15,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_16,Closure,16,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_17,Closure,17,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_18,Closure,18,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_19,Closure,19,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_20,Closure,20,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_21,Closure,21,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_22,Closure,22,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_23,Closure,23,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_24,Closure,24,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_25,Closure,25,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_26,Closure,26,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_27,Closure,27,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_28,Closure,28,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_29,Closure,29,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_30,Closure,30,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_31,Closure,31,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_32,Closure,32,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_33,Closure,33,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_34,Closure,34,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_35,Closure,35,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_36,Closure,36,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_37,Closure,37,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_38,Closure,38,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_39,Closure,39,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_40,Closure,40,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_41,Closure,41,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_42,Closure,42,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_43,Closure,43,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_44,Closure,44,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_45,Closure,45,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_46,Closure,46,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_47,Closure,47,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_48,Closure,48,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_49,Closure,49,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_50,Closure,50,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_51,Closure,51,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_52,Closure,52,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_53,Closure,53,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_54,Closure,54,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_55,Closure,55,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_56,Closure,56,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_57,Closure,57,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_58,Closure,58,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_59,Closure,59,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_60,Closure,60,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_61,Closure,61,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_62,Closure,62,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_64,Closure,64,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_65,Closure,65,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_66,Closure,66,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_67,Closure,67,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_68,Closure,68,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_69,Closure,69,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_70,Closure,70,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_71,Closure,71,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_72,Closure,72,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_73,Closure,73,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_74,Closure,74,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_75,Closure,75,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_76,Closure,76,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_77,Closure,77,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_78,Closure,78,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_79,Closure,79,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_80,Closure,80,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_81,Closure,81,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_82,Closure,82,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_83,Closure,83,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_84,Closure,84,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_85,Closure,85,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_86,Closure,86,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_87,Closure,87,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_88,Closure,88,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_89,Closure,89,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_90,Closure,90,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_91,Closure,91,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_92,Closure,92,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_94,Closure,94,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_95,Closure,95,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_96,Closure,96,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_97,Closure,97,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_98,Closure,98,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_99,Closure,99,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_100,Closure,100,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_101,Closure,101,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_102,Closure,102,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_103,Closure,103,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_104,Closure,104,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_105,Closure,105,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_106,Closure,106,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_107,Closure,107,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_108,Closure,108,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_109,Closure,109,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_110,Closure,110,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_111,Closure,111,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_112,Closure,112,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_113,Closure,113,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_114,Closure,114,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_115,Closure,115,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_116,Closure,116,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_117,Closure,117,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_118,Closure,118,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_119,Closure,119,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_120,Closure,120,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_121,Closure,121,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_122,Closure,122,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_123,Closure,123,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_124,Closure,124,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_125,Closure,125,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_126,Closure,126,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_127,Closure,127,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Closure_128,Closure,128,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_129,Closure,129,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_130,Closure,130,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_131,Closure,131,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Closure_132,Closure,132,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Closure_133,Closure,133,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_1,Lang,1,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_3,Lang,3,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_4,Lang,4,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Lang_5,Lang,5,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_6,Lang,6,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_7,Lang,7,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_8,Lang,8,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_9,Lang,9,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_10,Lang,10,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_11,Lang,11,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_12,Lang,12,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_13,Lang,13,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_14,Lang,14,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_15,Lang,15,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_16,Lang,16,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Lang_17,Lang,17,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_19,Lang,19,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_20,Lang,20,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_21,Lang,21,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_22,Lang,22,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_23,Lang,23,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_24,Lang,24,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_26,Lang,26,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_27,Lang,27,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_28,Lang,28,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_29,Lang,29,No,Yes,N/A - no_judge ablation (logged verdict: needs_revision),Correct
+Lang_30,Lang,30,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_31,Lang,31,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Lang_32,Lang,32,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_33,Lang,33,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_34,Lang,34,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_35,Lang,35,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_36,Lang,36,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_37,Lang,37,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_38,Lang,38,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_39,Lang,39,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Lang_40,Lang,40,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_41,Lang,41,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_42,Lang,42,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_43,Lang,43,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_44,Lang,44,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_45,Lang,45,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_46,Lang,46,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_47,Lang,47,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_49,Lang,49,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_50,Lang,50,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_51,Lang,51,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_52,Lang,52,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_53,Lang,53,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_54,Lang,54,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_55,Lang,55,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_56,Lang,56,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_57,Lang,57,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_58,Lang,58,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_59,Lang,59,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_60,Lang,60,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_61,Lang,61,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_62,Lang,62,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_63,Lang,63,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Lang_64,Lang,64,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Lang_65,Lang,65,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_1,Math,1,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_2,Math,2,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_3,Math,3,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_4,Math,4,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_5,Math,5,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_6,Math,6,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_7,Math,7,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_8,Math,8,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_9,Math,9,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_10,Math,10,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_11,Math,11,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_12,Math,12,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_13,Math,13,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_14,Math,14,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_15,Math,15,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_16,Math,16,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_17,Math,17,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_18,Math,18,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_19,Math,19,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_20,Math,20,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_21,Math,21,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_22,Math,22,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_23,Math,23,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_24,Math,24,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_25,Math,25,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_26,Math,26,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_27,Math,27,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_28,Math,28,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_29,Math,29,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_30,Math,30,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_31,Math,31,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_32,Math,32,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_33,Math,33,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_34,Math,34,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_35,Math,35,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_36,Math,36,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_37,Math,37,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_38,Math,38,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_39,Math,39,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_40,Math,40,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_41,Math,41,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_42,Math,42,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_43,Math,43,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_44,Math,44,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_45,Math,45,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_46,Math,46,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_47,Math,47,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_48,Math,48,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_49,Math,49,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_50,Math,50,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_51,Math,51,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_52,Math,52,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_53,Math,53,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_54,Math,54,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_55,Math,55,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_56,Math,56,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_57,Math,57,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_58,Math,58,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_59,Math,59,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_60,Math,60,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_61,Math,61,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_62,Math,62,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_63,Math,63,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_64,Math,64,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_65,Math,65,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_66,Math,66,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_67,Math,67,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_68,Math,68,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_69,Math,69,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_70,Math,70,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_71,Math,71,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_72,Math,72,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_73,Math,73,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_74,Math,74,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_75,Math,75,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_76,Math,76,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_77,Math,77,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_78,Math,78,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_79,Math,79,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_80,Math,80,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_81,Math,81,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_82,Math,82,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_83,Math,83,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_84,Math,84,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_85,Math,85,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_86,Math,86,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_87,Math,87,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_88,Math,88,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_89,Math,89,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_90,Math,90,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_91,Math,91,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_92,Math,92,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_93,Math,93,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_94,Math,94,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_95,Math,95,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_96,Math,96,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_97,Math,97,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_98,Math,98,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_99,Math,99,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_100,Math,100,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Math_101,Math,101,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_102,Math,102,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_103,Math,103,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_104,Math,104,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Math_105,Math,105,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Math_106,Math,106,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_12,Mockito,12,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_13,Mockito,13,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_14,Mockito,14,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Mockito_15,Mockito,15,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_16,Mockito,16,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Mockito_17,Mockito,17,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Mockito_22,Mockito,22,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_23,Mockito,23,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Mockito_24,Mockito,24,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_25,Mockito,25,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Mockito_26,Mockito,26,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_27,Mockito,27,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_28,Mockito,28,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_29,Mockito,29,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_30,Mockito,30,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Mockito_31,Mockito,31,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Mockito_32,Mockito,32,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_33,Mockito,33,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Mockito_34,Mockito,34,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_35,Mockito,35,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Mockito_36,Mockito,36,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_37,Mockito,37,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Mockito_38,Mockito,38,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Time_1,Time,1,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_2,Time,2,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_3,Time,3,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Time_4,Time,4,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Time_5,Time,5,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Time_6,Time,6,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_7,Time,7,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_8,Time,8,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_9,Time,9,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Overfitting
+Time_10,Time,10,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_11,Time,11,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_12,Time,12,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_13,Time,13,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_14,Time,14,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_15,Time,15,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Time_16,Time,16,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_17,Time,17,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_18,Time,18,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Time_19,Time,19,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_20,Time,20,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Time_22,Time,22,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_23,Time,23,Yes,Yes,N/A - no_judge ablation (logged verdict: correct),Correct
+Time_24,Time,24,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_25,Time,25,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_26,Time,26,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
+Time_27,Time,27,No,No,N/A - no_judge ablation (logged verdict: needs_revision),N/A (not plausible)
