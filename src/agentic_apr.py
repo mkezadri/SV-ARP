@@ -1000,9 +1000,11 @@ class RepairAgent(GeminiAgent):
                 suggestions  = []
             if ABL_BINARY_ONLY:
                 # binary_only: the Repair Agent learns only that the tests
-                # still fail, with no detail.
+                # still fail, with no detail. The diff of its own previous
+                # candidate is not test evidence and is shown, as in the other
+                # configurations (corrected; the runs of October 2026 also
+                # blanked it).
                 test_output = "TEST RESULT: FAIL"
-                diff_text   = ""
             # no_test_fb: test output withheld; the tests still decide
             # acceptance.
             if ABL_NO_TEST_FB:
@@ -1554,6 +1556,13 @@ def repair_node(state: RepairState) -> RepairState:
                     "  4. The safest fix is a ONE-LINE logic change inside an existing "
                     "method — do not restructure APIs.\n\n"
                 )
+                if ABL_BINARY_ONLY:
+                    # binary_only withholds the compiler output; the rules of
+                    # this mechanism stay, as in every configuration
+                    # (corrected; the runs of October 2026 showed the output).
+                    compile_warning = compile_warning.replace(
+                        f"Full compile output:\n{compile_output}\n\n", "", 1
+                    )
                 noop_warning = compile_warning + noop_warning
                 logger.warning("Compile error detected — compile warning injected")
 
@@ -1580,6 +1589,18 @@ def repair_node(state: RepairState) -> RepairState:
                         "  3. If you changed multiple methods, revert ALL changes "
                         "except the single method closest to the failing test.\n\n"
                     )
+                    if ABL_BINARY_ONLY:
+                        # binary_only withholds which tests broke, and how many;
+                        # the instructions of this mechanism stay, as in every
+                        # configuration (corrected; the runs of October 2026
+                        # listed the tests).
+                        regression_warning = (
+                            "\n⚠ REGRESSION: Your last patch broke one or more "
+                            "tests that were previously PASSING.\n\n"
+                            + regression_warning[
+                                regression_warning.index("You introduced a regression."):
+                            ]
+                        )
                     noop_warning = regression_warning + noop_warning
                     logger.warning(
                         "Regression detected: %d non-trigger tests failing — "
@@ -1668,8 +1689,11 @@ def repair_node(state: RepairState) -> RepairState:
                     tested_lines, orig_lines, shrink_pct,
                 )
 
-            # Rule D: repetitive judge feedback
-            if len(prev_judges) >= 2:
+            # Rule D: repetitive judge feedback. Without a Judge there is no
+            # rationale to compare: the constant placeholder written by the
+            # no_judge path would trigger the rule on every attempt from the
+            # third (corrected; it fired in the runs of October 2026).
+            if len(prev_judges) >= 2 and not ABL_SKIP_JUDGE:
                 last_reason = prev_judges[-1].get("reason", "")
                 prev_reason = prev_judges[-2].get("reason", "")
                 feedback_sim = patch_similarity(last_reason, prev_reason)
@@ -1949,6 +1973,68 @@ def judge_node(state: RepairState) -> RepairState:
     if ABL_SKIP_JUDGE:
         tr = state.get("test_result")
         ok = bool(tr is not None and tr.passed)
+
+        # The two stagnation guards of the path with a Judge (below), which
+        # this early exit used to skip (corrected; they never fired in the
+        # runs of October 2026). Same detectors, same rules, same records.
+        patched_now      = state.get("current_patch", "") or ""
+        per_file_now     = state.get("per_file_sources") or {}
+        thread_id_now    = state.get("_thread_id", state.get("project_name", "default"))
+        if len(per_file_now) > 1:
+            per_file_patches_now = state.get("per_file_patches") or {}
+            osc_key = (
+                combined_fingerprint(per_file_patches_now)
+                if per_file_patches_now
+                else patched_now
+            )
+            oscillation_fired = _get_detector(thread_id_now).record(osc_key)
+            if oscillation_fired and not ok:
+                state["oscillation_abort"] = True
+                state["judge_verdict"]     = "incorrect"
+                state["judge_reason"]      = (
+                    "Oscillation detected: the agent produced the same patch as a "
+                    "previous iteration and the tests still fail. Aborting."
+                )
+                logger.warning(
+                    "Oscillation abort (multi-file) at iteration %d (thread=%s)",
+                    state["iteration"], thread_id_now,
+                )
+                state.setdefault("history", []).append({
+                    "iteration": state["iteration"],
+                    "action":    "judge",
+                    "verdict":   "incorrect",
+                    "reason":    state["judge_reason"],
+                    "metadata":  {
+                        "oscillation":          True,
+                        "is_multi_file":        True,
+                        "ablation":             "no_judge",
+                        "test_status_observed": "FAIL",
+                        "model":                None,
+                    },
+                })
+                return state
+            if oscillation_fired and ok:
+                logger.info(
+                    "Oscillation triggered but test PASSED — accepting (iteration %d)",
+                    state["iteration"]
+                )
+        else:
+            detector_single = _get_single_detector(thread_id_now)
+            detector_single.record(patch_fingerprint(patched_now))
+            recent_fps = detector_single._fingerprints[-OSCILLATION_WINDOW:]
+            if len(recent_fps) >= 2 and len(set(recent_fps)) == 1:
+                state["_repetition_count"] = state.get("_repetition_count", 0) + 1
+            else:
+                state["_repetition_count"] = 0
+            if state.get("_repetition_count", 0) >= 2:
+                state["_single_oscillation_near"] = True
+                logger.warning(
+                    "Single-file oscillation near: same patch %d times in window",
+                    state["_repetition_count"],
+                )
+            else:
+                state["_single_oscillation_near"] = False
+
         state["judge_verdict"] = "correct" if ok else "needs_revision"
         state["judge_reason"]  = (
             "[no_judge ablation] verdict taken from the test suite only"
@@ -1973,7 +2059,10 @@ def judge_node(state: RepairState) -> RepairState:
             patched   = state.get("current_patch") or ""
             diff_text = ""
             try:
-                diff_text = unified_diff(state.get("buggy_code", ""), patched)
+                # against the full file, as in the path with a Judge (corrected;
+                # the runs of October 2026 diffed the localized excerpt, which
+                # made the diff unusable for files of 150 lines or more)
+                diff_text = unified_diff(state.get("full_buggy_code", ""), patched)
             except Exception:
                 pass
             state["feedback"] = {
