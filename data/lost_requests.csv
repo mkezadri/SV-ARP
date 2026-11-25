@@ -1,0 +1,36 @@
+configuration,bug_id,session,first_logged_at,agent,cause,requests_lost,execution_canonical,note
+full,Math_67,20261011_005033,2026-10-11 22:48:59,Repair,network connection lost (DNS failure),1,yes,answered on a regeneration; no attempt was left without output
+full,Chart_14,20261110_104737,2026-11-10 11:01:49,Judge,HTTP 503 (model under high demand),1,yes,review lost
+full,Mockito_3,20261123_064025,2026-11-23 07:13:59,Repair,HTTP 503 (model under high demand),1,yes,answered on a regeneration; no attempt was left without output
+full,Mockito_3,20261123_064025,2026-11-23 07:31:40,Judge,HTTP 503 (model under high demand),1,yes,review lost
+full,Mockito_4,20261123_064025,2026-11-23 08:06:28,Judge,HTTP 503 (model under high demand),1,yes,review lost
+full,Mockito_5,20261123_064025,2026-11-23 08:34:11,Judge,HTTP 503 (model under high demand),1,yes,review lost
+full,Mockito_6,20261123_064025,2026-11-23 08:50:29,Repair,HTTP 503 (model under high demand),4,yes,attempt 2 was left without model output (all three generations failed); the other failed request was answered on a regeneration
+full,Mockito_9,20261123_100046,2026-11-23 10:33:09,Judge,HTTP 503 (model under high demand),1,yes,review lost
+full,Mockito_10,20261123_100046,2026-11-23 11:08:46,Repair,HTTP 503 (model under high demand),1,yes,answered on a regeneration; no attempt was left without output
+full,Mockito_19,20261123_100046,2026-11-23 12:10:51,Judge,HTTP 503 (model under high demand),1,yes,review lost
+full,Mockito_20,20261123_100046,2026-11-23 12:26:38,Judge,HTTP 503 (model under high demand),1,yes,review lost
+no_semantic,Math_49,20261015_093532,2026-10-16 02:13:19,Repair,network connection lost (DNS failure),6,yes,attempts 2 and 3 were left without model output (all three generations failed)
+no_semantic,Math_49,20261015_093532,2026-10-16 02:38:24,Judge,network connection lost (DNS failure),1,yes,review lost
+no_semantic,Math_81,20261015_093532,2026-10-16 06:28:20,Repair,HTTP 503 (model under high demand),1,yes,answered on a regeneration; no attempt was left without output
+no_semantic,Math_92,20261015_093532,2026-10-16 07:11:30,Judge,HTTP 503 (model under high demand),2,yes,2 reviews lost
+no_semantic,Mockito_4,20261123_124846,2026-11-23 14:18:28,Judge,HTTP 503 (model under high demand),1,yes,review lost
+no_semantic,Mockito_6,20261123_124846,2026-11-23 14:59:29,Repair,HTTP 503 (model under high demand),1,yes,answered on a regeneration; no attempt was left without output
+no_semantic,Mockito_6,20261123_124846,2026-11-23 15:15:46,Judge,HTTP 503 (model under high demand),2,yes,2 reviews lost
+binary_only,Lang_14,20261120_091831,2026-11-20 21:15:16,Judge,HTTP 503 (model under high demand),1,yes,review lost
+binary_only,Lang_14,20261120_091831,2026-11-20 21:26:17,Repair,HTTP 503 (model under high demand),1,yes,answered on a regeneration; no attempt was left without output
+binary_only,Lang_20,20261120_091831,2026-11-20 21:48:37,Judge,HTTP 503 (model under high demand),4,yes,4 reviews lost
+binary_only,Lang_20,20261120_091831,2026-11-20 21:58:51,Repair,HTTP 503 (model under high demand),9,yes,"attempts 2, 3 and 4 were left without model output (all three generations failed)"
+binary_only,Lang_30,20261120_091831,2026-11-20 23:59:06,Judge,HTTP 503 (model under high demand),4,yes,4 reviews lost
+binary_only,Lang_30,20261120_091831,2026-11-21 00:08:50,Repair,HTTP 503 (model under high demand),9,yes,"attempts 2, 3 and 4 were left without model output (all three generations failed)"
+binary_only,Lang_31,20261120_091831,2026-11-21 01:52:35,Judge,HTTP 503 (model under high demand),4,yes,4 reviews lost
+binary_only,Lang_31,20261120_091831,2026-11-21 02:01:06,Repair,HTTP 503 (model under high demand),9,yes,"attempts 2, 3 and 4, which follow its plausible candidate of attempt 1, were left without model output (all three generations failed)"
+binary_only,Lang_39,20261120_091831,2026-11-21 04:01:03,Repair,HTTP 503 (model under high demand),9,yes,"attempts 2, 3 and 4 were left without model output (all three generations failed)"
+binary_only,Lang_20,20261123_051340,2026-11-23 05:22:39,Judge,HTTP 503 (model under high demand),1,no (re-execution attempt abandoned during this bug; it left no record),
+binary_only,Lang_20,20261123_051340,2026-11-23 05:30:31,Repair,HTTP 503 (model under high demand),1,no (re-execution attempt abandoned during this bug; it left no record),
+no_judge,Lang_20,20261121_173559,2026-11-22 09:03:10,Repair,HTTP 503 (model under high demand),9,yes,"attempts 2, 3 and 4 were left without model output (all three generations failed)"
+no_judge,Lang_30,20261121_173559,2026-11-22 10:41:06,Repair,HTTP 503 (model under high demand),9,yes,"attempts 2, 3 and 4 were left without model output (all three generations failed)"
+no_judge,Lang_39,20261121_173559,2026-11-22 12:15:33,Repair,HTTP 503 (model under high demand),9,yes,"attempts 2, 3 and 4 were left without model output (all three generations failed)"
+sample_t010,Closure_3,20261105_120856,2026-11-05 13:06:58,Repair,HTTP 503 (model under high demand),1,yes,answered on a regeneration; no attempt was left without output
+sample_t045a,Closure_4,20261106_001716,2026-11-06 01:12:54,Repair,network connection lost (DNS failure),3,yes,"attempt 1, the single attempt of the pass, was left without model output (all three generations failed)"
+sample_t045a,Closure_5,20261106_001716,2026-11-06 01:40:04,Repair,network connection lost (DNS failure),1,yes,answered on a regeneration; no attempt was left without output
