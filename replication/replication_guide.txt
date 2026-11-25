@@ -34,8 +34,7 @@ versions need (Mockito 1 to 11 and 18 to 21). Check that it is unpacked:
 `ls $D4J_HOME/framework/lib/build_systems/gradle/dists` must show
 `gradle-4.9-bin.zip` inside a folder, not an empty folder. If these versions
 stop within seconds with "Baseline does not compile", this is the cause; in
-our October runs it left 15 bugs unbuilt. `scripts/mockito_probe.sh` checks
-out one of them, builds it and reports the time.
+our October runs it left 15 bugs unbuilt.
 
 ---
 
@@ -75,6 +74,7 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r requirements.txt
+chmod +x run_all.sh scripts/check_env.sh
 ```
 
 ---
@@ -131,6 +131,7 @@ bug id alone. `run_all.sh` does this for you (`results_arm_<name>`).
 ./run_all.sh no_judge         # no Judge; acceptance by the tests alone
 
 # resampling control: four independent single attempts per bug
+# (the passes are named after the temperature they request; gemini-3.5-flash-lite ignores it)
 ./run_all.sh sample_t010 sample_t045a sample_t045b sample_t085
 ```
 
@@ -144,6 +145,7 @@ unpacked from `data/results/`), then:
 ```bash
 for z in data/results/*.zip; do unzip -q -o "$z" -d data; done   # published results
 cp data/verification/*.csv data/
+printf 'Mockito_%s\n' 1 2 3 4 5 6 7 8 9 10 11 18 19 20 21 > data/mockito_gradle_15.txt   # the 15 Gradle-built Mockito bugs
 python analysis/make_figures.py --raw data --rule first \
     --bug-list benchmark/versions.txt \
     --overrides data/overrides_all.csv \
@@ -156,7 +158,7 @@ python analysis/make_figures.py --raw data --rule first \
     --discard-session full=20261110_032346 \
     --reexecuted binary_only=20261120_091831+20261121_115528+20261123_171006 \
     --reexecuted no_judge=20261121_173559+20261123_173421 \
-    --without-bugs benchmark/mockito_gradle_15.txt \
+    --without-bugs data/mockito_gradle_15.txt \
     --second-verification data/second_verification \
     > report.md
 ```
@@ -166,8 +168,8 @@ tallies of the second verification. Five of them describe the published runs
 and are to be omitted for your own: `--concurrent` names the two Full sessions
 that shared a working directory, `--rerun` the session of 10 November 2026
 that executed their 50 bugs again (`benchmark/rerun_full_50.txt`),
-`--discard-session` a session that was discarded in full
-(`data/discarded/README.md`), `--reexecuted` the sessions that executed
+`--discard-session` a session that was discarded in full and is not part of
+the package, `--reexecuted` the sessions that executed
 Binary-Only and No-Judge with the corrected code (the only canonical ones for
 these two configurations; the earlier sessions are kept for their labels and
 for the comparison of section 4f), and `--without-bugs` the 15 Gradle-built
@@ -205,6 +207,20 @@ Pass the output file to `make_figures.py` with one more `--judge-swap` option.
 
 ---
 
+## Step 8 — Test the safeguards of the harness (optional, no model needed)
+
+```bash
+python -m unittest discover -s tests -v      # 42 failure-injection tests, a few seconds
+python tests/remove_each_safeguard.py        # removes each of 24 safeguards in a copy, about a minute
+```
+
+The tests replace the `defects4j` command and the model client by stubs, so
+they need neither an API key nor Defects4J. Run them after any change to
+`src/`, `run_all.sh`, `scripts/check_env.sh` or the canonical-record rule of
+`analysis/make_figures.py`.
+
+---
+
 ## Troubleshooting
 
 **`GEMINI_API_KEY` not set**
@@ -224,7 +240,8 @@ Almost certainly the locale setting. Run `./scripts/check_env.sh`: a clean
 Closure 2b checkout must report exactly one failing test. See Step 1b.
 
 **Results differ slightly from the paper**
-Gemini models are non-deterministic even at `temperature=0.1`. Between the
+The model's output varies from run to run: `gemini-3.5-flash-lite` ignores the
+temperature of a request and samples with its own settings. Between the
 identical first attempts of two configurations, 10% to 12% of bugs are correct
 in one and not in the other, so per-project totals may vary by several bugs. This is why all ablation
 comparisons in the paper are paired on identical bug sets and evaluated with

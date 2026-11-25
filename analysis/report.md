@@ -1050,6 +1050,52 @@ Scored only on patches whose judged text is the canonical, labelled text; bugs j
 
 vetoed by every reviewer: Closure_62, Lang_31; overfitting caught by every reviewer: Lang_31
 
+Each reviewer as a filter on the patches it was scored on (a veto removes the patch):
+
+| model | patches | precision before | overfitting removed | correct removed | patches kept | overfitting among them | precision after |
+|---|---|---|---|---|---|---|---|
+| deepseek_v4_flash_semantic | 184 | 86.4% | 4/25 | 16/159 | 164 | 21 (12.8%) | 87.2% |
+| gemini_3_5_flash_lite_semantic | 186 | 86.6% | 3/25 | 7/161 | 176 | 22 (12.5%) | 87.5% |
+| claude_sonnet_5_5_semantic | 194 | 86.6% | 13/26 | 9/168 | 172 | 13 (7.6%) | 92.4% |
+
+Matched set, the patches scored for every reviewer: 184 patches (25 overfitting, 159 correct)
+
+| model | overfitting caught | correct wrongly vetoed | κ vs labels | precision before | precision after |
+|---|---|---|---|---|---|
+| deepseek_v4_flash_semantic | 4/25 | 16/159 | 0.065 | 86.4% | 87.2% |
+| gemini_3_5_flash_lite_semantic | 3/25 | 7/159 | 0.102 | 86.4% | 87.4% |
+| claude_sonnet_5_5_semantic | 12/25 | 9/159 | 0.454 | 86.4% | 92.0% |
+
+Matched set, the same without the multi-file patches: 178 patches (25 overfitting, 153 correct)
+
+| model | overfitting caught | correct wrongly vetoed | κ vs labels | precision before | precision after |
+|---|---|---|---|---|---|
+| deepseek_v4_flash_semantic | 4/25 | 15/153 | 0.069 | 86.0% | 86.8% |
+| gemini_3_5_flash_lite_semantic | 3/25 | 7/153 | 0.099 | 86.0% | 86.9% |
+| claude_sonnet_5_5_semantic | 12/25 | 9/153 | 0.451 | 86.0% | 91.7% |
+
+Confusion matrix of each reviewer against the labels, on the patches it was scored on (a veto is a positive), with sensitivity, specificity and veto precision and their 95% Wilson intervals:
+
+| model | patches | overfitting vetoed | correct vetoed | overfitting kept | correct kept | sensitivity | specificity | veto precision |
+|---|---|---|---|---|---|---|---|---|
+| deepseek_v4_flash_semantic | 184 | 4 | 16 | 21 | 143 | 4/25, 16.0% [6.4, 34.7] | 143/159, 89.9% [84.3, 93.7] | 4/20, 20.0% [8.1, 41.6] |
+| gemini_3_5_flash_lite_semantic | 186 | 3 | 7 | 22 | 154 | 3/25, 12.0% [4.2, 30.0] | 154/161, 95.7% [91.3, 97.9] | 3/10, 30.0% [10.8, 60.3] |
+| claude_sonnet_5_5_semantic | 194 | 13 | 9 | 13 | 159 | 13/26, 50.0% [32.1, 67.9] | 159/168, 94.6% [90.1, 97.2] | 13/22, 59.1% [38.7, 76.7] |
+
+Confusion matrix of each reviewer against the labels, on the matched set (a veto is a positive), with sensitivity, specificity and veto precision and their 95% Wilson intervals:
+
+| model | patches | overfitting vetoed | correct vetoed | overfitting kept | correct kept | sensitivity | specificity | veto precision |
+|---|---|---|---|---|---|---|---|---|
+| deepseek_v4_flash_semantic | 184 | 4 | 16 | 21 | 143 | 4/25, 16.0% [6.4, 34.7] | 143/159, 89.9% [84.3, 93.7] | 4/20, 20.0% [8.1, 41.6] |
+| gemini_3_5_flash_lite_semantic | 184 | 3 | 7 | 22 | 152 | 3/25, 12.0% [4.2, 30.0] | 152/159, 95.6% [91.2, 97.9] | 3/10, 30.0% [10.8, 60.3] |
+| claude_sonnet_5_5_semantic | 184 | 12 | 9 | 13 | 150 | 12/25, 48.0% [30.0, 66.5] | 150/159, 94.3% [89.6, 97.0] | 12/21, 57.1% [36.5, 75.5] |
+
+Pairs of reviewers on the matched set (McNemar exact, two-sided, unadjusted; first-only/second-only): overfitting patches that only one of the two vetoes, correct patches that only one of the two vetoes, and patches on which only one of the two agrees with the label:
+
+- deepseek_v4_flash_semantic vs gemini_3_5_flash_lite_semantic: overfitting vetoed 3/2, p=1.0000; correct vetoed 13/4, p=0.0490; agrees with the label 7/15, p=0.1338
+- deepseek_v4_flash_semantic vs claude_sonnet_5_5_semantic: overfitting vetoed 0/8, p=0.0078; correct vetoed 14/7, p=0.1892; agrees with the label 7/22, p=0.0081
+- gemini_3_5_flash_lite_semantic vs claude_sonnet_5_5_semantic: overfitting vetoed 2/11, p=0.0225; correct vetoed 5/7, p=0.7744; agrees with the label 9/16, p=0.2295
+
 ## 12. Size of the modified files, and the diff section of the no_judge prompt
 
 - single-file bugs: 357; lines in the modified file: median 666, quartiles 296 / 1370; 323 (90.5%) have 150 lines or more, 133 (37.3%) have 1,000 or more
@@ -1118,5 +1164,219 @@ on the 52 bugs themselves (plausible / correct): full 17 / 15, no_semantic 23 / 
 - records made before the re-execution, earliest valid: plausible=204, correct=177, pending=0; on the 50 re-executed bugs: plausible=19, correct=17; correct fixes against the reduced configurations (full-only/other-only, McNemar): no_semantic 35/26 p=0.306; binary_only 36/12 p=0.001; no_judge 37/28 p=0.321; smallest Holm-adjusted value 0.002
 - records made before the re-execution, latest valid: plausible=206, correct=179, pending=0; on the 50 re-executed bugs: plausible=21, correct=19; correct fixes against the reduced configurations (full-only/other-only, McNemar): no_semantic 36/25 p=0.200; binary_only 38/12 p=0.000; no_judge 38/27 p=0.215; smallest Holm-adjusted value 0.001
 - strict (plausible in every execution): plausible=199
+
+## 15. Paired differences, with 95% confidence intervals
+
+Difference between two configurations on the same bugs (first minus second). The interval is the normal approximation for a difference of paired proportions, its variance taken from the discordant pairs; it is not adjusted.
+
+| comparison | metric | first-only | second-only | difference (bugs) | 95% interval (bugs) | difference (points) | 95% interval (points) |
+|---|---|---|---|---|---|---|---|
+| full minus no_semantic | correct | 35 | 28 | +7 | -8.5 to +22.5 | +1.80 | -2.20 to +5.81 |
+| full minus no_semantic | plausible | 31 | 31 | +0 | -15.4 to +15.4 | +0.00 | -3.98 to +3.98 |
+| full minus binary_only | correct | 36 | 14 | +22 | +8.3 to +35.7 | +5.67 | +2.14 to +9.20 |
+| full minus binary_only | plausible | 39 | 19 | +20 | +5.2 to +34.8 | +5.15 | +1.34 to +8.97 |
+| full minus no_judge | correct | 37 | 30 | +7 | -9.0 to +23.0 | +1.80 | -2.33 to +5.94 |
+| full minus no_judge | plausible | 39 | 29 | +10 | -6.1 to +26.1 | +2.58 | -1.58 to +6.73 |
+| full minus control | correct | 41 | 26 | +15 | -1.0 to +31.0 | +3.87 | -0.25 to +7.98 |
+| full minus control | plausible | 45 | 29 | +16 | -0.8 to +32.8 | +4.12 | -0.20 to +8.45 |
+| no_semantic minus control | correct | 33 | 25 | +8 | -6.9 to +22.9 | +2.06 | -1.78 to +5.90 |
+| no_semantic minus control | plausible | 40 | 24 | +16 | +0.4 to +31.6 | +4.12 | +0.10 to +8.14 |
+| binary_only minus control | correct | 24 | 31 | -7 | -21.5 to +7.5 | -1.80 | -5.55 to +1.94 |
+| binary_only minus control | plausible | 31 | 35 | -4 | -19.9 to +11.9 | -1.03 | -5.13 to +3.07 |
+| no_judge minus control | correct | 34 | 26 | +8 | -7.2 to +23.2 | +2.06 | -1.85 to +5.97 |
+| no_judge minus control | plausible | 39 | 33 | +6 | -10.6 to +22.6 | +1.55 | -2.74 to +5.83 |
+
+## 16. First attempts and the temperature requested
+
+The first-attempt prompt is the same in every configuration and in every pass of the control; the runs differ in the temperature that the harness requested. If the setting took effect, two runs that both requested a low temperature would produce the same candidate more often than two runs of which one requested a high temperature.
+
+| run | temperature requested at the first attempt | bugs with a first attempt | of which at that request | plausible at the first attempt | correct |
+|---|---|---|---|---|---|
+| full | 0.1 | 388 | 388 | 148 | 131 |
+| no_semantic | 0.1 | 388 | 388 | 151 | 133 |
+| binary_only | 0.1 | 388 | 388 | 142 | 122 |
+| no_judge | 0.1 | 388 | 388 | 132 | 120 |
+| sample_t010 | 0.1 | 388 | 388 | 140 | 121 |
+| sample_t045a | 0.45 | 388 | 388 | 145 | 126 |
+| sample_t045b | 0.45 | 388 | 388 | 144 | 124 |
+| sample_t085 | 0.85 | 388 | 388 | 140 | 126 |
+
+over the 8 runs: plausible at the first attempt 132 to 151, correct 120 to 133
+
+Share of bugs whose first-attempt candidates have the same text in two runs (same Java token sequence; bugs on which both runs made their usual request):
+
+| temperatures requested by the two runs | pairs of runs | comparisons | same text | share | lowest pair | highest pair |
+|---|---|---|---|---|---|---|
+| 0.1 and 0.1 | 10 | 3880 | 1456 | 37.5% | 33.5% | 42.0% |
+| 0.1 and 0.45 | 10 | 3880 | 1584 | 40.8% | 38.1% | 43.6% |
+| 0.1 and 0.85 | 5 | 1940 | 762 | 39.3% | 35.6% | 41.8% |
+| 0.45 and 0.45 | 1 | 388 | 169 | 43.6% | 43.6% | 43.6% |
+| 0.45 and 0.85 | 2 | 776 | 330 | 42.5% | 41.8% | 43.3% |
+
+all 28 pairs of runs: 4301 of 10864 comparisons (39.6%), from 33.5% to 43.6% per pair
+per pair: full / no_semantic 163/388; full / binary_only 147/388; full / no_judge 130/388; full / sample_t010 142/388; no_semantic / binary_only 151/388; no_semantic / no_judge 141/388; no_semantic / sample_t010 141/388; binary_only / no_judge 150/388; binary_only / sample_t010 158/388; no_judge / sample_t010 133/388; full / sample_t045a 154/388; full / sample_t045b 154/388; no_semantic / sample_t045a 163/388; no_semantic / sample_t045b 167/388; binary_only / sample_t045a 166/388; binary_only / sample_t045b 153/388; no_judge / sample_t045a 151/388; no_judge / sample_t045b 148/388; sample_t010 / sample_t045a 159/388; sample_t010 / sample_t045b 169/388; full / sample_t085 149/388; no_semantic / sample_t085 160/388; binary_only / sample_t085 153/388; no_judge / sample_t085 138/388; sample_t010 / sample_t085 162/388; sample_t045a / sample_t045b 169/388; sample_t045a / sample_t085 162/388; sample_t045b / sample_t085 168/388
+
+## 17. Correct fixes by kind of label, and the comparisons without alternative fixes
+
+| configuration | plausible | identical | equivalent | alternative | correct, kind not recorded | overfitting | identical or equivalent |
+|---|---|---|---|---|---|---|---|
+| full | 202 | 67 | 68 | 40 | 0 | 27 | 135 |
+| no_semantic | 202 | 0 | 5 | 2 | 161 | 34 | 5 |
+| binary_only | 182 | 63 | 62 | 28 | 0 | 29 | 125 |
+| no_judge | 192 | 61 | 72 | 35 | 0 | 24 | 133 |
+| control | 186 | 69 | 63 | 28 | 0 | 26 | 132 |
+
+patch texts that carry two kinds of correct label (in a configuration and in a control pass): 5 (Chart_4: equivalent and identical; Chart_7: equivalent and identical; Chart_8: equivalent and identical; Math_50: alternative and equivalent; Math_90: alternative and equivalent)
+
+Identical or equivalent patches only (alternative fixes not counted as correct), McNemar exact against `full`; configurations whose correct patches all carry a kind (left out: no_semantic, 161 without a kind):
+
+| comparison | full | other | full-only | other-only | p | p, texts with two kinds counted | p, not counted |
+|---|---|---|---|---|---|---|---|
+| full vs binary_only | 135 | 125 | 27 | 17 | 0.1742 | 0.1352 | 0.1742 |
+| full vs no_judge | 135 | 133 | 30 | 28 | 0.8957 | 0.7914 | 0.8957 |
+| full vs control | 135 | 132 | 29 | 26 | 0.7877 | 0.5831 | 0.6835 |
+
+full minus binary_only, by kind: identical +4, equivalent +6, alternative +12, all correct +22
+
+full minus no_judge, by kind: identical +6, equivalent -4, alternative +5, all correct +7
+
+Attempts 2 to 4 on the bugs whose first attempt is plausible in neither of the two configurations, identical or equivalent only:
+
+- full vs binary_only: 218 bugs, 23 / 16, only first 12, only second 5, p=0.1435
+- full vs no_judge: 221 bugs, 24 / 22, only first 12, only second 10, p=0.8318
+- binary_only vs no_judge: 227 bugs, 18 / 28, only first 6, only second 16, p=0.0525
+
+Plausible patches, which involve no label: McNemar exact against `full`, Holm over the three: no_semantic 31/31, p=1.0000, Holm 1.0000; binary_only 39/19, p=0.0119, Holm 0.0358; no_judge 39/29, p=0.2750, Holm 0.5500
+
+## 18. Cost at the provider's list prices
+
+Input and output tokens are priced separately, at USD 0.30 per million input tokens and USD 2.50 per million output tokens (`--price-in`, `--price-out`; the defaults are the list prices of `gemini-3.5-flash-lite`, standard paid tier, as published on 25 November 2026). Section 7 gives the estimate that the harness logged at a flat rate; here the cost is computed from the logged token counts.
+
+| configuration | input tokens | output tokens | output share | USD | repair USD | Judge USD | Judge share of USD | USD per bug | USD per plausible patch | USD per correct fix | USD logged at the flat rate |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| full | 45,412,031 | 983,437 | 2.1% | $16.08 | $9.39 | $6.69 | 41.6% | $0.0414 | $0.0796 | $0.0919 | $16.24 |
+| no_semantic | 40,679,017 | 854,336 | 2.1% | $14.34 | $7.84 | $6.50 | 45.3% | $0.0370 | $0.0710 | $0.0854 | $14.54 |
+| binary_only | 43,763,868 | 911,550 | 2.0% | $15.41 | $8.87 | $6.54 | 42.5% | $0.0397 | $0.0847 | $0.1007 | $15.64 |
+| no_judge | 22,349,863 | 722,114 | 3.1% | $8.51 | $8.51 | $0.00 | 0.0% | $0.0219 | $0.0443 | $0.0507 | $8.08 |
+| control, as run | 21,082,897 | 1,152,279 | 5.2% | $9.21 | $9.21 | $0.00 | 0.0% | $0.0237 | $0.0495 | $0.0575 | $7.78 |
+| control, early stop | 15,353,076 | 907,822 | 5.6% | $6.88 | $6.88 | $0.00 | 0.0% | $0.0177 | $0.0370 | $0.0430 | $5.69 |
+
+steps with a token record (the four configurations and the control passes): 9,470; steps whose logged total is not the sum of prompt and output tokens: 0
+four configurations together: $54.34
+- full: per bug, mean $0.0414, median $0.0247, maximum $0.3948
+- no_semantic: per bug, mean $0.0370, median $0.0247, maximum $0.3278
+- binary_only: per bug, mean $0.0397, median $0.0260, maximum $0.2520
+- no_judge: per bug, mean $0.0219, median $0.0145, maximum $0.1956
+full arm, plausible patches found at the first attempt: n=148, median USD at list prices 0.0068
+full arm, plausible patches found after iteration: n=54, median USD at list prices 0.0223
+example trajectory (Closure_51, full): 18,651 input and 912 output tokens, 19,563 in all, $0.0079
+
+Prompt sizes in `full`, in tokens as the API counted them (one request per file; requests that were regenerated are left out):
+
+- Repair Agent prompt, first attempt: 378 requests, median 6,888, 90th percentile 20,241, maximum 76,129
+- Repair Agent prompt, later attempts: 609 requests, median 16,338, 90th percentile 41,745, maximum 158,176
+- Judge prompt: 1014 requests, median 13,667, 90th percentile 39,295, maximum 152,526
+
+Incremental cost per additional correct fix (difference in USD over difference in correct fixes; the differences in correct fixes are those of section 15, with their intervals):
+
+- full against no_semantic: +1.74 USD for +7 correct fixes, $0.25 per additional correct fix
+- full against binary_only: +0.67 USD for +22 correct fixes, $0.03 per additional correct fix
+- full against no_judge: +7.57 USD for +7 correct fixes, $1.08 per additional correct fix
+- full against control, as run: +6.88 USD for +15 correct fixes, $0.46 per additional correct fix
+- full against control, early stop: +9.21 USD for +15 correct fixes, $0.61 per additional correct fix
+- no_judge against control, as run: -0.70 USD for +8 correct fixes
+- no_judge against control, early stop: +1.63 USD for +8 correct fixes, $0.20 per additional correct fix
+
+Budget of k iterations (the first k iterations of every execution; a loop stopped after k iterations would have produced them) and of k control passes: fixes and cost at list prices.
+
+| configuration | k | plausible | correct | input tokens | output tokens | USD | USD per correct fix |
+|---|---|---|---|---|---|---|---|
+| full | 1 | 148 | 131 | 12,667,043 | 368,270 | $4.72 | $0.0360 |
+| full | 2 | 177 | 153 | 24,325,552 | 632,273 | $8.88 | $0.0580 |
+| full | 3 | 191 | 166 | 35,287,055 | 848,266 | $12.71 | $0.0765 |
+| full | 4 | 202 | 175 | 45,412,031 | 983,437 | $16.08 | $0.0919 |
+| no_semantic | 1 | 151 | 133 | 12,487,900 | 337,701 | $4.59 | $0.0345 |
+| no_semantic | 2 | 176 | 149 | 22,849,591 | 523,703 | $8.16 | $0.0548 |
+| no_semantic | 3 | 189 | 158 | 32,043,509 | 727,926 | $11.43 | $0.0724 |
+| no_semantic | 4 | 202 | 168 | 40,679,017 | 854,336 | $14.34 | $0.0854 |
+| binary_only | 1 | 142 | 122 | 12,546,263 | 364,020 | $4.67 | $0.0383 |
+| binary_only | 2 | 168 | 142 | 23,986,343 | 602,721 | $8.70 | $0.0613 |
+| binary_only | 3 | 175 | 147 | 33,999,415 | 778,173 | $12.15 | $0.0826 |
+| binary_only | 4 | 182 | 153 | 43,763,868 | 911,550 | $15.41 | $0.1007 |
+| no_judge | 1 | 132 | 120 | 5,414,042 | 253,401 | $2.26 | $0.0188 |
+| no_judge | 2 | 173 | 151 | 11,830,503 | 443,669 | $4.66 | $0.0308 |
+| no_judge | 3 | 184 | 161 | 17,478,813 | 613,372 | $6.78 | $0.0421 |
+| no_judge | 4 | 192 | 168 | 22,349,863 | 722,114 | $8.51 | $0.0507 |
+| control, as run | 1 | 140 | 121 | 5,545,432 | 268,888 | $2.34 | $0.0193 |
+| control, early stop | 1 | 140 | 121 | 5,545,432 | 268,888 | $2.34 | $0.0193 |
+| control, as run | 2 | 165 | 142 | 10,834,168 | 570,339 | $4.68 | $0.0329 |
+| control, early stop | 2 | 165 | 142 | 9,156,015 | 508,760 | $4.02 | $0.0283 |
+| control, as run | 3 | 173 | 149 | 16,106,547 | 904,231 | $7.09 | $0.0476 |
+| control, early stop | 3 | 173 | 149 | 12,442,176 | 752,106 | $5.61 | $0.0377 |
+| control, as run | 4 | 186 | 160 | 21,082,897 | 1,152,279 | $9.21 | $0.0575 |
+| control, early stop | 4 | 186 | 160 | 15,353,076 | 907,822 | $6.88 | $0.0430 |
+
+The loop after k iterations against k control passes (the same number of tested candidates; McNemar exact on correct fixes, two-sided, unadjusted; loop-only/control-only):
+
+| k | configuration | correct | USD | control correct | control USD, as run | discordant | p |
+|---|---|---|---|---|---|---|---|
+| 1 | full | 131 | $4.72 | 121 | $2.34 | 25/15 | 0.1539 |
+| 1 | no_judge | 120 | $2.26 | 121 | $2.34 | 20/21 | 1.0000 |
+| 2 | full | 153 | $8.88 | 142 | $4.68 | 34/23 | 0.1849 |
+| 2 | no_judge | 151 | $4.66 | 142 | $4.68 | 31/22 | 0.2717 |
+| 3 | full | 166 | $12.71 | 149 | $7.09 | 42/25 | 0.0498 |
+| 3 | no_judge | 161 | $6.78 | 149 | $7.09 | 35/23 | 0.1480 |
+| 4 | full | 175 | $16.08 | 160 | $9.21 | 41/26 | 0.0864 |
+| 4 | no_judge | 168 | $8.51 | 160 | $9.21 | 34/26 | 0.3663 |
+
+At about the cost of `no_judge` with 4 iterations ($8.51, 168 correct), paired on bug identity:
+
+- binary_only, k=2: $8.70, 142 correct; no_judge-only 42, other-only 16, p=0.0009
+- no_semantic, k=2: $8.16, 149 correct; no_judge-only 45, other-only 26, p=0.0319
+- full, k=2: $8.88, 153 correct; no_judge-only 43, other-only 28, p=0.0959
+- control, as run, k=4: $9.21, 160 correct; no_judge-only 34, other-only 26, p=0.3663
+
+## 19. Later attempts on the bugs whose first candidate is the same in two configurations
+
+The first-attempt prompt is the same in every configuration, and two configurations often produce the same first candidate (same Java token sequence, all files). On the bugs where they do and that candidate fails, the two loops start their feedback from one and the same failed candidate; what differs afterwards is the feedback. The subset is selected by what the model generated, not at random, and the analysis is post hoc.
+
+| pair | bugs with the same first candidate | recorded outcome differs | it fails in both | plausible later: first / second | only first / only second, p | correct later: first / second | only first / only second, p |
+|---|---|---|---|---|---|---|---|
+| full vs no_semantic | 163 | 1 (Mockito_26) | 70 | 20 / 17 | 7/4, p=0.5488 | 16 / 10 | 8/2, p=0.1094 |
+| full vs binary_only | 147 | 1 (Mockito_26) | 62 | 12 / 10 | 2/0, p=0.5000 | 10 / 7 | 3/0, p=0.2500 |
+| full vs no_judge | 130 | 2 (Mockito_22, Mockito_26) | 51 | 15 / 15 | 4/4, p=1.0000 | 14 / 11 | 6/3, p=0.5078 |
+| no_semantic vs binary_only | 151 | 0 | 62 | 17 / 12 | 5/0, p=0.0625 | 11 / 9 | 3/1, p=0.6250 |
+| no_semantic vs no_judge | 141 | 1 (Mockito_22) | 59 | 19 / 18 | 6/5, p=1.0000 | 11 / 13 | 4/6, p=0.7539 |
+| binary_only vs no_judge | 150 | 1 (Mockito_22) | 61 | 13 / 14 | 4/5, p=1.0000 | 10 / 12 | 3/5, p=0.7266 |
+
+The same comparison on the bugs whose first candidates differ and both fail:
+
+| pair | bugs | plausible later: first / second | only first / only second, p | correct later: first / second | only first / only second, p |
+|---|---|---|---|---|---|
+| full vs no_semantic | 147 | 26 / 21 | 17/12, p=0.4583 | 21 / 15 | 15/9, p=0.3075 |
+| full vs binary_only | 156 | 33 / 17 | 22/6, p=0.0037 | 26 / 12 | 17/3, p=0.0026 |
+| full vs no_judge | 170 | 33 / 29 | 16/12, p=0.5716 | 26 / 23 | 14/11, p=0.6900 |
+| no_semantic vs binary_only | 157 | 26 / 17 | 20/11, p=0.1496 | 19 / 13 | 14/8, p=0.2863 |
+| no_semantic vs no_judge | 163 | 25 / 27 | 15/17, p=0.8601 | 19 / 23 | 11/15, p=0.5572 |
+| binary_only vs no_judge | 166 | 18 / 34 | 6/22, p=0.0037 | 13 / 26 | 5/18, p=0.0106 |
+
+## 20. Three endpoints: test-passing, identical or equivalent, all correct
+
+A correct patch whose kind was not recorded takes the kind of the same patch text where one was recorded (in another configuration or in a control pass). Where no occurrence of the text carries a kind, the patch is counted at the upper end of the range only; a text that carries two kinds, one of them alternative, likewise.
+
+| configuration | plausible | identical or equivalent | all correct | kind recorded | kind from the same text elsewhere | no kind anywhere |
+|---|---|---|---|---|---|---|
+| full | 202 | 135 to 137 | 175 | 175 | 0 | 0 |
+| no_semantic | 202 | 106 to 150 | 168 | 7 | 117 (identical 65, equivalent 39, alternative 16) | 44 |
+| binary_only | 182 | 125 to 126 | 153 | 153 | 0 | 0 |
+| no_judge | 192 | 133 to 134 | 168 | 168 | 0 | 0 |
+| control | 186 | 131 to 132 | 160 | 160 | 0 | 0 |
+
+Identical or equivalent patches, McNemar exact against `full`, at the lower end of both ranges and at the upper end of both (a text is counted in the same way wherever it occurs):
+
+- full vs no_semantic: 135 against 106, 41/12, p=0.0001; 137 against 150, 21/34, p=0.1048
+- full vs binary_only: 135 against 125, 27/17, p=0.1742; 137 against 126, 28/17, p=0.1352
+- full vs no_judge: 135 against 133, 30/28, p=0.8957; 137 against 134, 30/27, p=0.7914
+- full vs control: 135 against 131, 29/25, p=0.6835; 137 against 132, 29/24, p=0.5831
 
 canonical per-bug tables written to `figures_out/canonical_<arm>.csv`

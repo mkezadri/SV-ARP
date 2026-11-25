@@ -1,11 +1,13 @@
-# SV-APR dependencies
+# SV-ARP dependencies
 # Install with: pip install -r requirements.txt
 
-# Google Gemini SDK
+# The runs reported in the paper used google-genai 1.66.0 on Python 3.11
+# (pip install google-genai==1.66.0 gives that version).
 google-genai>=0.8.0
-
-# LangGraph orchestration
 langgraph>=0.2.0
 
-# Environment variable loading (optional)
+# Optional: only for scripts/judge_swap.py (offline review with a second model)
+openai>=1.0.0
+
+# Optional: loads a .env file if present
 python-dotenv>=1.0.0

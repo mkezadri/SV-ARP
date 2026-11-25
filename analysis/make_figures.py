@@ -528,6 +528,13 @@ def main():
                     help="a list of bugs (one per line): section 14c repeats the paired comparisons without them")
     ap.add_argument("--second-verification", default=None, metavar="DIR",
                     help="directory with the second-verification files verification_<arm>.csv (tallies only)")
+    ap.add_argument("--price-in", type=float, default=0.30, metavar="USD",
+                    help="price of a million input tokens (section 18; default: the list price of "
+                         "gemini-3.5-flash-lite, standard paid tier, on 25 November 2026)")
+    ap.add_argument("--price-out", type=float, default=2.50, metavar="USD",
+                    help="price of a million output tokens (section 18; same source)")
+    ap.add_argument("--example-bug", default="Closure_51", metavar="BUG",
+                    help="the bug whose trajectory the paper shows; section 18 prints its cost")
     args = ap.parse_args()
     os.makedirs(args.outdir, exist_ok=True)
 
@@ -1974,7 +1981,7 @@ def main():
           "execution are listed and excluded.\n")
         P("| model | judged on canonical text | vetoed | overfitting caught | correct wrongly vetoed | veto precision | κ vs labels [95% bootstrap CI] | excluded: other execution's text | not judged |")
         P("|---|---|---|---|---|---|---|---|---|")
-        both_veto = None; both_caught = None
+        both_veto = None; both_caught = None; pilot10 = []
         for path in args.judge_swap:
             by_bug = defaultdict(list)                 # usable verdicts, in file order (later = newer)
             for r in csv.DictReader(open(path, encoding="utf-8", errors="replace")):
@@ -2012,6 +2019,7 @@ def main():
             P(f"| {model} | {len(scored)} | {vet} | {caught}/{len(bad)} | {fv}/{len(good)} | "
               f"{caught}/{vet if vet else 1} | {kappa(kp):.3f} [{lo:.2f}, {hi:.2f}] | "
               f"{len(notcanon)} ({', '.join(notcanon)}) | {len(missing)} ({', '.join(missing)}) |")
+            pilot10.append((model, scored))
             vset = {b for b, m, _h in scored if m == "bad"}; cset = {b for b, m, h in scored if m == "bad" and h == "bad"}
             both_veto = vset if both_veto is None else both_veto & vset
             both_caught = cset if both_caught is None else both_caught & cset
@@ -2021,6 +2029,65 @@ def main():
         if both_veto is not None:
             P(f"\nvetoed by every reviewer: {', '.join(sorted(both_veto, key=order_key)) or 'none'}; "
               f"overfitting caught by every reviewer: {', '.join(sorted(both_caught, key=order_key)) or 'none'}")
+        if pilot10:
+            def _filter_row(model, sc):
+                tp = sum(1 for _b, m, h in sc if m == "bad" and h == "bad"); fp = sum(1 for _b, m, h in sc if m == "bad" and h == "correct")
+                fn = sum(1 for _b, m, h in sc if m != "bad" and h == "bad"); tn = sum(1 for _b, m, h in sc if m != "bad" and h == "correct")
+                return tp, fp, fn, tn
+            P("\nEach reviewer as a filter on the patches it was scored on (a veto removes the patch):\n")
+            P("| model | patches | precision before | overfitting removed | correct removed | patches kept | overfitting among them | precision after |")
+            P("|---|---|---|---|---|---|---|---|")
+            for model, sc in pilot10:
+                tp, fp, fn, tn = _filter_row(model, sc)
+                P(f"| {model} | {len(sc)} | {100*(fp+tn)/len(sc):.1f}% | {tp}/{tp+fn} | {fp}/{fp+tn} | {fn+tn} | {fn} ({100*fn/max(fn+tn,1):.1f}%) | {100*tn/max(fn+tn,1):.1f}% |")
+            common10 = set.intersection(*(set(b for b, _m, _h in sc) for _mo, sc in pilot10))
+            multi10 = {b for b in common10 if truthy(rec["full"][b]["row"].get("is_multi_file"))}
+            for title10, set10 in (("the patches scored for every reviewer", common10),
+                                   ("the same without the multi-file patches", common10 - multi10)):
+                nbad = sum(1 for b in set10 if gt[b] == "bad")
+                P(f"\nMatched set, {title10}: {len(set10)} patches ({nbad} overfitting, {len(set10) - nbad} correct)\n")
+                P("| model | overfitting caught | correct wrongly vetoed | κ vs labels | precision before | precision after |")
+                P("|---|---|---|---|---|---|")
+                for model, sc in pilot10:
+                    sub10 = [x for x in sc if x[0] in set10]
+                    tp, fp, fn, tn = _filter_row(model, sub10)
+                    P(f"| {model} | {tp}/{tp+fn} | {fp}/{fp+tn} | {kappa([(m, h) for _b, m, h in sub10]):.3f} | "
+                      f"{100*(fp+tn)/len(sub10):.1f}% | {100*tn/max(fn+tn,1):.1f}% |")
+
+            def _wilson(k_, n_, z=1.959964):
+                """95% Wilson score interval of a proportion k_/n_."""
+                if n_ == 0:
+                    return 0.0, 0.0
+                ph = k_ / n_; den = 1 + z * z / n_
+                mid = (ph + z * z / (2 * n_)) / den
+                half = z * math.sqrt(ph * (1 - ph) / n_ + z * z / (4 * n_ * n_)) / den
+                return max(0.0, mid - half), min(1.0, mid + half)
+
+            def _rate(k_, n_):
+                lo_, hi_ = _wilson(k_, n_)
+                return f"{k_}/{n_}, {100*k_/max(n_, 1):.1f}% [{100*lo_:.1f}, {100*hi_:.1f}]"
+
+            for title10, set10 in (("on the patches it was scored on", None), ("on the matched set", common10)):
+                P(f"\nConfusion matrix of each reviewer against the labels, {title10} (a veto is a positive), with "
+                  "sensitivity, specificity and veto precision and their 95% Wilson intervals:\n")
+                P("| model | patches | overfitting vetoed | correct vetoed | overfitting kept | correct kept | sensitivity | specificity | veto precision |")
+                P("|---|---|---|---|---|---|---|---|---|")
+                for model, sc in pilot10:
+                    sub10 = sc if set10 is None else [x for x in sc if x[0] in set10]
+                    tp, fp, fn, tn = _filter_row(model, sub10)
+                    P(f"| {model} | {len(sub10)} | {tp} | {fp} | {fn} | {tn} | {_rate(tp, tp + fn)} | {_rate(tn, tn + fp)} | {_rate(tp, tp + fp)} |")
+            bad10 = {b for b in common10 if gt[b] == "bad"}; good10 = common10 - bad10
+            P("\nPairs of reviewers on the matched set (McNemar exact, two-sided, unadjusted; first-only/second-only): "
+              "overfitting patches that only one of the two vetoes, correct patches that only one of the two vetoes, and "
+              "patches on which only one of the two agrees with the label:\n")
+            for (m1, s1), (m2, s2) in _it.combinations(pilot10, 2):
+                v1 = {b for b, m, _h in s1 if m == "bad" and b in common10}
+                v2 = {b for b, m, _h in s2 if m == "bad" and b in common10}
+                x, y, n, p = mcnemar_exact(v1 & bad10, v2 & bad10)
+                x2, y2, n2, p2 = mcnemar_exact(v1 & good10, v2 & good10)
+                x3, y3, n3, p3 = mcnemar_exact((v1 & bad10) | (good10 - v1), (v2 & bad10) | (good10 - v2))
+                P(f"- {m1} vs {m2}: overfitting vetoed {x}/{y}, p={p:.4f}; correct vetoed {x2}/{y2}, p={p2:.4f}; "
+                  f"agrees with the label {x3}/{y3}, p={p3:.4f}")
         P()
 
     # ── 12. file sizes, and what the no_judge diff section contained ───────
@@ -2194,6 +2261,389 @@ def main():
     strict_pl = sum(1 for b in evaluable if can["full"][b]["completed"] and
                     all(truthy(r.get("plausible")) for _, r in can["full"][b]["completed"]))
     P(f"- strict (plausible in every execution): plausible={strict_pl}\n")
+    # ── 15. paired differences with confidence intervals ───────────────────
+    def paired_ci(A, B, n_):
+        """A minus B as a difference of two paired proportions over n_ bugs, with a 95%
+        interval from the normal approximation; the variance comes from the discordant pairs."""
+        x = len(A - B); y = len(B - A)
+        d_ = (x - y) / n_
+        se = math.sqrt(max(x + y - (x - y) ** 2 / n_, 0.0)) / n_
+        return x, y, d_, d_ - 1.959964 * se, d_ + 1.959964 * se
+    n_ev = len(evaluable)
+    P("## 15. Paired differences, with 95% confidence intervals\n")
+    P("Difference between two configurations on the same bugs (first minus second). The interval is the normal "
+      "approximation for a difference of paired proportions, its variance taken from the discordant pairs; it is not adjusted.\n")
+    P("| comparison | metric | first-only | second-only | difference (bugs) | 95% interval (bugs) | difference (points) | 95% interval (points) |")
+    P("|---|---|---|---|---|---|---|---|")
+    sets15 = {a: (S_co[a], S_pl[a]) for a in ARMS}
+    pairs15 = [("full", a) for a in ARMS[1:]]
+    if sample_dirs and ctrl_sets:
+        kmax = max(ctrl_sets); sets15["control"] = (ctrl_sets[kmax][1], ctrl_sets[kmax][0])
+        pairs15 += [(a, "control") for a in ARMS]
+    for a, b_ in pairs15:
+        for mi, metric in ((0, "correct"), (1, "plausible")):
+            x, y, d_, lo, hi = paired_ci(sets15[a][mi], sets15[b_][mi], n_ev)
+            P(f"| {a} minus {b_} | {metric} | {x} | {y} | {x - y:+d} | {n_ev*lo:+.1f} to {n_ev*hi:+.1f} | {100*d_:+.2f} | {100*lo:+.2f} to {100*hi:+.2f} |")
+    P()
+
+    # ── 16. first attempts and the temperature requested ───────────────────
+    P("## 16. First attempts and the temperature requested\n")
+    P("The first-attempt prompt is the same in every configuration and in every pass of the control; the runs differ in the "
+      "temperature that the harness requested. If the setting took effect, two runs that both requested a low temperature "
+      "would produce the same candidate more often than two runs of which one requested a high temperature.\n")
+
+    def _first_step(r):
+        return next((e for e in _history(r) if e.get("action") == "repair" and int(fnum(e.get("iteration"), -1)) == 0), None)
+
+    runs16 = []          # (name, {bug: (text of the first candidate, temperature requested)}, plausible, correct)
+    for arm in ARMS:
+        d_ = {}
+        for b in evaluable:
+            st = _first_step(rec[arm][b]["row"])
+            if st is not None:
+                d_[b] = (_norm_text(_step_text(st)), _step_temperature(st.get("metadata") or {}))
+        runs16.append((arm, d_, I_pl[arm], I_co[arm]))
+    if sample_dirs:
+        for temp, name, info in samples:
+            d_ = {}
+            for b in evaluable:
+                if info[b]["excluded"]:
+                    continue
+                st = _first_step(info[b]["row"])
+                if st is not None:
+                    d_[b] = (_norm_text(_step_text(st)), _step_temperature(st.get("metadata") or {}))
+            pl_ = {b for b in evaluable if info[b]["plausible"]}
+            runs16.append((name, d_, pl_, {b for b in pl_ if is_correct_label(info[b]["label"])}))
+    nominal = {}
+    P("| run | temperature requested at the first attempt | bugs with a first attempt | of which at that request | plausible at the first attempt | correct |")
+    P("|---|---|---|---|---|---|")
+    for name, d_, pl_, co_ in runs16:
+        cnt = Counter(t for _, t in d_.values() if t is not None)
+        nominal[name] = cnt.most_common(1)[0][0] if cnt else None
+        P(f"| {name} | {nominal[name]} | {len(d_)} | {cnt.get(nominal[name], 0)} | {len(pl_)} | {len(co_)} |")
+    pls16 = [len(x[2]) for x in runs16]; cos16 = [len(x[3]) for x in runs16]
+    P(f"\nover the {len(runs16)} runs: plausible at the first attempt {min(pls16)} to {max(pls16)}, correct {min(cos16)} to {max(cos16)}")
+    groups16 = defaultdict(list)
+    for (na, da, _pa, _ca), (nb, db, _pb, _cb) in _it.combinations(runs16, 2):
+        ta, tb = nominal[na], nominal[nb]
+        both = [b for b in evaluable if b in da and b in db and da[b][1] == ta and db[b][1] == tb]
+        same = sum(1 for b in both if da[b][0] == db[b][0])
+        groups16[tuple(sorted((ta, tb)))].append((na, nb, same, len(both)))
+    P("\nShare of bugs whose first-attempt candidates have the same text in two runs (same Java token sequence; "
+      "bugs on which both runs made their usual request):\n")
+    P("| temperatures requested by the two runs | pairs of runs | comparisons | same text | share | lowest pair | highest pair |")
+    P("|---|---|---|---|---|---|---|")
+    for key in sorted(groups16):
+        g = groups16[key]; s_ = sum(x[2] for x in g); n_ = sum(x[3] for x in g); rs = [100 * x[2] / x[3] for x in g]
+        P(f"| {key[0]} and {key[1]} | {len(g)} | {n_} | {s_} | {100*s_/n_:.1f}% | {min(rs):.1f}% | {max(rs):.1f}% |")
+    all16 = [x for g in groups16.values() for x in g]
+    P(f"\nall {len(all16)} pairs of runs: {sum(x[2] for x in all16)} of {sum(x[3] for x in all16)} comparisons "
+      f"({100*sum(x[2] for x in all16)/sum(x[3] for x in all16):.1f}%), "
+      f"from {min(100*x[2]/x[3] for x in all16):.1f}% to {max(100*x[2]/x[3] for x in all16):.1f}% per pair")
+    P("per pair: " + "; ".join(f"{na} / {nb} {same}/{n_}" for na, nb, same, n_ in all16) + "\n")
+
+    # ── 17. kinds of correct label; comparisons without alternative fixes ──
+    P("## 17. Correct fixes by kind of label, and the comparisons without alternative fixes\n")
+    KIND = {"Correct (identical)": "identical", "Correct (equivalent)": "equivalent", "Correct (alternative)": "alternative"}
+    lab17 = OrderedDict((a, {b: (rec[a][b]["label"], rec[a][b]["first_txt"]) for b in evaluable if rec[a][b]["plausible"]}) for a in ARMS)
+    kinds_at = defaultdict(set)          # kinds that a patch text carries anywhere (configurations and control passes)
+    for a in ARMS:
+        for b, (l, t) in lab17[a].items():
+            if l in KIND: kinds_at[(b, t)].add(KIND[l])
+    if sample_dirs and ctrl_sets:
+        c17 = {}
+        for b in evaluable:
+            for temp, name, info in samples:
+                if info[b]["plausible"]:
+                    if info[b]["label"] in KIND: kinds_at[(b, info[b]["txt"])].add(KIND[info[b]["label"]])
+                    if b not in c17: c17[b] = (info[b]["label"], info[b]["txt"])
+        lab17["control"] = c17
+    P("| configuration | plausible | identical | equivalent | alternative | correct, kind not recorded | overfitting | identical or equivalent |")
+    P("|---|---|---|---|---|---|---|---|")
+    cnt17 = {}
+    for a, d_ in lab17.items():
+        c = Counter(KIND.get(l, "no kind" if is_correct_label(l) else l) for l, _t in d_.values())
+        cnt17[a] = c
+        P(f"| {a} | {len(d_)} | {c['identical']} | {c['equivalent']} | {c['alternative']} | {c['no kind']} | {c['Overfitting']} | {c['identical'] + c['equivalent']} |")
+    two = sorted((k for k, v in kinds_at.items() if len(v) > 1), key=lambda k: order_key(k[0]))
+    P(f"\npatch texts that carry two kinds of correct label (in a configuration and in a control pass): {len(two)}"
+      + (" (" + "; ".join(f"{b}: {' and '.join(sorted(kinds_at[(b, t)]))}" for b, t in two) + ")" if two else ""))
+
+    def strict17(a, mode):
+        """Bugs whose patch is identical or equivalent. mode says what to do with a text that is
+        labelled alternative in one place and equivalent in another."""
+        out = set()
+        for b, (l, t) in lab17[a].items():
+            k = KIND.get(l)
+            if k is None:
+                continue
+            ks_ = kinds_at.get((b, t), {k})
+            if "alternative" in ks_ and len(ks_) > 1 and mode != "as recorded":
+                if mode == "counted": out.add(b)
+                continue
+            if k in ("identical", "equivalent"): out.add(b)
+        return out
+
+    with_kind = [a for a in lab17 if a != "full" and cnt17[a]["no kind"] == 0]
+    without_kind = [a for a in lab17 if cnt17[a]["no kind"]]
+    left17 = ", ".join("%s, %d without a kind" % (a, cnt17[a]["no kind"]) for a in without_kind)
+    P("\nIdentical or equivalent patches only (alternative fixes not counted as correct), McNemar exact against `full`; "
+      "configurations whose correct patches all carry a kind" + (" (left out: %s)" % left17 if left17 else "") + ":\n")
+    P("| comparison | full | other | full-only | other-only | p | p, texts with two kinds counted | p, not counted |")
+    P("|---|---|---|---|---|---|---|---|")
+    for a in with_kind:
+        x, y, n, p = mcnemar_exact(strict17("full", "as recorded"), strict17(a, "as recorded"))
+        p_c = mcnemar_exact(strict17("full", "counted"), strict17(a, "counted"))[3]
+        p_n = mcnemar_exact(strict17("full", "not counted"), strict17(a, "not counted"))[3]
+        P(f"| full vs {a} | {len(strict17('full', 'as recorded'))} | {len(strict17(a, 'as recorded'))} | {x} | {y} | {p:.4f} | {p_c:.4f} | {p_n:.4f} |")
+    for a in with_kind:
+        if a in ARMS:
+            c0, c1 = cnt17["full"], cnt17[a]
+            P(f"\nfull minus {a}, by kind: identical {c0['identical'] - c1['identical']:+d}, equivalent {c0['equivalent'] - c1['equivalent']:+d}, "
+              f"alternative {c0['alternative'] - c1['alternative']:+d}, all correct {len(S_co['full']) - len(S_co[a]):+d}")
+    P("\nAttempts 2 to 4 on the bugs whose first attempt is plausible in neither of the two configurations, identical or equivalent only:\n")
+    for a, b_ in _it.combinations([x for x in ARMS if cnt17[x]["no kind"] == 0], 2):
+        sub = {x_ for x_ in evaluable if x_ not in I_pl[a] and x_ not in I_pl[b_]}
+        sa, sb = strict17(a, "as recorded") & sub, strict17(b_, "as recorded") & sub
+        x, y, n, p = mcnemar_exact(sa, sb)
+        P(f"- {a} vs {b_}: {len(sub)} bugs, {len(sa)} / {len(sb)}, only first {x}, only second {y}, p={p:.4f}")
+    tests17 = [(a,) + mcnemar_exact(S_pl["full"], S_pl[a]) for a in ARMS[1:]]
+    h17 = holm([t[4] for t in tests17])
+    P("\nPlausible patches, which involve no label: McNemar exact against `full`, Holm over the three: "
+      + "; ".join(f"{a} {x}/{y}, p={p:.4f}, Holm {h:.4f}" for (a, x, y, n, p), h in zip(tests17, h17)) + "\n")
+
+    # ── 18. cost at the provider's list prices ─────────────────────────────
+    P("## 18. Cost at the provider's list prices\n")
+    P(f"Input and output tokens are priced separately, at USD {args.price_in:.2f} per million input tokens and "
+      f"USD {args.price_out:.2f} per million output tokens (`--price-in`, `--price-out`; the defaults are the list prices of "
+      "`gemini-3.5-flash-lite`, standard paid tier, as published on 25 November 2026). Section 7 gives the estimate that "
+      "the harness logged at a flat rate; here the cost is computed from the logged token counts.\n")
+
+    def _usd18(pt, ct):
+        return (pt * args.price_in + ct * args.price_out) / 1e6
+
+    def _split18(r, upto=None):
+        """Tokens of one execution: [repair prompt, repair output, Judge prompt, Judge output,
+        steps with a token record, steps whose logged total is not prompt + output].
+        upto=k keeps the steps of the first k iterations."""
+        out = [0, 0, 0, 0, 0, 0]
+        for e in _history(r):
+            act = e.get("action")
+            md = e.get("metadata") or {}
+            if act not in ("repair", "judge") or (act == "judge" and not md.get("model")):
+                continue
+            if upto is not None and int(fnum(e.get("iteration"), 0)) >= upto:
+                continue
+            o = 0 if act == "repair" else 2
+            for part in _step_parts(md):
+                pt = int(fnum(part.get("prompt_tokens"))); ct = int(fnum(part.get("candidate_tokens"))); tt = int(fnum(part.get("total_tokens")))
+                if not (pt or ct or tt):
+                    continue
+                out[o] += pt; out[o + 1] += ct; out[4] += 1; out[5] += (tt != pt + ct)
+        return out
+
+    def _sum18(rows, upto=None):
+        tot = [0, 0, 0, 0, 0, 0]
+        for r in rows:
+            tot = [x + y for x, y in zip(tot, _split18(r, upto))]
+        return tot
+
+    rows18 = OrderedDict((a, [rec[a][b]["row"] for b in evaluable]) for a in ARMS)
+    out18 = OrderedDict((a, (len(S_pl[a]), len(S_co[a]))) for a in ARMS)
+    flat18 = {a: sum(rec[a][b]["usd"] for b in evaluable) for a in ARMS}
+    if sample_dirs and ctrl_sets:
+        kmax = max(ctrl_sets)
+        rows18["control, as run"] = [info[b]["row"] for _t, _n, info in samples[:kmax] for b in evaluable if not info[b]["excluded"]]
+        early = []
+        for b in evaluable:
+            for _t, _n, info in samples[:kmax]:
+                if info[b]["excluded"]:
+                    continue
+                early.append(info[b]["row"])
+                if info[b]["plausible"]:
+                    break
+        rows18["control, early stop"] = early
+        for nm in ("control, as run", "control, early stop"):
+            out18[nm] = (len(ctrl_sets[kmax][0]), len(ctrl_sets[kmax][1]))
+            flat18[nm] = sum(fnum(r.get("estimated_usd")) for r in rows18[nm])
+    P("| configuration | input tokens | output tokens | output share | USD | repair USD | Judge USD | Judge share of USD | USD per bug | USD per plausible patch | USD per correct fix | USD logged at the flat rate |")
+    P("|---|---|---|---|---|---|---|---|---|---|---|---|")
+    usd18 = {}; steps18 = odd18 = 0
+    for nm, rows_ in rows18.items():
+        rp, ro, jp, jo, n_, odd = _sum18(rows_)
+        steps18 += n_ if nm != "control, early stop" else 0
+        odd18 += odd if nm != "control, early stop" else 0
+        us = _usd18(rp + jp, ro + jo); usd18[nm] = us
+        pl_, co_ = out18[nm]
+        P(f"| {nm} | {rp + jp:,} | {ro + jo:,} | {100*(ro + jo)/max(rp + ro + jp + jo, 1):.1f}% | ${us:.2f} | ${_usd18(rp, ro):.2f} | ${_usd18(jp, jo):.2f} | "
+          f"{100*_usd18(jp, jo)/max(us, 1e-12):.1f}% | ${us/len(evaluable):.4f} | ${us/max(pl_, 1):.4f} | ${us/max(co_, 1):.4f} | ${flat18[nm]:.2f} |")
+    P(f"\nsteps with a token record (the four configurations and the control passes): {steps18:,}; "
+      f"steps whose logged total is not the sum of prompt and output tokens: {odd18}")
+    P(f"four configurations together: ${sum(usd18[a] for a in ARMS):.2f}")
+    bug18 = {a: {b: _usd18(*(lambda s: (s[0] + s[2], s[1] + s[3]))(_split18(rec[a][b]["row"]))) for b in evaluable} for a in ARMS}
+    for a in ARMS:
+        v = list(bug18[a].values())
+        P(f"- {a}: per bug, mean ${sum(v)/len(v):.4f}, median ${_st.median(v):.4f}, maximum ${max(v):.4f}")
+    for nm, sel in (("found at the first attempt", lambda x: x["plausible_iteration"] == 0), ("found after iteration", lambda x: x["plausible_iteration"] > 0)):
+        v = [bug18["full"][b] for b in S_pl["full"] if sel(rec["full"][b])]
+        P(f"full arm, plausible patches {nm}: n={len(v)}, median USD at list prices {_st.median(v):.4f}")
+    if args.example_bug in bug18["full"]:
+        s_ = _split18(rec["full"][args.example_bug]["row"])
+        P(f"example trajectory ({args.example_bug}, full): {s_[0] + s_[2]:,} input and {s_[1] + s_[3]:,} output tokens, "
+          f"{sum(s_[:4]):,} in all, ${bug18['full'][args.example_bug]:.4f}")
+    # size of the prompts, from the requests that were generated once (a regeneration adds its own prompt)
+    sizes18 = defaultdict(list)
+    for b in evaluable:
+        for e in _history(rec["full"][b]["row"]):
+            md = e.get("metadata") or {}
+            if e.get("action") == "judge" and md.get("model") and fnum(md.get("prompt_tokens")):
+                sizes18["Judge prompt"].append(int(fnum(md.get("prompt_tokens"))))
+            elif e.get("action") == "repair":
+                first = int(fnum(e.get("iteration"), 0)) == 0
+                for part in _step_parts(md):
+                    if int(fnum(part.get("generation_attempts"), 1) or 1) == 1 and fnum(part.get("prompt_tokens")):
+                        sizes18["Repair Agent prompt, first attempt" if first else "Repair Agent prompt, later attempts"].append(int(fnum(part.get("prompt_tokens"))))
+    P("\nPrompt sizes in `full`, in tokens as the API counted them (one request per file; requests that were regenerated are left out):\n")
+    for nm in ("Repair Agent prompt, first attempt", "Repair Agent prompt, later attempts", "Judge prompt"):
+        v = sorted(sizes18[nm])
+        if v:
+            P(f"- {nm}: {len(v)} requests, median {int(_st.median(v)):,}, 90th percentile {v[min(len(v) - 1, int(0.9 * len(v)))]:,}, maximum {v[-1]:,}")
+    P("\nIncremental cost per additional correct fix (difference in USD over difference in correct fixes; the differences "
+      "in correct fixes are those of section 15, with their intervals):\n")
+    pairs18 = [("full", a) for a in ARMS[1:]]
+    if "control, as run" in usd18:
+        pairs18 += [("full", "control, as run"), ("full", "control, early stop"), ("no_judge", "control, as run"), ("no_judge", "control, early stop")]
+    for a, b_ in pairs18:
+        dc = out18[a][1] - out18[b_][1]; du = usd18[a] - usd18[b_]
+        P(f"- {a} against {b_}: {du:+.2f} USD for {dc:+d} correct fixes"
+          + (f", ${du/dc:.2f} per additional correct fix" if dc > 0 and du > 0 else ""))
+
+    P("\nBudget of k iterations (the first k iterations of every execution; a loop stopped after k iterations would have "
+      "produced them) and of k control passes: fixes and cost at list prices.\n")
+    P("| configuration | k | plausible | correct | input tokens | output tokens | USD | USD per correct fix |")
+    P("|---|---|---|---|---|---|---|---|")
+    kmax_it = max(int(fnum(rec[a][b]["row"].get("iterations"), 1)) for a in ARMS for b in evaluable)
+    budget18 = {}
+    for a in ARMS:
+        for k in range(1, kmax_it + 1):
+            pl_ = {b for b in S_pl[a] if rec[a][b]["plausible_iteration"] < k}
+            co_ = pl_ & S_co[a]
+            rp, ro, jp, jo, _n, _o = _sum18(rows18[a], upto=k)
+            us = _usd18(rp + jp, ro + jo); budget18[(a, k)] = (pl_, co_, us)
+            P(f"| {a} | {k} | {len(pl_)} | {len(co_)} | {rp + jp:,} | {ro + jo:,} | ${us:.2f} | ${us/max(len(co_), 1):.4f} |")
+    if sample_dirs and ctrl_sets:
+        for k in sorted(ctrl_sets):
+            for nm, stop in (("control, as run", False), ("control, early stop", True)):
+                rows_ = []
+                for b in evaluable:
+                    for _t, _n, info in samples[:k]:
+                        if info[b]["excluded"]:
+                            continue
+                        rows_.append(info[b]["row"])
+                        if stop and info[b]["plausible"]:
+                            break
+                rp, ro, jp, jo, _n2, _o2 = _sum18(rows_)
+                us = _usd18(rp + jp, ro + jo); budget18[(nm, k)] = (ctrl_sets[k][0], ctrl_sets[k][1], us)
+                P(f"| {nm} | {k} | {len(ctrl_sets[k][0])} | {len(ctrl_sets[k][1])} | {rp + jp:,} | {ro + jo:,} | ${us:.2f} | ${us/max(len(ctrl_sets[k][1]), 1):.4f} |")
+    if sample_dirs and ctrl_sets:
+        P("\nThe loop after k iterations against k control passes (the same number of tested candidates; McNemar exact on "
+          "correct fixes, two-sided, unadjusted; loop-only/control-only):\n")
+        P("| k | configuration | correct | USD | control correct | control USD, as run | discordant | p |")
+        P("|---|---|---|---|---|---|---|---|")
+        for k in sorted(ctrl_sets):
+            for a in ("full", "no_judge"):
+                if (a, k) not in budget18:
+                    continue
+                x, y, n, p = mcnemar_exact(budget18[(a, k)][1], ctrl_sets[k][1])
+                P(f"| {k} | {a} | {len(budget18[(a, k)][1])} | ${budget18[(a, k)][2]:.2f} | {len(ctrl_sets[k][1])} | "
+                  f"${budget18[('control, as run', k)][2]:.2f} | {x}/{y} | {p:.4f} |")
+    ref18 = budget18.get(("no_judge", kmax_it))
+    if ref18:
+        P(f"\nAt about the cost of `no_judge` with {kmax_it} iterations (${ref18[2]:.2f}, {len(ref18[1])} correct), paired on bug identity:\n")
+        for key in sorted((k_ for k_ in budget18 if k_ != ("no_judge", kmax_it)), key=lambda k_: abs(budget18[k_][2] - ref18[2]))[:4]:
+            x, y, n, p = mcnemar_exact(ref18[1], budget18[key][1])
+            P(f"- {key[0]}, k={key[1]}: ${budget18[key][2]:.2f}, {len(budget18[key][1])} correct; no_judge-only {x}, other-only {y}, p={p:.4f}")
+    P()
+
+    # ── 19. later attempts after the same failed first candidate ───────────
+    P("## 19. Later attempts on the bugs whose first candidate is the same in two configurations\n")
+    P("The first-attempt prompt is the same in every configuration, and two configurations often produce the same first "
+      "candidate (same Java token sequence, all files). On the bugs where they do and that candidate fails, the two loops "
+      "start their feedback from one and the same failed candidate; what differs afterwards is the feedback. The subset is "
+      "selected by what the model generated, not at random, and the analysis is post hoc.\n")
+    first19 = {}
+    for a in ARMS:
+        d_ = {}
+        for b in evaluable:
+            st = _first_step(rec[a][b]["row"])
+            if st is not None:
+                d_[b] = _norm_text(_step_text(st))
+        first19[a] = d_
+    P("| pair | bugs with the same first candidate | recorded outcome differs | it fails in both | plausible later: first / second | only first / only second, p | correct later: first / second | only first / only second, p |")
+    P("|---|---|---|---|---|---|---|---|")
+    for a, b_ in _it.combinations(ARMS, 2):
+        same = [b for b in evaluable if b in first19[a] and b in first19[b_] and first19[a][b] == first19[b_][b]]
+        mixed = [b for b in same if (b in I_pl[a]) != (b in I_pl[b_])]
+        sub = {b for b in same if b not in I_pl[a] and b not in I_pl[b_]}
+        la, lb = S_pl[a] & sub, S_pl[b_] & sub
+        ca, cb = S_co[a] & sub, S_co[b_] & sub
+        x, y, n, p = mcnemar_exact(la, lb); x2, y2, n2, p2 = mcnemar_exact(ca, cb)
+        P(f"| {a} vs {b_} | {len(same)} | {len(mixed)}" + (f" ({', '.join(sorted(mixed, key=order_key))})" if mixed else "")
+          + f" | {len(sub)} | {len(la)} / {len(lb)} | {x}/{y}, p={p:.4f} | {len(ca)} / {len(cb)} | {x2}/{y2}, p={p2:.4f} |")
+    P("\nThe same comparison on the bugs whose first candidates differ and both fail:\n")
+    P("| pair | bugs | plausible later: first / second | only first / only second, p | correct later: first / second | only first / only second, p |")
+    P("|---|---|---|---|---|---|")
+    for a, b_ in _it.combinations(ARMS, 2):
+        sub = {b for b in evaluable if b not in I_pl[a] and b not in I_pl[b_]
+               and not (b in first19[a] and b in first19[b_] and first19[a][b] == first19[b_][b])}
+        la, lb = S_pl[a] & sub, S_pl[b_] & sub
+        ca, cb = S_co[a] & sub, S_co[b_] & sub
+        x, y, n, p = mcnemar_exact(la, lb); x2, y2, n2, p2 = mcnemar_exact(ca, cb)
+        P(f"| {a} vs {b_} | {len(sub)} | {len(la)} / {len(lb)} | {x}/{y}, p={p:.4f} | {len(ca)} / {len(cb)} | {x2}/{y2}, p={p2:.4f} |")
+    P()
+
+    # ── 20. three endpoints ────────────────────────────────────────────────
+    P("## 20. Three endpoints: test-passing, identical or equivalent, all correct\n")
+    P("A correct patch whose kind was not recorded takes the kind of the same patch text where one was recorded (in another "
+      "configuration or in a control pass). Where no occurrence of the text carries a kind, the patch is counted at the "
+      "upper end of the range only; a text that carries two kinds, one of them alternative, likewise.\n")
+    P("| configuration | plausible | identical or equivalent | all correct | kind recorded | kind from the same text elsewhere | no kind anywhere |")
+    P("|---|---|---|---|---|---|---|")
+    lo20 = {}; hi20 = {}
+    for a, d_ in lab17.items():
+        lo_ = set(); hi_ = set(); c = Counter(); dk = Counter()
+        for b, (l, t) in d_.items():
+            if not is_correct_label(l):
+                continue
+            k = KIND.get(l)
+            ks_ = set(kinds_at.get((b, t), set())) | ({k} if k else set())
+            if k:
+                c["recorded"] += 1
+            elif ks_:
+                c["elsewhere"] += 1
+                for kk in ks_: dk[kk] += 1
+            else:
+                c["nowhere"] += 1
+            if not ks_ or ("alternative" in ks_ and len(ks_) > 1):
+                hi_.add(b)
+            elif "alternative" not in ks_:
+                lo_.add(b); hi_.add(b)
+        lo20[a] = lo_; hi20[a] = hi_
+        rng = f"{len(lo_)}" if len(lo_) == len(hi_) else f"{len(lo_)} to {len(hi_)}"
+        nco = sum(1 for l, _t in d_.values() if is_correct_label(l))
+        P(f"| {a} | {len(d_)} | {rng} | {nco} | {c['recorded']} | {c['elsewhere']}"
+          + (f" (identical {dk['identical']}, equivalent {dk['equivalent']}, alternative {dk['alternative']})" if c['elsewhere'] else "")
+          + f" | {c['nowhere']} |")
+    P("\nIdentical or equivalent patches, McNemar exact against `full`, at the lower end of both ranges and at the upper "
+      "end of both (a text is counted in the same way wherever it occurs):\n")
+    for a in lab17:
+        if a == "full":
+            continue
+        x, y, n, p = mcnemar_exact(lo20["full"], lo20[a]); x2, y2, n2, p2 = mcnemar_exact(hi20["full"], hi20[a])
+        P(f"- full vs {a}: {len(lo20['full'])} against {len(lo20[a])}, {x}/{y}, p={p:.4f}; "
+          f"{len(hi20['full'])} against {len(hi20[a])}, {x2}/{y2}, p={p2:.4f}")
+    P()
+
     P(f"canonical per-bug tables written to `{args.outdir}/canonical_<arm>.csv`")
 
 
