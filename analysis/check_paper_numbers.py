@@ -162,9 +162,9 @@ hs = dict(zip(ARMS[1:], holm([exact_p(st[a]["x"], st[a]["y"]) for a in ARMS[1:]]
 d_ns, d_bo, d_nj = F["co"] - NS["co"], F["co"] - BO["co"], F["co"] - NJ["co"]
 b, n, j = st["binary_only"], st["no_semantic"], st["no_judge"]
 
-T("abstract: headline", rf"it produces {F['pl']} plausible patches, {first_share}\% of them at the first attempt, of which {F['co']} are verified correct ({pct(F['co'], N_BUGS)}\% of the bugs; precision {F['prec']}\%), at an estimated \${CF['mean']} per bug")
+T("abstract: headline", rf"it produces {F['pl']} plausible patches, {first_share}\% of them at the first attempt, of which {F['co']} are labelled correct under an LLM-assisted protocol with author adjudication ({pct(F['co'], N_BUGS)}\% of the bugs; precision {F['prec']}\%), at an estimated \${CF['mean']} per bug")
 T("abstract: test evidence", rf"the correct fixes fall from {F['co']} to {BO['co']} (McNemar p~=~{mp(b['x'], b['y'], 3)}, Holm-adjusted {fmt(hs['binary_only'], 3)})")
-T("abstract: Judge", rf"Removing the Judge leaves {NJ['co']} (p~=~{mp(j['x'], j['y'])}) at half the cost, and four independent single attempts")
+T("abstract: Judge", rf"Removing the Judge leaves {NJ['co']} (p~=~{mp(j['x'], j['y'])}) at half the cost, and four independent attempts")
 T("introduction: test evidence", rf"it loses {d_bo} correct fixes, the one difference in the study that survives correction")
 T("contribution 2", rf"{F['pl']} plausible and {F['co']} verified-correct patches (precision {F['prec']}\%) on the {N_BUGS} active \dfj{{}} v1.2 bugs, with at most four tested candidates per bug, at an estimated \${CF['mean']} per bug")
 T("contribution 3", rf"four configurations paired on {N_BUGS} bugs, an equal-budget resampling control and a replication analysis of first attempts show that withholding the test output costs {d_bo} correct fixes, the only difference that survives multiplicity correction, ")
@@ -230,10 +230,10 @@ fa = R(r"full arm, share of each project's plausible patches found at the first 
 T("first-attempt share per project", rf"is {fa[7]}\% for Time, {fa[3]}\% for Math, {fa[0]}\% for Chart, {fa[2]}\% for Lang, {fa[1]}\% for Closure and {fa[6]}\% for Mockito ({fa[4]} of {fa[5]})")
 
 # ── ablation table and tests ──────────────────────────────────────────────
-T("ablation table, Full", rf"\cfull{{}} & {F['pl']} & {F['co']} & {F['prec']}\% & {F['ov']} & & & & & & & {F['dc']} \\")
+T("ablation table, Full", rf"\cfull{{}} & {F['pl']} & {F['acc']} & {F['co']} & {F['prec']}\% & {F['ov']} & & & & & & & {F['dc']} \\")
 for arm in ARMS[1:]:
     a, s_ = arms[arm], st[arm]
-    T(f"ablation table, {arm}", rf"{MACRO[arm]} & {a['pl']} & {a['co']} & {a['prec']}\% & {a['ov']} & {s_['x']}/{s_['y']} & {mp(s_['x'], s_['y'], 3)} & {fmt(exact_p(s_['x'], s_['y']) / 2, 3)} & {fmt(hs[arm], 3)} & {s_['xp']}/{s_['yp']} & {mp(s_['xp'], s_['yp'], 3)} & {a['dc']} \\")
+    T(f"ablation table, {arm}", rf"{MACRO[arm]} & {a['pl']} & {a['acc']} & {a['co']} & {a['prec']}\% & {a['ov']} & {s_['x']}/{s_['y']} & {mp(s_['x'], s_['y'], 3)} & {fmt(exact_p(s_['x'], s_['y']) / 2, 3)} & {fmt(hs[arm], 3)} & {s_['xp']}/{s_['yp']} & {mp(s_['xp'], s_['yp'], 3)} & {a['dc']} \\")
 T("pairwise: Binary-Only", rf"lowers the count of verified-correct fixes from {F['co']} to {BO['co']}: {b['x']} bugs are fixed only by \cfull{{}} against {b['y']} fixed only by \cbin{{}} (two-sided \pval{{{mp(b['x'], b['y'], 3)}}}, one-sided \pval{{{fmt(exact_p(b['x'], b['y']) / 2, 3)}}}), and the plausible count falls from {F['pl']} to {BO['pl']} (\pval{{{mp(b['xp'], b['yp'], 3)}}}). After Holm adjustment over the three tests the value is ${fmt(hs['binary_only'], 3)}$, so this difference is significant")
 C("the adjusted Binary-Only value is below 0.05", hs["binary_only"] < Fraction(5, 100))
 T("pairwise: No-Judge", rf"changes the count from {F['co']} to {NJ['co']} ({j['x']} bugs fixed only by \cfull{{}} against {j['y']} fixed only by \cnoj{{}}; two-sided \pval{{{mp(j['x'], j['y'])}}}, one-sided \pval{{{fmt(exact_p(j['x'], j['y']) / 2)}}}) and the plausible count from {F['pl']} to {NJ['pl']} (\pval{{{mp(j['xp'], j['yp'])}}})")
@@ -450,7 +450,7 @@ od = R(r"first-plausible-wins correct over all 24 sample orderings: min (\d+), m
 T("control: orderings", rf"between {od[0]} and {od[1]} correct fixes (mean {od[2]}); the union over passes, which would require an oracle to pick the correct patch, gives {od[3]}")
 T("control: two estimates", rf"the first attempts of the configurations ({prox[0]} plausible, {prox[1]} correct) and the control ({kpl[3]}, {kco[3]}), are close")
 C("the control's plausible count is the one used for its cost", kpl[3] == kpl4)
-T("abstract: control", rf"four independent single attempts obtain {kco[3]} correct fixes with half the full loop's tokens, not significantly fewer than the loop without the Judge")
+T("abstract: control", rf"four independent attempts obtain {kco[3]} correct fixes with half the full loop's tokens, not significantly fewer than the loop without the Judge")
 C("abstract: 'not significantly fewer'", exact_p(K4[9], K4[10]) > Fraction(5, 100))
 T("control vs No-Judge", rf"{kpl[3]} against {NJ['pl']} plausible ({K4[7]} bugs repaired only by \cnoj{{}}, {K4[8]} only by the control; \pval{{{mp(K4[7], K4[8])}}}) and {kco[3]} against {NJ['co']} correct ({K4[9]} against {K4[10]}; \pval{{{mp(K4[9], K4[10])}}})")
 T("control: tokens", rf"{ctok:.1f}~M as run, and {etok:.1f}~M with {th(ce[0])} tested candidates when each bug stops at its first plausible pass, against {CJ['tok'] / 1e6:.1f}~M and {th(CJ['cand'])} candidates for \cnoj")
@@ -489,92 +489,42 @@ k2 = R(r"Independent review 2 \(blind\): n=(\d+), agreement=([\d.]+)%, κ=([\d.]
 k3 = R(r"Independent review 3 \(blind\): n=(\d+), agreement=([\d.]+)%, κ=([\d.]+) \[95% bootstrap CI ([\d.]+), ([\d.]+)\], disagreements=(\d+)")
 T("blind passes", rf"on {int(k2[0]) - int(k2[5])} of {k2[0]} patches ($\kappa={fmt(k2[2])}$, 95\% bootstrap interval ${k2[3]}$ to ${k2[4]}$; \citealp{{cohen1960}}) and with the pass-3 labels on {int(k3[0]) - int(k3[5])} of {k3[0]} ($\kappa={fmt(k3[2])}$, ${k3[3]}$ to ${k3[4]}$)")
 exc = R(r"Bugs whose blind passes reviewed the patch of another execution, excluded here: (\d+) \(([^)]*)\)")
-C("patches left out of the blind-pass figures: eight of the re-execution and eight of the Mockito bugs", int(exc[0]) == 16 and sum(x.startswith("Mockito") for x in exc[1].split(", ")) == 8 and int(k3[0]) + 16 == F["pl"])
-n_re = int(exc[0]) - sum(x.startswith("Mockito") for x in exc[1].split(", "))
-re_pl = int(re.search(r"- re-execution: valid executions \d+, plausible (\d+)", rep).group(1))
-T("blind passes and the re-execution", rf"Of the {re_pl} plausible patches of the re-execution, {WORDS[re_pl - n_re]} have the text these passes read. Of the {WORDS[n_re]} others")
+C("patches left out of the blind-pass figures: 16, eight of them of the Mockito bugs", int(exc[0]) == 16 and sum(x.startswith("Mockito") for x in exc[1].split(", ")) == 8 and int(k3[0]) + 16 == F["pl"])
+T("blind passes: the texts they read", rf"These passes read the text of {k3[0]} of the {F['pl']} plausible patches reported for \cfull{{}}.")
+T("blind passes: left out of both figures", rf"the {exc[0]} patches whose text the blind passes did not read are left out of both figures")
+# the others, by the source of their label (section 2b lists the records of the session executed after the verification)
+sec2b = rep.split("## 2b.")[1].split("- `binary_only`")[0]
+src2b = {b_: (lab_.strip(), src_.strip()) for b_, lab_, src_ in re.findall(r"\n  \| (\w+) \| [^|\n]* \| [^|\n]* \| ([^|\n]*) \| ([^|\n]*) \|", sec2b)}
+not_read = [x for x in exc[1].split(", ") if not x.startswith("Mockito")]
+C("blind passes: every other patch is a record of the session executed after them", all(b_ in src2b for b_ in not_read))
+carried = [b_ for b_ in not_read if src2b[b_][1].startswith("identical labelled patch")]
+later = [b_ for b_ in not_read if src2b[b_][1] == "labelled after the re-execution"]
+ident_ = [b_ for b_ in carried if src2b[b_][0] == "Correct (identical)"]
+C("blind passes: the other patches are carried over or labelled later", sorted(carried + later) == sorted(not_read) and len(ident_) == 3)
+def _names(bs):
+    bs = [b_.replace("_", "-") for b_ in bs]
+    return ", ".join(bs[:-1]) + " and " + bs[-1] if len(bs) > 1 else bs[0]
+T("blind passes: the 16 others", rf"Of the {exc[0]} others, {WORDS[int(exc[0]) - len(not_read)]} are those of the Mockito bugs executed last; {_names(ident_)}, all three token-identical to the developer fix, and {_names([b_ for b_ in carried if b_ not in ident_])} have the text of a patch labelled in another configuration or in the control; and {_names(later)} were labelled after these passes, under pass 1 and adjudication.")
+T("data package: labels only", rf"labels only are recorded for the {WORDS[len(later)]} patches of \cfull{{}} labelled after the blind passes")
 C("Closure-9 and Lang-16 are two of the four pass-3 disagreements", k3[5] == "4" and "Closure_9" in rep.split("Independent review 3 (blind)")[1].split("\n")[0] and "Lang_16" in rep.split("Independent review 3 (blind)")[1].split("\n")[0])
 sv = {a: R(rf"- `{a}`: (\d+) patches logged plausible in the file[^;]*; canonical plausible patches whose text it reviewed: (\d+) of (\d+)") for a in ARMS}
 svt = R(r"canonical plausible patches of the four configurations whose text the second verification reviewed: (\d+) of (\d+)")
-T("second verification coverage", rf"Of the {svt[1]} canonical patches reported here it read the text of {svt[0]}: {sv['full'][1]} of the {sv['full'][2]} of \cfull{{}}, {sv['no_semantic'][1]} of the {sv['no_semantic'][2]} of \cnosem{{}}, {sv['binary_only'][1]} of the {sv['binary_only'][2]} of \cbin{{}} and {sv['no_judge'][1]} of the {sv['no_judge'][2]} of \cnoj")
+C("second verification: the Full patches it read are as many as the blind passes read", sv["full"][1] == k3[0])
+T("second verification coverage", rf"Of the {svt[1]} canonical patches reported here it read the text of {svt[0]}: {sv['full'][1]} of the {sv['full'][2]} of \cfull{{}} (the {k3[0]} that the blind passes read), {sv['no_semantic'][1]} of the {sv['no_semantic'][2]} of \cnosem{{}}, {sv['binary_only'][1]} of the {sv['binary_only'][2]} of \cbin{{}} and {sv['no_judge'][1]} of the {sv['no_judge'][2]} of \cnoj")
 ex9 = R(r"execution of the logged-plausible patches: \{'JDK 8 re-run of the relevant tests': (\d+), 'not re-run \(project could not be rebuilt\)': (\d+), 'token-identical to the developer fix, not re-executed': (\d+)\}")
 T("second verification: Full", rf"the relevant tests were re-run for {ex9[0]} of the {sv['full'][0]} patches in its file; {ex9[2]} others are token-identical to the developer fix and were not re-executed, and {ex9[1]} Chart patches could not be rebuilt")
 T("second verification: No-Semantic", rf"they were re-run for the {R(r"'Yes \(re-run\)': (\d+)")[0]} patches outside Chart")
 T("labels given last: records", rf"Of the {BO['pl'] + NJ['pl']} plausible records of \cbin{{}} and \cnoj{{}}, ")
 
-# ── re-execution, concurrent sessions ─────────────────────────────────────
-v = re.findall(r"- ([^:\n]+): plausible=(\d+), correct=(\d+), pending=0; on the (\d+) re-executed bugs: plausible=(\d+), correct=(\d+); correct fixes against the reduced configurations \(full-only/other-only, McNemar\): no_semantic (\d+)/(\d+) p=[\d.]+; binary_only (\d+)/(\d+) p=[\d.]+; no_judge (\d+)/(\d+) p=[\d.]+; smallest Holm-adjusted value [\d.]+", rep)
-assert len(v) == 3, len(v)
-
-
-def cell(x, y):
-    p_ = pt(x, y)
-    return f"{x}/{y} ({p_})"
-
-
-def hmin(v_):
-    return min(holm([exact_p(v_[6], v_[7]), exact_p(v_[8], v_[9]), exact_p(v_[10], v_[11])]))
-
-
-for v_, label in zip(v, ("Re-execution", "Earlier session", "Later session")):
-    T(f"executions table, {label}", rf"{label} & {v_[4]} & {v_[5]} & {v_[1]} & {v_[2]} & {cell(v_[6], v_[7])} & {cell(v_[8], v_[9])} & {cell(v_[10], v_[11])} & {fmt(hmin(v_), 3)} \\")
-e_, l_ = v[1], v[2]
-
-
-def p2lt(x, y):
-    return "$p<0.001$" if exact_p(x, y) < Fraction(1, 1000) and fmt(exact_p(x, y), 3) == "0.000" else rf"\pval{{{mp(x, y, 3) if exact_p(x, y) < Fraction(1, 100) else mp(x, y)}}}"
-
-
-T("sensitivity 1: earlier session", rf"it has {e_[1]} plausible and {e_[2]} correct fixes ({p2lt(e_[6], e_[7])}, {p2lt(e_[8], e_[9])} and {p2lt(e_[10], e_[11])} against \cnosem{{}}, \cbin{{}} and \cnoj{{}})")
-T("sensitivity 1: later session", rf"and with the later one {l_[1]} and {l_[2]} ({p2lt(l_[6], l_[7])}, {p2lt(l_[8], l_[9])} and {p2lt(l_[10], l_[11])})")
-C("under each choice only the comparison with Binary-Only survives adjustment", all(sorted(holm([exact_p(x[6], x[7]), exact_p(x[8], x[9]), exact_p(x[10], x[11])]))[0] < Fraction(5, 100) < sorted(holm([exact_p(x[6], x[7]), exact_p(x[8], x[9]), exact_p(x[10], x[11])]))[1] and exact_p(x[8], x[9]) < exact_p(x[6], x[7]) for x in v))
-T("threat: range over the three executions", rf"moves \cfull{{}} between {F['co']} and {l_[2]} correct fixes and leaves the comparison with \cbin{{}} the only one that survives adjustment")
-C("the reported choice gives Full its lowest count", F["co"] == min(int(x[2]) for x in v))
-strict = R(r"strict \(plausible in every execution\): plausible=(\d+)")
-T("strict", rf"gives \cfull{{}} {strict[0]} plausible fixes instead of {F['pl']}")
+# ── one execution per bug and configuration; recorded outcomes of identical candidates ──
+sec2 = rep.split("## 2. Bugs executed more than once")[1].split("Records that are never canonical")[0]
+C("threats: one valid execution of each bug in each configuration (section 2)", all(f"- `{a}`: none" in sec2 for a in ARMS))
 d4 = R(r"- tested candidates in valid executions: (\d+); distinct texts: \d+; texts tested more than once: (\d+) \((\d+) candidates\)")
 both = R(r"texts recorded both as passing and as failing: (\d+), of which (\d+) within valid executions \(([^)]*)\)")
-T("appendix A: candidates", rf"{th(d4[0])} candidates were tested in valid executions; {th(d4[1])} texts were tested more than once ({th(d4[2])} candidates), and the recorded outcome is the same at every occurrence for all but {WORDS[int(both[1])]} of them. {WORDS[int(both[1]) - 1].capitalize()} are Mockito candidates")
-C("the texts with two outcomes in valid executions", both[2] == "Chart_14, Mockito_5, Mockito_22, Mockito_24, Mockito_26")
-cs = R(r"Valid executions of the two sessions on these bugs: (\d+), (\d+) tested candidates; candidates whose text was also tested in an execution outside the two sessions: (\d+) \((\d+) bugs\), same recorded outcome: (\d+)")
-T("appendix A: concurrent sessions", rf"left {cs[0]} valid executions of the 52 bugs, with {cs[1]} tested candidates. For {cs[2]} of them, from {cs[3]} bugs, the same text was tested in an execution outside the two sessions, and {cs[4]} have the same recorded outcome there; the exception is the Chart-14 candidate. The {int(cs[1]) - int(cs[2])} others")
-T("section 4.4: other candidates of the two sessions", rf"the same outcome for the {cs[4]} other candidates of these sessions")
-T("appendix A: records that look normal", rf"The remaining {cs[0]} records look normal")
-pr = re.findall(r"\| (re-execution vs full \d+_\d+|full \d+_\d+ vs full \d+_\d+) \| (\d+) \| (\d+) \| (\d+) \((\d+)%;[^|]*\) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|", rep)
-assert len(pr) == 3
-T("appendix A: three executions", rf"both valid for {pr[0][1]} of the 50 bugs and differ in the plausibility outcome of {WORDS[int(pr[0][3])]}; the later session and the re-execution, for {pr[1][1]} and {WORDS[int(pr[1][3])]}; the two concurrent sessions, for {pr[2][1]} and {WORDS[int(pr[2][3])]}. In each pair, every candidate text that both executions tested ({pr[0][7]}, {pr[1][7]} and {pr[2][7]} texts) has the same recorded outcome, and the first candidate has the same text for {pr[0][5]}, {pr[1][5]} and {pr[2][5]} bugs")
-C("identical candidates have one outcome in each pair", all(p_[5] == p_[6] and p_[7] == p_[8] for p_ in pr))
-T("appendix A: disagreement share", rf"disagree on the plausibility of {min(int(p_[4]) for p_ in pr)}\% to {max(int(p_[4]) for p_ in pr)}\% of these bugs")
-T("section 4.4: plausibility differs", rf"for {WORDS[int(pr[0][3])]} and for {WORDS[int(pr[1][3])]} of the {pr[0][1]} bugs on which both are valid")
-ex = re.findall(r"- (re-execution|full \d+_\d+): valid executions (\d+), plausible (\d+), tested candidates (\d+)", rep)
-T("section 4.4: plausible patches on the 50 bugs", rf"the re-execution produced {ex[0][2]} plausible patches, against {ex[1][2]} in each concurrent session")
-C("the two concurrent sessions have the same plausible count", ex[1][2] == ex[2][2])
-fc = R(r"- re-execution against each other execution: [^\n]*\(range (\d+) to (\d+)\)\n- between two of the other executions: range (\d+) to (\d+) of (\d+) to (\d+) bugs")
-fp = R(r"- first candidates that pass: re-execution (\d+);[^\n]*\(others: (\d+) to (\d+)\)")
-T("appendix A: first candidates", rf"for {fc[0]} to {fc[1]} of the 47 to 50 bugs that both executed, against {fc[2]} to {fc[3]} between two of the other executions, and {fp[0]} of its first candidates pass, against {fp[1]} to {fp[2]}")
-ps_ = R(r"- bugs compared per execution: (\d+) to (\d+); first Repair Agent prompt of equal size in every comparison: (\w+); first Judge prompt of equal size: (\d+)/(\d+)")
-C("prompts of equal size in every comparison", ps_[2] == "yes" and ps_[3] == ps_[4])
-T("appendix A: prompt sizes", rf"{ps_[0]} to {ps_[1]} bugs, depending on the execution), the recorded token count is identical")
+mix = both[2].split(", ")
+C("the texts with two outcomes in valid executions are Mockito texts", all(x.startswith("Mockito_") for x in mix) and len(mix) == int(both[1]))
+T("appendix: identical candidates", rf"{th(d4[0])} candidates were tested in valid executions; {th(d4[1])} texts were tested more than once ({th(d4[2])} candidates), and the recorded outcome is the same at every occurrence for all but {WORDS[int(both[1])]} of them, Mockito candidates that fail a timing-dependent test in some executions and pass in others ({_names(mix)})")
 
-# ── sensitivity: subsets ──────────────────────────────────────────────────
-sb = {arm: R(rf"\| {arm} \| (\d+) \| (\d+) \| (\d+)/(\d+) \| [\d.]+ \| [\d.]+ \| [\d.]+ \| (\d+)/(\d+) \| [\d.]+ \|\n") for arm in ARMS[1:]}
-sbf = R(r"\| full \| (\d+) \| (\d+) \| \| \| \| \| \| \|")
-sbc = R(r"\| control \(best of 4\) \| (\d+) \| (\d+) \| (\d+)/(\d+) \| [\d.]+ \| \| \| (\d+)/(\d+) \| [\d.]+ \|")
-n_sub = R(r"Paired set restricted to the other (\d+) bugs; McNemar exact against `full`, Holm over the three correct-fix comparisons.\n\n\| arm \| plausible \| correct \| correct: full-only/arm-only \| p \| p1 \|")[0]
-hs2 = dict(zip(ARMS[1:], holm([exact_p(sb[a][2], sb[a][3]) for a in ARMS[1:]])))
-T("subset table, Full", rf"\cfull{{}} & {sbf[0]} & {sbf[1]} & & & & & & \\")
-for arm in ARMS[1:]:
-    g = sb[arm]
-    T(f"subset table, {arm}", rf"{MACRO[arm]} & {g[0]} & {g[1]} & {g[2]}/{g[3]} & {pt(g[2], g[3])} & {'$<$0.001' if exact_p(g[2], g[3]) / 2 < Fraction(1, 2000) else fmt(exact_p(g[2], g[3]) / 2, 3)} & {fmt(hs2[arm], 3)} & {g[4]}/{g[5]} & {pt(g[4], g[5])} \\")
-T("subset table, control", rf"\cctrl{{}} & {sbc[0]} & {sbc[1]} & {sbc[2]}/{sbc[3]} & {pt(sbc[2], sbc[3])} & & & {sbc[4]}/{sbc[5]} & {pt(sbc[4], sbc[5])} \\")
-g1, g2, g3 = sb["no_semantic"], sb["binary_only"], sb["no_judge"]
-T("sensitivity 2: without the 52 bugs", rf"the {n_sub} remaining bugs give {sbf[1]} correct fixes for \cfull{{}} against {g1[1]}, {g2[1]} and {g3[1]} for \cnosem{{}}, \cbin{{}} and \cnoj{{}} (\pval{{{mp(g1[2], g1[3], 3)}}}, \pval{{{mp(g2[2], g2[3], 3)}}} and \pval{{{mp(g3[2], g3[3])}}}; Holm-adjusted ${fmt(hs2['no_semantic'])}$, ${fmt(hs2['binary_only'], 3)}$ and ${fmt(hs2['no_judge'])}$)")
-T("appendix A: the remaining bugs", rf"On the {n_sub} remaining bugs the comparison with \cbin{{}} is significant after Holm adjustment and the two others are not")
-C("... and the unadjusted values are smaller than on the full set for all three", all(exact_p(sb[a][2], sb[a][3]) < exact_p(st[a]["x"], st[a]["y"]) for a in ARMS[1:]) and hs2["binary_only"] < Fraction(5, 100) < min(hs2["no_semantic"], hs2["no_judge"]))
-T("subset: plausible, Full against No-Judge", rf"the plausible counts of \cfull{{}} and \cnoj{{}} differ with \pval{{{mp(g3[4], g3[5], 3)}}}")
-T("subset table caption", rf"on the {n_sub} bugs that the two concurrent sessions did not execute")
-sub = R(r"on the 52 bugs themselves \(plausible / correct\): full (\d+) / (\d+), no_semantic (\d+) / (\d+), binary_only (\d+) / (\d+), no_judge (\d+) / (\d+), control (\d+) / (\d+)")
-T("the 52 bugs themselves", rf"the four configurations have {sub[0]}, {sub[2]}, {sub[4]} and {sub[6]} plausible and {sub[1]}, {sub[3]}, {sub[5]} and {sub[7]} correct fixes, and the control {sub[8]} and {sub[9]}")
 # without the bugs with an attempt that received no model output
 no_out = R(r"executions with an attempt that received no model output: (\d+)")[0]
 s2c = R(r"Sensitivity: the paired comparisons on the (\d+) evaluable bugs without the bugs whose canonical execution in some configuration has such an attempt \(([^)]*)\):\n\n- full vs no_semantic: correct (\d+) vs (\d+) [^\n]*\n- full vs binary_only: correct (\d+) vs (\d+) [^\n]*\n- full vs no_judge: correct (\d+) vs (\d+) ")
@@ -639,13 +589,13 @@ dsline = rep.split("| deepseek_v4_flash_semantic |")[1].split("\n")[2]
 C("the DeepSeek line of wrongly vetoed patches", dsline.strip().startswith("- vetoed, correct:"))
 T("offline review: DeepSeek and token-identical patches", rf"{WORDS[dsline.count('[Correct (identical)]')].capitalize()} of the {ds[4]} correct patches DeepSeek vetoes are token-identical to the developer fix")
 C("Sonnet vetoes no token-identical patch", "[Correct (identical)]" not in rep.split("| claude_sonnet_5_5_semantic |")[1].split("\n")[2])
-T("offline review: Sonnet", rf"It vetoes {cl[1]} patches, of which {cl[2]} are overfitting and {cl[4]} correct ($\kappa={fmt(cl[8])}$, interval ${cl[9]}$ to ${cl[10]}$)")
+T("offline review: Sonnet on all its patches", rf"On the {cl[0]} patches that it judged, Claude Sonnet~5.5 vetoes {cl[1]}, of which {cl[2]} are overfitting and {cl[4]} correct ($\kappa={fmt(cl[8])}$, interval ${cl[9]}$ to ${cl[10]}$)")
 left, left_ok = int(cl[0]) - int(cl[1]), int(cl[5]) - int(cl[4])
 T("offline review: as a filter", rf"Used as a filter on these {cl[0]} patches, its vetoes would raise precision from {pct(cl[5], cl[0])}\% to {pct(left_ok, left)}\% ({left_ok} of {left}) at the cost of {cl[4]} of their {cl[5]} correct fixes")
-T("offline review: contribution", rf"detect {ds[2]} and {gm[2]} of {ds[3]} overfitting patches while wrongly vetoing {ds[4]} and {gm[4]} correct ones ($\kappa={fmt(ds[8])}$ and ${fmt(gm[8])}$), and Claude Sonnet~5.5 detects {cl[2]} of {cl[3]} while wrongly vetoing {cl[4]} of {cl[5]} ($\kappa={fmt(cl[8])}$")
-T("offline review: abstract", rf"agreement beyond chance is not established for two (Cohen's kappa {fmt(ds[8])} and {fmt(gm[8])}), and Claude Sonnet 5.5 catches half the overfitting patches (kappa {fmt(cl[8])})")
+pass                                  # contribution 5: matched set, checked below
+pass                                  # abstract: matched set, checked below
 C("Sonnet catches 'half' of the overfitting patches, at 'about one correct fix in twenty'", 2 * int(cl[2]) == int(cl[3]) and 17 <= int(cl[5]) / int(cl[4]) <= 23)
-T("offline review table caption", rf"Offline LLM review of the {cl[0]} plausible patches")
+pass                                  # caption: matched set, checked below
 
 # ── paired differences with confidence intervals (report section 15) ─────
 from math import sqrt
@@ -677,6 +627,7 @@ def sg(n_):
 
 cb, cj, cfc, cjc = (ci[k_] for k_ in (("full", "binary_only", "correct"), ("full", "no_judge", "correct"), ("full", "control", "correct"), ("no_judge", "control", "correct")))
 T("intervals in RQ3", rf"{d_bo} fixes for \cbin{{}}, with an interval from {ri(cb['lo'])} to {ri(cb['hi'])}, and {d_nj} for \cnoj{{}}, with an interval from a loss of {-ri(cj['lo'])} fixes to a gain of {ri(cj['hi'])}")
+T("implications: interval of the review", rf"for a gain that this study could not distinguish from zero and whose interval reaches {ri(cj['hi'])} correct fixes")
 T("RQ3 answer: interval", rf"runs from a loss of {-ri(cj['lo'])} fixes to a gain of {ri(cj['hi'])}: the experiment establishes neither")
 T("contribution 3: review", rf"that removing the Judge costs {d_nj} (95\% confidence interval {sg(ri(cj['lo']))} to {sg(ri(cj['hi']))}), which cannot be distinguished")
 T("contribution 3: control", rf"obtain {NJ['co'] - kco[3]} correct fixes fewer than the loop without the Judge (interval {sg(ri(cjc['lo']))} to {sg(ri(cjc['hi']))};")
@@ -722,7 +673,9 @@ assert set(kd) == set(ARMS) | {"control"}        # plausible, identical, equival
 C("kinds: the rows add up to the headline counts", all(kd[a][1] + kd[a][2] + kd[a][3] + kd[a][4] == arms[a]["co"] and kd[a][0] == arms[a]["pl"] for a in ARMS) and kd["control"][0] == kpl[3] and sum(kd["control"][1:5]) == kco[3])
 C("kinds: the split of Full is the one given in RQ1", (kd["full"][1], kd["full"][2], kd["full"][3]) == (int(split[2]), int(split[1]), int(split[0])))
 kf, kb, kj, kc, kn = (kd[a] for a in ("full", "binary_only", "no_judge", "control", "no_semantic"))
-T("kinds per configuration", rf"Of the {F['co']} correct fixes of \cfull{{}}, {kf[1]} are identical, {kf[2]} equivalent and {kf[3]} alternative; \cbin{{}} has {kb[1]}, {kb[2]} and {kb[3]}, \cnoj{{}} {kj[1]}, {kj[2]} and {kj[3]}, and the control {kc[1]}, {kc[2]} and {kc[3]}, so {kf[3] - kb[3]} of the {d_bo} fixes by which \cbin{{}} trails are a difference in alternative fixes")
+T("kinds per configuration", rf"Of the {F['co']} correct fixes of \cfull{{}}, {kf[1]} are identical, {kf[2]} equivalent and {kf[3]} alternative; \cnosem{{}} has {kn[1]}, {kn[2]} and {kn[3]}, \cbin{{}} {kb[1]}, {kb[2]} and {kb[3]}, \cnoj{{}} {kj[1]}, {kj[2]} and {kj[3]}, and the control {kc[1]}, {kc[2]} and {kc[3]}, so {kf[3] - kb[3]} of the {d_bo} fixes by which \cbin{{}} trails are a difference in alternative fixes")
+C("kinds: No-Semantic trails Full in correct fixes and leads it by one identical or equivalent fix", NS["co"] < F["co"] and kn[6] - kf[6] == 1)
+T("kinds: No-Semantic against Full", rf"and \cnosem{{}}, {WORDS[F['co'] - NS['co']]} correct fixes behind \cfull{{}}, has one identical or equivalent fix more.")
 byk = R(r"full minus binary_only, by kind: identical ([+-]\d+), equivalent ([+-]\d+), alternative ([+-]\d+), all correct ([+-]\d+)", sec17)
 C("... as the report gives the difference by kind", (int(byk[2]), int(byk[3])) == (kf[3] - kb[3], d_bo))
 alt = kf[3] - kb[3]
@@ -730,20 +683,37 @@ T("abstract: alternative fixes", rf"with alternative fixes left out ({kf[6]} aga
 T("contribution 3: alternative fixes", rf"the only difference that survives multiplicity correction, and one that is no longer significant when alternative fixes are left out ({kf[6]} against {kb[6]}); that removing the Judge")
 T("RQ3 answer: alternative fixes", rf"{WORDS_CAP[alt]} of the {d_bo} are a surplus of alternative fixes ({kf[3]} against {kb[3]}): when alternative fixes are not counted, the difference keeps its direction ({kf[6]} against {kb[6]}) and is not significant")
 T("conclusion: alternative fixes", rf"the one difference that survives adjustment for multiple comparisons, though not when alternative fixes are left out ({kf[6]} against {kb[6]}), while the loop without the Judge")
-T("kinds: No-Semantic (section 4.5)", rf"where {kn[4]} of the {NS['co']} correct patches carry the label correct without a kind")
-T("kinds: No-Semantic (RQ3)", rf"For \cnosem{{}} the kind was not recorded for {kn[4]} of the {NS['co']} correct patches")
-C("kinds are recorded for every other configuration and for the control", all(kd[a][4] == 0 for a in ("full", "binary_only", "no_judge", "control")))
+C("kinds are recorded for every configuration and for the control", all(kd[a][4] == 0 for a in kd))
+# how the kinds of No-Semantic were recorded: the override rows of 26 November (data/overrides_all.csv)
+ovr_csv = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "overrides_all.csv")
+if os.path.exists(ovr_csv):
+    import csv as _csv
+    _ns = [r_ for r_ in _csv.DictReader(open(ovr_csv, encoding="utf-8")) if r_["arm"] == "no_semantic" and r_["which"] == "first"
+           and r_["note"].startswith(("Kind of the same patch text elsewhere", "Kind recorded in adjudication"))]
+    n_else = sum(1 for r_ in _ns if r_["note"].startswith("Kind of the same patch text elsewhere"))
+    n_adj = len(_ns) - n_else
+    C("kinds of No-Semantic: one override row per bug, every one with a kind", len({r_["bug_id"] for r_ in _ns}) == len(_ns)
+      and all(r_["semantic_verdict"] in ("Correct (identical)", "Correct (equivalent)", "Correct (alternative)") for r_ in _ns))
+    T("kinds: No-Semantic (section 4.5)", rf"For {len(_ns)} of the {NS['co']} correct patches of \cnosem{{}}, which pass 1 had labelled correct without a kind, the kind was recorded last: for {n_else} from the same patch text in another configuration or in the control, and for the other {n_adj} in adjudication by the author")
+else:
+    print("(data/overrides_all.csv not found: the check of the No-Semantic kinds is skipped)")
 sr = {r_[0]: r_[1:] for r_ in re.findall(r"\| full vs (\w+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| ([\d.]+) \| ([\d.]+) \| ([\d.]+) \|", sec17)}
-assert set(sr) == {"binary_only", "no_judge", "control"}
+assert set(sr) == {"no_semantic", "binary_only", "no_judge", "control"}
 C("strict counts are the identical and equivalent patches", int(sr["binary_only"][0]) == kf[6] and int(sr["binary_only"][1]) == kb[6] and int(sr["no_judge"][1]) == kj[6] and int(sr["control"][1]) == kc[6])
-T("without alternative fixes", rf"With the identical and equivalent patches alone, \cfull{{}} has {kf[6]} against {kb[6]} for \cbin{{}} ({sr['binary_only'][2]} against {sr['binary_only'][3]} discordant bugs; \pval{{{mp(sr['binary_only'][2], sr['binary_only'][3])}}}), and no comparison is significant")
+C("strict count of No-Semantic", int(sr["no_semantic"][1]) == kn[6])
+T("without alternative fixes", rf"With the identical and equivalent patches alone, \cfull{{}} has {kf[6]} against {kb[6]} for \cbin{{}} ({sr['binary_only'][2]} against {sr['binary_only'][3]} discordant bugs; \pval{{{mp(sr['binary_only'][2], sr['binary_only'][3])}}}) and {kn[6]} for \cnosem{{}} ({sr['no_semantic'][2]} against {sr['no_semantic'][3]}; \pval{{{mp(sr['no_semantic'][2], sr['no_semantic'][3])}}}), and no comparison is significant")
 C("without alternative fixes: no comparison is significant", all(exact_p(sr[a][2], sr[a][3]) > Fraction(5, 100) for a in sr) and int(sr["binary_only"][2]) > int(sr["binary_only"][3]))
 ls = R(r"- full vs binary_only: (\d+) bugs, (\d+) / (\d+), only first (\d+), only second (\d+), p=([\d.]+)", sec17)
 C("later attempts without alternative fixes: the bugs are those of the later-attempts table", int(ls[0]) == fb[0])
 T("without alternative fixes: later attempts", rf"the later attempts give {ls[1]} against {ls[2]} for \cfull{{}} and \cbin{{}} (\pval{{{mp(ls[3], ls[4])}}})")
-tw = R(r"patch texts that carry two kinds of correct label \(in a configuration and in a control pass\): (\d+) \(([^)]*)\)", sec17)
-tw_names = [x.split(":")[0].replace("_", "-") for x in tw[1].split("; ")]
-T("texts with two kinds", rf"{WORDS_CAP[int(tw[0])]} patch texts carry one kind in the configurations and another in a control pass ({', '.join(tw_names[:-1])} and {tw_names[-1]}); counting them either way leaves the comparison with \cbin{{}} between \pval{{{fmt(min(float(sr['binary_only'][5]), float(sr['binary_only'][6])))}}} and \pval{{{fmt(max(float(sr['binary_only'][4]), float(sr['binary_only'][5]), float(sr['binary_only'][6])))}}}")
+tw = R(r"patch texts that carry two kinds of correct label \(across the configurations and the control passes\): (\d+) \(([^)]*)\)", sec17)
+tw_items = [x.split(": ", 1) for x in tw[1].split("; ")]
+tw_where = {b_: dict((k_, set(w_.split(", "))) for k_, w_ in re.findall(r"(identical|equivalent|alternative) in ([\w, ]+?)(?= and (?:identical|equivalent|alternative) in |$)", d_)) for b_, d_ in tw_items}
+CONFS = set(ARMS)
+g_ie = [b_ for b_, w_ in tw_where.items() if w_.get("identical") == {"no_semantic", "control"} and w_.get("equivalent") == CONFS - {"no_semantic"}]
+g_ae = [b_ for b_, w_ in tw_where.items() if set(w_) == {"alternative", "equivalent"} and w_["alternative"] <= CONFS and w_["equivalent"] == {"control"}]
+C("texts with two kinds: where each kind is", sorted(g_ie + g_ae) == sorted(tw_where) and len(tw_where) == int(tw[0]))
+T("texts with two kinds", rf"{WORDS_CAP[int(tw[0])]} patch texts carry two kinds: those of {_names(g_ie)} are identical in \cnosem{{}} and in the control and equivalent in the three other configurations, and those of {_names(g_ae)} are alternative in the configurations and equivalent in the control; counting them either way leaves the comparison with \cbin{{}} between \pval{{{fmt(min(float(sr['binary_only'][5]), float(sr['binary_only'][6])))}}} and \pval{{{fmt(max(float(sr['binary_only'][4]), float(sr['binary_only'][5]), float(sr['binary_only'][6])))}}}")
 ph = dict((a, (x, y, p_, h_)) for a, x, y, p_, h_ in re.findall(r"(\w+) (\d+)/(\d+), p=([\d.]+), Holm ([\d.]+)", sec17))
 C("plausible, Holm over the three: as the report gives it", fmt(holm([exact_p(st[a]["xp"], st[a]["yp"]) for a in ARMS[1:]])[1], 4) == ph["binary_only"][3] and (int(ph["binary_only"][0]), int(ph["binary_only"][1])) == (b["xp"], b["yp"]))
 T("plausible counts involve no label", rf"{F['pl']} against {BO['pl']} (\pval{{{mp(b['xp'], b['yp'], 3)}}}, and ${fmt(ph['binary_only'][3], 3)}$ after Holm adjustment over the three comparisons), and, on the bugs whose first attempt failed in both configurations, {fb[1]} against {fb[2]} plausible patches from the later attempts (\pval{{{mp(fb[3], fb[4], 3)}}})")
@@ -755,11 +725,10 @@ for model in rev:
     flt[model] = R(rf"\| {model} \| (\d+) \| ([\d.]+)% \| (\d+)/(\d+) \| (\d+)/(\d+) \| (\d+) \| (\d+) \(([\d.]+)%\) \| ([\d.]+)% \|")
 fd, fg, fcl = (flt[m_] for m_ in ("deepseek_v4_flash_semantic", "gemini_3_5_flash_lite_semantic", "claude_sonnet_5_5_semantic"))
 C("filters: the rows are those of the review table", all((flt[m_][0], flt[m_][2], flt[m_][4]) == (rev[m_][0], rev[m_][2], rev[m_][4]) for m_ in rev))
-T("offline review: the first two as filters", rf"As filters they would move precision from {fd[1]}\% to {fd[9]}\% and from {fg[1]}\% to {fg[9]}\%, less than one point, at the cost of {fd[4]} and {fg[4]} correct fixes")
-C("... 'less than one point'", 0 < float(fd[9]) - float(fd[1]) < 1 and 0 < float(fg[9]) - float(fg[1]) < 1)
+pass                                  # filters: matched set, checked below
 T("offline review: what Sonnet leaves", rf"{fcl[7]} of the {fcl[6]} patches it keeps ({fcl[8]}\%) are still overfitting")
 C("... consistent with the filter sentence", (int(fcl[6]), fcl[9]) == (left, pct(left_ok, left)))
-T("RQ5 answer: the two smaller models", rf"as filters they would change precision by less than one point while discarding {fd[4]} and {fg[4]} correct fixes")
+T("RQ5 answer: the two smaller models", rf"as filters they would change precision by about one point while discarding {fd[4]} and {fg[4]} correct fixes")
 blkA = rep.split("Matched set, the patches scored for every reviewer")[1].split("Matched set, the same without")[0]
 blkB = rep.split("Matched set, the same without the multi-file patches")[1].split("\n## ")[0]
 mA = re.match(r": (\d+) patches \((\d+) overfitting, (\d+) correct\)", blkA).groups()
@@ -768,8 +737,9 @@ rowA = {m_: R(rf"\| {m_} \| (\d+)/(\d+) \| (\d+)/(\d+) \| ([\d.-]+) \| ([\d.]+)%
 rowB = {m_: R(rf"\| {m_} \| (\d+)/(\d+) \| (\d+)/(\d+) \| ([\d.-]+) \| ([\d.]+)% \| ([\d.]+)% \|", blkB) for m_ in rev}
 da, ga, ca = (rowA[m_] for m_ in ("deepseek_v4_flash_semantic", "gemini_3_5_flash_lite_semantic", "claude_sonnet_5_5_semantic"))
 db_, gb_, cb_ = (rowB[m_] for m_ in ("deepseek_v4_flash_semantic", "gemini_3_5_flash_lite_semantic", "claude_sonnet_5_5_semantic"))
-T("offline review: the same patches for all three", rf"The three reviewers were scored on {ds[0]}, {gm[0]} and {cl[0]} patches. On the {mA[0]} that all three judged on the canonical text ({mA[1]} overfitting, {mA[2]} correct), DeepSeek, \model{{}} and Claude Sonnet~5.5 catch {da[0]}, {ga[0]} and {ca[0]} overfitting patches and wrongly veto {da[2]}, {ga[2]} and {ca[2]} correct ones ($\kappa={fmt(da[4])}$, ${fmt(ga[4])}$ and ${fmt(ca[4])}$)")
-T("offline review: without the multi-file patches", rf"Without the {WORDS[int(mA[0]) - int(mB[0])]} multi-file patches of that set, of which the reviewers saw one file, the counts are the same except that DeepSeek wrongly vetoes {db_[2]}")
+T("offline review: the matched set", rf"The reviewers are therefore compared on the {mA[0]} patches that all three judged on the canonical text, {mA[1]} overfitting and {mA[2]} correct")
+C("the matched set is DeepSeek's own set", int(mA[0]) == int(ds[0]))
+T("offline review: without the multi-file patches", rf"Without the {WORDS[int(mA[0]) - int(mB[0])]} multi-file patches of the set, of which the reviewers saw one file, the counts are the same except that DeepSeek wrongly vetoes {db_[2]}")
 C("... the other counts are the same", (db_[0], gb_[0], cb_[0], gb_[2], cb_[2]) == (da[0], ga[0], ca[0], ga[2], ca[2]) and db_[2] != da[2])
 C("the ranking of the reviewers is the same on the matched set", float(ca[4]) > max(float(da[4]), float(ga[4])) and float(cl[8]) > max(float(ds[8]), float(gm[8])))
 C("abstract, conclusion: the intervals of the two smaller reviewers include zero", float(ds[9]) < 0 < float(ds[10]) and float(gm[9]) < 0 < float(gm[10]) and float(cl[9]) > 0)
@@ -829,14 +799,13 @@ e20 = {a: (int(pl_), rng, int(co_), int(rec_), els, int(now_)) for a, pl_, rng, 
 assert set(e20) == set(ARMS) | {"control"}
 ns20 = e20["no_semantic"]
 els20 = int(ns20[4].split(" ")[0])
-lo20, hi20 = ns20[1].split(" to ")
 C("endpoints: the kinds of No-Semantic add up", ns20[3] + els20 + ns20[5] == NS["co"] and els20 + ns20[5] == kn[4])
-C("endpoints: the other configurations have every kind recorded", all(e20[a][3] == e20[a][2] and e20[a][5] == 0 for a in e20 if a != "no_semantic"))
+C("endpoints: every configuration has every kind recorded", all(e20[a][3] == e20[a][2] and e20[a][5] == 0 for a in e20))
+C("endpoints: No-Semantic has no range", ns20[1] == str(kn[6]))
 C("endpoints: the lower ends are the counts without the texts that carry two kinds", e20["full"][1].split(" to ")[0] == str(kf[6]) and e20["binary_only"][1].split(" to ")[0] == str(kb[6]))
-T("endpoints: No-Semantic", rf"For {els20} of them the same patch text carries a kind in another configuration or in a control pass; the {ns20[5]} others leave its count of identical or equivalent patches between {lo20} and {hi20}, a range too wide for a comparison with the {kf[6]} of \cfull{{}}")
-T("endpoints table: caption", rf"For \cnosem{{}} the kind of {ns20[5]} correct patches is recorded nowhere, which leaves a range")
+C("endpoints table: the caption no longer speaks of a range", "recorded nowhere, which leaves a range" not in tex)
 T("endpoints table, full", rf"\cfull{{}} & {F['pl']} & & {kf[6]} & & {F['co']} & \\")
-T("endpoints table, no_semantic", rf"\cnosem{{}} & {NS['pl']} & {pt(n['xp'], n['yp'])} & {lo20} to {hi20} & & {NS['co']} & {pt(n['x'], n['y'])} \\")
+T("endpoints table, no_semantic", rf"\cnosem{{}} & {NS['pl']} & {pt(n['xp'], n['yp'])} & {kn[6]} & {pt(sr['no_semantic'][2], sr['no_semantic'][3])} & {NS['co']} & {pt(n['x'], n['y'])} \\")
 T("endpoints table, binary_only", rf"\cbin{{}} & {BO['pl']} & {pt(b['xp'], b['yp'])} & {kb[6]} & {pt(sr['binary_only'][2], sr['binary_only'][3])} & {BO['co']} & {pt(b['x'], b['y'])} \\")
 T("endpoints table, no_judge", rf"\cnoj{{}} & {NJ['pl']} & {pt(j['xp'], j['yp'])} & {kj[6]} & {pt(sr['no_judge'][2], sr['no_judge'][3])} & {NJ['co']} & {pt(j['x'], j['y'])} \\")
 T("endpoints table, control", rf"\cctrl{{}} & {kpl[3]} & {pt(K4[3], K4[4])} & {kc[6]} & {pt(sr['control'][2], sr['control'][3])} & {kco[3]} & {pt(K4[5], K4[6])} \\")
@@ -860,20 +829,37 @@ for m_ in rev:
     C(f"confusion matrix of {m_}: rates and Wilson intervals follow from the counts",
       (pct(tp, tp + fn_c),) + wilson(tp, tp + fn_c) == cm[m_]["sens"] and (pct(tn, tn + fp),) + wilson(tn, tn + fp) == cm[m_]["spec"] and (pct(tp, tp + fp),) + wilson(tp, tp + fp) == cm[m_]["prec"])
 order = ("deepseek_v4_flash_semantic", "gemini_3_5_flash_lite_semantic", "claude_sonnet_5_5_semantic")
-cd, cg, cs = (cm[m_] for m_ in order)
+blkM = rep.split("Confusion matrix of each reviewer against the labels, on the matched set")[1].split("Pairs of reviewers on the matched set")[0]
+cmM = {}
+for m_ in order:
+    g = R(rf"\| {m_} \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+)/(\d+), ([\d.]+)% \[([\d.]+), ([\d.]+)\] \| (\d+)/(\d+), ([\d.]+)% \[([\d.]+), ([\d.]+)\] \| (\d+)/(\d+), ([\d.]+)% \[([\d.]+), ([\d.]+)\] \|", blkM)
+    n_, tp, fp, fn_c, tn = (int(v) for v in g[:5])
+    cmM[m_] = dict(n=n_, tp=tp, fp=fp, fn=fn_c, tn=tn, sens=g[7:10], spec=g[12:15], prec=g[17:20])
+    C(f"matched confusion matrix of {m_}: rates and Wilson intervals follow from the counts",
+      (pct(tp, tp + fn_c),) + wilson(tp, tp + fn_c) == cmM[m_]["sens"] and (pct(tn, tn + fp),) + wilson(tn, tn + fp) == cmM[m_]["spec"] and (pct(tp, tp + fp),) + wilson(tp, tp + fp) == cmM[m_]["prec"])
+    C(f"matched confusion matrix of {m_}: the matched set of section 10", (str(n_), str(tp), str(fp)) == (mA[0], rowA[m_][0], rowA[m_][2]) and tp + fn_c == int(mA[1]) and fp + tn == int(mA[2]))
+kM = {m_: R(rf"- {m_}: (\d+) patches, κ ([\d.-]+) \[([\d.-]+), ([\d.-]+)\]") for m_ in order}
+C("matched kappa is the one of the matched table", all(kM[m_][1] == rowA[m_][4] and kM[m_][0] == mA[0] for m_ in order))
+cd, cg, cs = (cmM[m_] for m_ in order)
 
 
-def kap(g):
-    lo = ("$-" + g[9][1:] + "$") if g[9].startswith("-") else g[9]
-    return rf"{fmt(g[8])} [{lo}, {g[10]}]"
+def kap(k_):
+    lo = ("$-" + k_[2][1:] + "$") if k_[2].startswith("-") else k_[2]
+    return rf"{fmt(k_[1])} [{lo}, {k_[3]}]"
 
 
-T("offline review table: patches scored", rf"Patches scored & {cd['n']} & {cg['n']} & {cs['n']} \\")
+T("offline review table: caption", rf"Offline LLM review of the {mA[0]} plausible patches of the \cfull{{}} configuration that all three reviewers judged ({mA[1]} overfitting, {mA[2]} correct)")
 T("offline review table: overfitting patches", rf"Overfitting: vetoed, kept & {cd['tp']}, {cd['fn']} & {cg['tp']}, {cg['fn']} & {cs['tp']}, {cs['fn']} \\")
 T("offline review table: correct patches", rf"Correct: vetoed, kept & {cd['fp']}, {cd['tn']} & {cg['fp']}, {cg['tn']} & {cs['fp']}, {cs['tn']} \\")
 for label, key in (("Sensitivity", "sens"), ("Specificity", "spec"), ("Veto precision", "prec")):
     T(f"offline review table: {label.lower()}", label + " & " + " & ".join(rf"{c_[key][0]}\% [{c_[key][1]}, {c_[key][2]}]" for c_ in (cd, cg, cs)) + r" \\")
-T("offline review table: kappa", r"$\kappa$ vs.\ labels & " + " & ".join(kap(rev[m_]) for m_ in order) + r" \\")
+T("offline review table: kappa", r"$\kappa$ vs.\ labels & " + " & ".join(kap(kM[m_]) for m_ in order) + r" \\")
+T("offline review: Sonnet on the matched set", rf"On the same patches it vetoes {cs['tp'] + cs['fp']}, of which {cs['tp']} are overfitting and {cs['fp']} correct ($\kappa={fmt(kM[order[2]][1])}$, interval ${kM[order[2]][2]}$ to ${kM[order[2]][3]}$)")
+T("offline review: contribution", rf"on the {mA[0]} patches that all three judged, without the developer fix, DeepSeek~V4 Flash, \model{{}} and Claude Sonnet~5.5 detect {cd['tp']}, {cg['tp']} and {cs['tp']} of {mA[1]} overfitting patches while wrongly vetoing {cd['fp']}, {cg['fp']} and {cs['fp']} of {mA[2]} correct ones ($\kappa={fmt(kM[order[0]][1])}$, ${fmt(kM[order[1]][1])}$ and ${fmt(kM[order[2]][1])}$")
+T("offline review: abstract", rf"agreement beyond chance is not established for two (Cohen's kappa {fmt(kM[order[0]][1])} and {fmt(kM[order[1]][1])}), and Claude Sonnet 5.5 catches {cs['tp']} of {mA[1]} overfitting patches (kappa {fmt(kM[order[2]][1])})")
+C("abstract: the intervals of the two smaller reviewers include zero on the matched set", float(kM[order[0]][2]) < 0 < float(kM[order[0]][3]) and float(kM[order[1]][2]) < 0 < float(kM[order[1]][3]) and float(kM[order[2]][2]) > 0)
+T("offline review: the first two as filters", rf"As filters they would move precision from {da[5]}\% to {da[6]}\% and to {ga[6]}\%, by about one point, while keeping {cd['fn']} and {cg['fn']} of the {mA[1]} overfitting patches and discarding {cd['fp']} and {cg['fp']} correct fixes")
+C("... 'by about one point', from the same precision", da[5] == ga[5] and 0.5 < float(da[6]) - float(da[5]) < 1.5 and 0.5 < float(ga[6]) - float(ga[5]) < 1.5)
 T("offline review: sensitivity of the first two", rf"their sensitivity, {fmt(cd['sens'][0], 0)}\% and {fmt(cg['sens'][0], 0)}\%, has intervals that reach {fmt(cd['sens'][2], 0)}\% and {fmt(cg['sens'][2], 0)}\%")
 T("RQ5 answer: wording", r"For the two smaller models, agreement with the labels beyond chance is not established")
 prs = {(a1, a2): tuple(int(v) for v in vals) for a1, a2, *vals in
@@ -881,26 +867,34 @@ prs = {(a1, a2): tuple(int(v) for v in vals) for a1, a2, *vals in
 assert set(prs) == {(order[0], order[1]), (order[0], order[2]), (order[1], order[2])}
 dg, dc, gc = prs[(order[0], order[1])], prs[(order[0], order[2])], prs[(order[1], order[2])]
 C("pairs of reviewers: 'DeepSeek none that Claude Sonnet 5.5 keeps'", dc[0] == 0)
-T("pairs of reviewers: overfitting patches", rf"Claude Sonnet~5.5 vetoes {dc[1]} overfitting patches that DeepSeek keeps, and DeepSeek none that Claude Sonnet~5.5 keeps (McNemar exact test, \pval{{{mp(dc[0], dc[1], 3)}}}); against \model{{}} the counts are {gc[1]} and {gc[0]} (\pval{{{mp(gc[0], gc[1], 3)}}})")
+T("pairs of reviewers: overfitting patches", rf"It vetoes {dc[1]} overfitting patches that DeepSeek keeps, and DeepSeek none that Claude Sonnet~5.5 keeps (McNemar exact test, \pval{{{mp(dc[0], dc[1], 3)}}}); against \model{{}} the counts are {gc[1]} and {gc[0]} (\pval{{{mp(gc[0], gc[1], 3)}}})")
 T("pairs of reviewers: correct patches", rf"DeepSeek and \model{{}} differ ({dg[2]} against {dg[3]} vetoed by one of them only; \pval{{{mp(dg[2], dg[3], 3)}}}), and neither differs significantly from Claude Sonnet~5.5 (\pval{{{mp(dc[2], dc[3])}}} and \pval{{{mp(gc[2], gc[3])}}})")
 C("... as stated", exact_p(dg[2], dg[3]) < Fraction(5, 100) and exact_p(dc[2], dc[3]) > Fraction(5, 100) and exact_p(gc[2], gc[3]) > Fraction(5, 100))
 
 # ── statements that repeat a constant of the analysis or a count pinned elsewhere ─────────
-T("cost table caption: prices", r"USD at the list prices of the model, 0.30 per million input tokens and 2.50 per million output tokens")
+T("cost table caption: prices", r"USD is the estimated API cost of the repair runs at the list prices of the model, 0.30 per million input tokens and 2.50 per million output tokens, without the correctness assessment and local computing")
+T("Table 5: calls of Full", rf"generating and reviewing them took {th(CF['calls'])} Repair Agent and {th(jd['full']['inv'])} Judge calls for the {N_BUGS} bugs")
+T("5.1: calls per bug", rf"in \cfull{{}} they took {fmt(Fraction(calls_full, N_BUGS), 1)} LLM calls per bug")
+sev = R(r"- claude_sonnet_5_5_semantic: (\d+) rows; ([\d,]+) input and ([\d,]+) output tokens")
+pin_, pout_ = int(sev[1].replace(",", "")), int(sev[2].replace(",", ""))
+rev_usd = Fraction(pin_ * 2 + pout_ * 10, 10 ** 6)                    # Claude Sonnet 5.5: 2 and 10 USD per million tokens
+C("offline review cost: 'about 12 USD'", round(float(rev_usd)) == 12 and int(sev[0]) == int(cl[0]))
+T("offline review cost", rf"the review cost about 12~USD for the {cl[0]} patches ({fmt(Fraction(pin_, 10 ** 6), 1)}~M input and {fmt(Fraction(pout_, 10 ** 6), 2)}~M output tokens), {fmt(rev_usd / int(cl[0]), 3)}~USD per reviewed patch, against {CF['mean']}~USD per bug and {CF['pl']}~USD per plausible patch for the repair in \cfull{{}}")
+sec21 = rep.split("## 21.")[1].split("\ncanonical per-bug tables")[0]
+tp21 = R(r"- full vs binary_only \((\d+)/(\d+), significant after adjustment\): Holm-adjusted p reaches 0.05 after (\d+) changes placed against `full` \((\d+) if only correct labels of `full` change\); unadjusted p reaches 0.05 after (\d+) changes placed against `full` \((\d+) if only correct labels of `full` change\)", sec21)
+up21 = re.findall(r"- full vs (\w+) \(\d+/\d+, not significant\): the Holm-adjusted p falls below 0.05 after (\d+) changes placed in favour of `full`", sec21)
+C("label sensitivity: the discordant pairs are those of the test", (int(tp21[0]), int(tp21[1])) == (b["x"], b["y"]))
+C("label sensitivity: the two other comparisons need the same number", len(up21) == 2 and up21[0][1] == up21[1][1])
+kd21 = R(r"- kinds of the correct patches on the discordant bugs, full vs binary_only: full-only (\d+) \(identical \d+, equivalent \d+, alternative (\d+), no kind 0\); binary_only-only (\d+) \(identical \d+, equivalent \d+, alternative (\d+), no kind 0\)", sec21)
+T("label sensitivity", rf"Of the {kd21[0]} bugs fixed only by \cfull{{}}, {kd21[1]} have an alternative fix, against {kd21[3]} of the {kd21[2]} fixed only by \cbin{{}}, and the significance of the comparison turns on few labels: {WORDS[int(tp21[2])]} label changes placed against \cfull{{}} would bring the Holm-adjusted $p$-value to $0.05$ or above, and {WORDS[int(tp21[4])]} the unadjusted one ({WORDS[int(tp21[3])]} and {WORDS[int(tp21[5])]} if only labels of \cfull{{}} change). In the other direction, each of the two other comparisons with \cfull{{}} would need {up21[0][1]} changes in its favour to become significant")
 T("cost paragraph: the flat rate of the harness", r"at a flat rate of 0.35 per million tokens")
 T("Judge: one file of a multi-file candidate", rf"the review of the {mf[0]} multi-file bugs is therefore partial")
 
-# ── the failure-injection tests and the limits of the prompts (read in the repository, when the checker runs inside it) ──
+# ── the limits of the prompts (read in the repository, when the checker runs inside it) ──
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-tests_py, removals_py, harness_py = (os.path.join(root, *p_) for p_ in (("tests", "test_safeguards.py"), ("tests", "remove_each_safeguard.py"), ("src", "agentic_apr.py")))
-if all(os.path.exists(p_) for p_ in (tests_py, removals_py, harness_py)):
-    tests_src, harness_src = open(tests_py, encoding="utf-8").read(), open(harness_py, encoding="utf-8").read()
-    n_tests = len(re.findall(r"^    def test_\w+\(self\):", tests_src, re.M))
-    n_removals = len(re.findall(r'^    \("', open(removals_py, encoding="utf-8").read(), re.M))
-    T("safeguards: number of tests", rf"({n_tests} tests, which call neither the model nor \dfj{{}})")
-    T("safeguards: number of removals", rf"A second script removes each of {n_removals} safeguards in turn from a copy of the code")
-    C("safeguards: the refusals injected carry HTTP status 503, six in a row", "503 UNAVAILABLE" in tests_src and "max_retries:       int             = 6" in harness_src
-      and "six consecutive refusals with HTTP status 503" in tex)
+harness_py = os.path.join(root, "src", "agentic_apr.py")
+if os.path.exists(harness_py):
+    harness_src = open(harness_py, encoding="utf-8").read()
     lim = (re.search(r'return "".join\(diff\)\[:(\d+)\]', harness_src).group(1), re.search(r"max_chars:\s+int = (\d+)", harness_src).group(1),
            re.search(r'feedback.get\("test_output", ""\)\[:(\d+)\]', harness_src).group(1), re.search(r"test_results.output\[:(\d+)\]", harness_src).group(1))
     C("the two limits on the test output are the same", lim[2] == lim[3])
@@ -908,7 +902,7 @@ if all(os.path.exists(p_) for p_ in (tests_py, removals_py, harness_py)):
     C("... 'eight entries each'", "still_failing_targets[:8]" in harness_src and "regressions[:8]" in harness_src and "non_trigger_failing[:8]" in harness_src)
     T("limits of the Judge prompt", rf"the unified diff (its first {th(lim[0])} characters) and the structured test result (status, failing tests, and the first {th(lim[3])} characters of output)")
 else:
-    print("note: tests/ and src/ not found next to the checker; the counts of the failure-injection tests and the limits of the prompts were not checked")
+    print("note: src/ not found next to the checker; the limits of the prompts were not checked")
 
 # ── the abstract stays within the journal's limit ─────────────────────────
 abstract = re.search(r"\\abstract\{(.*?)\}\n\n\\keywords", tex, re.S).group(1)

@@ -41,7 +41,7 @@ Correctness
   and no override supplies a label, the bug is reported as PENDING and is not
   counted as correct.
 """
-import argparse, csv, glob, json, math, os, random, re, sys
+import argparse, csv, glob, hashlib, json, math, os, random, re, sys
 from collections import Counter, defaultdict, OrderedDict
 
 csv.field_size_limit(10**9)
@@ -386,14 +386,26 @@ def bootstrap_kappa(pairs, n=2000, seed=1):
     return (ks[int(0.025 * len(ks))], ks[int(0.975 * len(ks)) - 1]) if ks else (float("nan"),) * 2
 
 
+# --judged-texts: records on which labels or reviews were given and that are not in
+# the data, known by the SHA-256 of their patch text (as _patch_text normalises it)
+_JUDGED = {}            # (bug, session) -> SHA-256 of the patch text of that record
+_JUDGED_SESSION = {}    # (configuration, bug) -> the session of that record
+
+
+def _sha(t):
+    return hashlib.sha256((t or "").encode("utf-8")).hexdigest()
+
+
 def same_patch(entry, other_session):
     """True if the canonical execution's patch is textually identical to the
-    patch of the execution in other_session (whitespace-normalised)."""
+    patch of the execution in other_session (whitespace-normalised). A record of
+    other_session that is not in the data is compared by its SHA-256 (--judged-texts)."""
     mine = _patch_text(entry["row"])
     for s, r in entry["completed_all"]:
         if s == other_session:
             return bool(mine) and mine == _patch_text(r)
-    return False
+    h = _JUDGED.get(((entry["row"].get("bug_id") or "").strip(), other_session))
+    return bool(mine) and h is not None and _sha(mine) == h
 
 
 def label_of(ver_row):
@@ -524,6 +536,10 @@ def main():
                          "are canonical for that configuration. The earlier sessions stay in the data: their "
                          "labelled patches label identical texts of the new sessions, and they are compared "
                          "with them in section 4f")
+    ap.add_argument("--judged-texts", default=None, metavar="FILE",
+                    help="CSV arm,bug_id,session,patch_sha256: records on which the verification file and its blind "
+                         "passes, the second verification or an offline review judged and that are not in the data; "
+                         "their judgments apply to a canonical record of the bug whose patch text has that SHA-256")
     ap.add_argument("--without-bugs", action="append", default=[], metavar="FILE",
                     help="a list of bugs (one per line): section 14c repeats the paired comparisons without them")
     ap.add_argument("--second-verification", default=None, metavar="DIR",
@@ -553,6 +569,11 @@ def main():
             else:
                 tgt = delivered_overrides if which == "delivered" else overrides
                 tgt[r["arm"].strip()][r["bug_id"].strip()] = r
+    if args.judged_texts:
+        for r in csv.DictReader(open(args.judged_texts, encoding="utf-8")):
+            b_, s_ = r["bug_id"].strip(), r["session"].strip()
+            _JUDGED[(b_, s_)] = r["patch_sha256"].strip().lower()
+            _JUDGED_SESSION[(r["arm"].strip(), b_)] = s_
     conc = {}
     for spec in args.concurrent:
         a_, ss = spec.split("=", 1); conc[a_.strip()] = tuple(x.strip() for x in ss.split("+"))
@@ -643,12 +664,15 @@ def main():
         a session was written for one text and applies to that text only."""
         r = e["row"]; vr = ver[arm].get(b)
         has_old = bool(e_old and not e_old["excluded"])
-        vs = verified_session(b, e_old, vr) if has_old else None
+        # without the reviewed record in the data, the session that --judged-texts names for it
+        vs = verified_session(b, e_old, vr) if has_old else _JUDGED_SESSION.get((arm, b))
         plaus = truthy(r.get("plausible"))
         changed = (not has_old) or e["session"] != e_old["session"]
         same_first = not changed
         if changed and has_old and plaus and truthy(e_old["row"].get("plausible")):
             same_first = _patch_text(r) == _patch_text(e_old["row"])
+        elif changed and not has_old and plaus and vs is not None:
+            same_first = same_patch(e, vs)
         label = ""; label_src = ""
         ov_s = overrides_s.get(arm, {}).get((b, e["session"]))
         ov = overrides.get(arm, {}).get(b) if same_first else None
@@ -898,15 +922,16 @@ def main():
     # ── 2b. executions made after the verification ─────────────────────────
     if rerun or reexec:
         P("## 2b. Executions made after the verification\n")
-        P("Sessions set aside (they shared a working directory): " + (", ".join("`%s` %s" % (a_, " and ".join(ss)) for a_, ss in conc.items()) or "none")
-          + ". A set-aside execution is canonical only for a bug without a valid execution in another session.\n")
+        if conc:
+            P("Sessions set aside (they shared a working directory): " + ", ".join("`%s` %s" % (a_, " and ".join(ss)) for a_, ss in conc.items())
+              + ". A set-aside execution is canonical only for a bug without a valid execution in another session.\n")
         todo_rows = []
         for arm in ARMS:
             if arm not in rerun and arm not in reexec:
                 continue
             ch = [b for b in bugs if not rec[arm][b]["excluded"] and rec[arm][b]["changed"]]
             if arm in rerun:
-                P(f"- `{arm}`: session(s) {', '.join(rerun[arm])} executed after the verification; canonical record changed for {len(ch)} bugs\n")
+                P(f"- `{arm}`: session(s) {', '.join(rerun[arm])} executed after the verification; canonical record of {len(ch)} bugs\n")
             else:
                 P(f"- `{arm}`: executed again in full with corrected code (session(s) {', '.join(reexec[arm])}); "
                   f"{len(ch)} completed records, listed below when either execution is plausible\n")
@@ -921,10 +946,10 @@ def main():
                     o_txt = ("plausible at attempt %d, %s" % (int(fnum(ro.get("plausible_iteration"))) + 1, a0["label"] or "unlabelled")) if o_pl else "not plausible"
                     o_k = ("correct" if is_correct_label(a0["label"]) else "not correct") if o_pl else "not plausible"
                 else:
-                    o_txt = "none"; o_k = "none"
+                    o_txt = "none in the data"; o_k = "none in the data"
                 n_k = (("correct" if x["correct"] else ("pending" if x["label"] == "PENDING" else "not correct")) if x["plausible"] else "not plausible")
                 trans[(o_k, n_k)] += 1
-                if x["plausible"] or o_k not in ("not plausible", "none"):
+                if x["plausible"] or o_k not in ("not plausible", "none in the data"):
                     P(f"  | {b} | {o_txt} | {('plausible at attempt %d' % (x['plausible_iteration'] + 1)) if x['plausible'] else 'not plausible'} | "
                       f"{x['label']} | {x['label_src']} |")
                 if x["plausible"] and (x["label"] == "PENDING" or x["label"] == "Correct"):
@@ -1324,6 +1349,9 @@ def main():
     conc_bugs = {}
     for a_, (s1, s2) in conc.items():
         both = [b for b in evaluable if {s1, s2} <= {sx for sx, _ in per[a_].get(b, [])}]
+        if not both:
+            P(f"- `{a_}`: sessions {s1} and {s2}: no bug has a record in both")
+            continue
         conc_bugs[a_] = both
         can_in = [b for b in both if rec[a_][b]["session"] in (s1, s2)]
         # every valid execution the two sessions made on these bugs, against what was
@@ -1357,9 +1385,9 @@ def main():
         P(f"  records of the two sessions on these bugs: {dict(sorted(st_.items()))}")
     P()
 
-    # ── 4e. the re-execution against the earlier executions of the same bugs ──
+    # ── 4e. the re-execution against the other executions of the same bugs ──
     if rerun:
-        P("## 4e. The re-execution against the earlier executions of the same bugs\n")
+        P("## 4e. The re-execution against the other executions of the same bugs\n")
         import itertools as _it2
 
         def _first_cand(r):
@@ -1398,9 +1426,10 @@ def main():
 
             # (1) the re-execution and the set-aside sessions, pair by pair
             trio = ["re-execution"] + ["%s %s" % (a_, s_) for s_ in aside]
-            P("| pair | bugs with a valid execution in both | plausible in both | plausibility differs | first candidate has the same text | "
-              "... with the same recorded outcome | candidate texts tested in both | ... with the same recorded outcome |")
-            P("|---|---|---|---|---|---|---|---|")
+            if len(trio) > 1:
+                P("| pair | bugs with a valid execution in both | plausible in both | plausibility differs | first candidate has the same text | "
+                  "... with the same recorded outcome | candidate texts tested in both | ... with the same recorded outcome |")
+                P("|---|---|---|---|---|---|---|---|")
             for x_, y_ in _it2.combinations(trio, 2):
                 both = [b for b in rbugs if execs[x_][b] is not None and execs[y_][b] is not None]
                 px = {b for b in both if truthy(execs[x_][b].get("plausible"))}; py = {b for b in both if truthy(execs[y_][b].get("plausible"))}
@@ -1417,15 +1446,19 @@ def main():
                 P(f"| {x_} vs {y_} | {len(both)} | {len(px & py)} | {len(px ^ py)} ({100*len(px ^ py)/len(both):.0f}%; "
                   f"only the first: {', '.join(sorted(px - py, key=order_key)) or 'none'}; only the second: {', '.join(sorted(py - px, key=order_key)) or 'none'}) | "
                   f"{f_same} | {f_out} | {t_both} | {t_same} |")
-            P()
+            if len(trio) > 1:
+                P()
             for n_ in trio:
                 v_ = [r for r in execs[n_].values() if r is not None]
                 P(f"- {n_}: valid executions {len(v_)}, plausible {sum(1 for r in v_ if truthy(r.get('plausible')))}, "
                   f"tested candidates {sum(len(_candidate_outcomes(r)) for r in v_)}")
             pats = Counter(tuple(truthy(execs[n_][b].get("plausible")) for n_ in trio) for b in rbugs if all(execs[n_][b] is not None for n_ in trio))
-            P(f"- bugs with a valid execution in all {len(trio)}: {sum(pats.values())}; same plausibility in all: "
-              f"{sum(v for k, v in pats.items() if len(set(k)) == 1)}; plausibility differs between at least two valid executions: "
-              f"{sum(1 for b in rbugs if len({truthy(execs[n_][b].get('plausible')) for n_ in trio if execs[n_][b] is not None}) > 1)} bugs\n")
+            if len(trio) > 1:
+                P(f"- bugs with a valid execution in all {len(trio)}: {sum(pats.values())}; same plausibility in all: "
+                  f"{sum(v for k, v in pats.items() if len(set(k)) == 1)}; plausibility differs between at least two valid executions: "
+                  f"{sum(1 for b in rbugs if len({truthy(execs[n_][b].get('plausible')) for n_ in trio if execs[n_][b] is not None}) > 1)} bugs\n")
+            else:
+                P()
 
             # (2) first candidates: the first-attempt prompt is the same in every configuration and in the control
             comp = trio + [arm for arm in ARMS if arm != a_] + first_temp
@@ -2004,7 +2037,8 @@ def main():
                         judged = next((row for s_, row in e["completed_all"] if s_ == ses), None)
                     else:
                         judged = e["completed_all"][-1][1] if e["completed_all"] else None
-                    if judged is not None and _patch_text(judged) == want:
+                    if (judged is not None and _patch_text(judged) == want) or \
+                            (judged is None and ses and _JUDGED.get((b, ses)) == _sha(want)):
                         rows[b] = r
                         break
                 if b not in rows:
@@ -2088,6 +2122,17 @@ def main():
                 x3, y3, n3, p3 = mcnemar_exact((v1 & bad10) | (good10 - v1), (v2 & bad10) | (good10 - v2))
                 P(f"- {m1} vs {m2}: overfitting vetoed {x}/{y}, p={p:.4f}; correct vetoed {x2}/{y2}, p={p2:.4f}; "
                   f"agrees with the label {x3}/{y3}, p={p3:.4f}")
+            P("\nκ against the labels on the matched set, with its 95% bootstrap interval (2,000 resamples, fixed seed):\n")
+            for model, sc in pilot10:
+                kp10 = [(m, h) for b, m, h in sc if b in common10]
+                lo10, hi10 = bootstrap_kappa(kp10)
+                P(f"- {model}: {len(kp10)} patches, κ {kappa(kp10):.3f} [{lo10:.2f}, {hi10:.2f}]")
+            P("\nTokens of each offline review, as its file records them (every row of the file, one per patch text judged):\n")
+            for path in args.judge_swap:
+                rows10 = list(csv.DictReader(open(path, encoding="utf-8", errors="replace")))
+                pt10 = sum(int(fnum(r.get("prompt_tokens"))) for r in rows10); ct10 = sum(int(fnum(r.get("completion_tokens"))) for r in rows10)
+                name10 = os.path.basename(path).replace("judge_swap_", "").replace(".csv", "")
+                P(f"- {name10}: {len(rows10)} rows; " + (f"{pt10:,} input and {ct10:,} output tokens" if pt10 else "no token counts recorded"))
         P()
 
     # ── 12. file sizes, and what the no_judge diff section contained ───────
@@ -2227,7 +2272,9 @@ def main():
             x = rec[arm][b]
             if x["plausible"]:
                 learn(b, x["first_txt"], x["label"], "%s, session %s" % (arm, x["session"]))
-    if rerun.get("full"):
+    before_ = [b for b in evaluable if rec["full"][b]["changed"]
+               and can_review["full"].get(b) and not can_review["full"][b]["excluded"]]
+    if rerun.get("full") and before_:
         variants = [("as reported (set-aside sessions last, then earliest)", per["full"], args.rule, conc.get("full", ())),
                     ("records made before the re-execution, earliest valid", per_review["full"], "first", ()),
                     ("records made before the re-execution, latest valid", per_review["full"], "last", ())]
@@ -2347,15 +2394,18 @@ def main():
     KIND = {"Correct (identical)": "identical", "Correct (equivalent)": "equivalent", "Correct (alternative)": "alternative"}
     lab17 = OrderedDict((a, {b: (rec[a][b]["label"], rec[a][b]["first_txt"]) for b in evaluable if rec[a][b]["plausible"]}) for a in ARMS)
     kinds_at = defaultdict(set)          # kinds that a patch text carries anywhere (configurations and control passes)
+    kinds_where = defaultdict(lambda: defaultdict(set))     # ... and where it carries each
     for a in ARMS:
         for b, (l, t) in lab17[a].items():
-            if l in KIND: kinds_at[(b, t)].add(KIND[l])
+            if l in KIND: kinds_at[(b, t)].add(KIND[l]); kinds_where[(b, t)][KIND[l]].add(a)
     if sample_dirs and ctrl_sets:
         c17 = {}
         for b in evaluable:
             for temp, name, info in samples:
                 if info[b]["plausible"]:
-                    if info[b]["label"] in KIND: kinds_at[(b, info[b]["txt"])].add(KIND[info[b]["label"]])
+                    if info[b]["label"] in KIND:
+                        kinds_at[(b, info[b]["txt"])].add(KIND[info[b]["label"]])
+                        kinds_where[(b, info[b]["txt"])][KIND[info[b]["label"]]].add("control")
                     if b not in c17: c17[b] = (info[b]["label"], info[b]["txt"])
         lab17["control"] = c17
     P("| configuration | plausible | identical | equivalent | alternative | correct, kind not recorded | overfitting | identical or equivalent |")
@@ -2366,8 +2416,10 @@ def main():
         cnt17[a] = c
         P(f"| {a} | {len(d_)} | {c['identical']} | {c['equivalent']} | {c['alternative']} | {c['no kind']} | {c['Overfitting']} | {c['identical'] + c['equivalent']} |")
     two = sorted((k for k, v in kinds_at.items() if len(v) > 1), key=lambda k: order_key(k[0]))
-    P(f"\npatch texts that carry two kinds of correct label (in a configuration and in a control pass): {len(two)}"
-      + (" (" + "; ".join(f"{b}: {' and '.join(sorted(kinds_at[(b, t)]))}" for b, t in two) + ")" if two else ""))
+    _where = lambda places: ", ".join(sorted(places, key=lambda x: (ARMS + ["control"]).index(x)))
+    P(f"\npatch texts that carry two kinds of correct label (across the configurations and the control passes): {len(two)}"
+      + (" (" + "; ".join(f"{b}: " + " and ".join(f"{k} in {_where(kinds_where[(b, t)][k])}" for k in sorted(kinds_at[(b, t)]))
+                         for b, t in two) + ")" if two else ""))
 
     def strict17(a, mode):
         """Bugs whose patch is identical or equivalent. mode says what to do with a text that is
@@ -2642,6 +2694,43 @@ def main():
         x, y, n, p = mcnemar_exact(lo20["full"], lo20[a]); x2, y2, n2, p2 = mcnemar_exact(hi20["full"], hi20[a])
         P(f"- full vs {a}: {len(lo20['full'])} against {len(lo20[a])}, {x}/{y}, p={p:.4f}; "
           f"{len(hi20['full'])} against {len(hi20[a])}, {x2}/{y2}, p={p2:.4f}")
+    P()
+
+    # ── 21. label sensitivity of the primary comparison (tipping point) ────
+    P("## 21. Label sensitivity of the comparisons with `full` (tipping point)\n")
+    P("How many correct-label changes would alter the outcome of a comparison on the primary metric? A change moves one "
+      "bug: a correct patch relabelled overfitting in the configuration ahead removes one of its discordant bugs, and an "
+      "overfitting patch relabelled correct in the other configuration adds one of its own. Against the leader, the "
+      "changes are placed to raise the p-value as fast as possible; Holm adjusts over the three comparisons with `full`, "
+      "the other two kept as they are.\n")
+    tests21 = {a: mcnemar_exact(S_co["full"], S_co[a]) for a in ARMS[1:]}
+
+    def _holm21(a, x, y):
+        ps = [mcnemar_exact(set(range(x)), set(range(x, x + y)))[3] if b_ == a else tests21[b_][3] for b_ in ARMS[1:]]
+        return holm(ps)[ARMS[1:].index(a)]
+
+    def _p21(x, y):
+        return mcnemar_exact(set(range(x)), set(range(x, x + y)))[3]
+    for a in ARMS[1:]:
+        x0, y0 = tests21[a][0], tests21[a][1]
+        if _holm21(a, x0, y0) < 0.05:
+            res = []
+            for crit, f in (("Holm-adjusted p", lambda x, y: _holm21(a, x, y)), ("unadjusted p", _p21)):
+                k_all = next(k for k in range(x0 + 1) if max(f(x0 - i, y0 + k - i) for i in range(k + 1)) >= 0.05)
+                k_lead = next(k for k in range(x0 + 1) if f(x0 - k, y0) >= 0.05)
+                res.append(f"{crit} reaches 0.05 after {k_all} changes placed against `full` ({k_lead} if only correct labels of `full` change)")
+            P(f"- full vs {a} ({x0}/{y0}, significant after adjustment): " + "; ".join(res))
+        else:
+            best = next(k for k in range(1, x0 + y0 + 400) if any(_holm21(a, x0 + i, y0 - (k - i)) < 0.05 for i in range(max(0, k - y0), k + 1)))
+            P(f"- full vs {a} ({x0}/{y0}, not significant): the Holm-adjusted p falls below 0.05 after {best} changes placed in favour of `full`")
+    KIND21 = {"Correct (identical)": "identical", "Correct (equivalent)": "equivalent", "Correct (alternative)": "alternative"}
+    for a in ARMS[1:]:
+        only_f = sorted(S_co["full"] - S_co[a], key=order_key); only_a = sorted(S_co[a] - S_co["full"], key=order_key)
+        kf21 = Counter(KIND21.get(rec["full"][b]["label"], "no kind") for b in only_f)
+        ka21 = Counter(KIND21.get(rec[a][b]["label"], "no kind") for b in only_a)
+        P(f"- kinds of the correct patches on the discordant bugs, full vs {a}: full-only {len(only_f)} "
+          f"(identical {kf21['identical']}, equivalent {kf21['equivalent']}, alternative {kf21['alternative']}, no kind {kf21['no kind']}); "
+          f"{a}-only {len(only_a)} (identical {ka21['identical']}, equivalent {ka21['equivalent']}, alternative {ka21['alternative']}, no kind {ka21['no kind']})")
     P()
 
     P(f"canonical per-bug tables written to `{args.outdir}/canonical_<arm>.csv`")

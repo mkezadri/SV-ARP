@@ -1,7 +1,7 @@
 bug_id,excluded,session,executions,verified_session,plausible,judge_verdict,accepted,semantic_label,label_source,correct,delivered_label,delivered_correct,iterations,plausible_iteration,total_tokens,estimated_usd,time_seconds,baseline_failing
 Chart_1,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443)",True,Correct (identical),True,1,0,57140,0.02,22.23,1
 Chart_2,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,493446,0.1727,278.58,2
-Chart_3,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t010)",True,Correct (equivalent),True,1,0,36810,0.0129,14.52,1
+Chart_3,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532)",True,Correct (equivalent),True,1,0,36810,0.0129,14.52,1
 Chart_4,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443)",True,Correct (equivalent),True,1,0,160946,0.0563,51.46,22
 Chart_5,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,139281,0.0487,198.52,1
 Chart_6,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),identical labelled patch (control pass sample_t045a),True,Correct (alternative),True,1,0,8726,0.0031,51.41,2
@@ -21,7 +21,7 @@ Chart_19,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical
 Chart_20,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,5746,0.002,26.82,1
 Chart_21,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),identical labelled patch (control pass sample_t045a),True,Correct (alternative),True,1,0,23054,0.0081,33.64,1
 Chart_22,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,76297,0.0267,88.28,6
-Chart_23,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (full, session 20261010_140443)",True,Correct (equivalent),True,1,0,17524,0.0061,13.49,1
+Chart_23,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_semantic, session 20261015_093532)",True,Correct (equivalent),True,1,0,17524,0.0061,13.49,1
 Chart_24,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,6084,0.0021,12.81,1
 Chart_25,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,210851,0.0738,98.3,4
 Chart_26,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,40534,0.0142,29.33,22
@@ -29,13 +29,13 @@ Closure_1,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,label
 Closure_2,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,403847,0.1413,622.18,1
 Closure_3,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,90652,0.0317,61.75,3
 Closure_4,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,70112,0.0245,464.0,3
-Closure_5,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a)",True,Correct (identical),True,1,0,14435,0.0051,35.19,1
+Closure_5,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532)",True,Correct (identical),True,1,0,14435,0.0051,35.19,1
 Closure_6,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,28784,0.0101,122.02,3
 Closure_7,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,identical labelled patch (control pass sample_t010),False,Overfitting,False,1,0,19628,0.0069,124.18,2
 Closure_8,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,18548,0.0065,36.09,1
 Closure_9,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,override (identical patch),False,Overfitting,False,1,0,8984,0.0031,28.11,1
 Closure_10,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,415501,0.1454,483.34,1
-Closure_11,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (binary_only, session 20261017_013332; kind from control pass sample_t010)",True,Correct (identical),True,1,0,56625,0.0198,122.7,2
+Closure_11,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (binary_only, session 20261017_013332; kind from no_semantic, session 20261015_093532)",True,Correct (identical),True,1,0,56625,0.0198,122.7,2
 Closure_12,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,53248,0.0186,56.36,1
 Closure_13,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,33090,0.0116,152.39,1
 Closure_14,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,201812,0.0706,233.33,3
@@ -82,7 +82,7 @@ Closure_54,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not pla
 Closure_55,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,86971,0.0304,39.59,1
 Closure_56,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,13730,0.0048,109.02,3
 Closure_57,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,11742,0.0041,95.15,1
-Closure_58,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a)",True,Correct (identical),True,1,0,9632,0.0034,26.33,1
+Closure_58,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532)",True,Correct (identical),True,1,0,9632,0.0034,26.33,1
 Closure_59,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,253064,0.0886,391.43,1
 Closure_60,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,396884,0.1389,381.16,2
 Closure_61,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,77844,0.0272,99.59,3
@@ -197,7 +197,7 @@ Lang_41,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternativ
 Lang_42,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,114468,0.0401,102.08,1
 Lang_43,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (full, session 20261011_005033)",True,Correct (equivalent),True,1,0,14797,0.0052,46.51,1
 Lang_44,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,110759,0.0388,62.34,1
-Lang_45,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (identical),True,1,0,22037,0.0077,13.12,1
+Lang_45,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532)",True,Correct (identical),True,1,0,22037,0.0077,13.12,1
 Lang_46,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,2,1,67307,0.0236,92.01,1
 Lang_47,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,72159,0.0253,12.38,2
 Lang_49,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,49053,0.0172,15.41,1
@@ -209,7 +209,7 @@ Lang_54,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,"identi
 Lang_55,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,8872,0.0031,17.35,1
 Lang_56,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,253686,0.0888,105.26,1
 Lang_57,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (binary_only, session 20261017_013332; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,11480,0.004,12.91,11
-Lang_58,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (equivalent),True,1,0,45950,0.0161,15.52,1
+Lang_58,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532)",True,Correct (equivalent),True,1,0,45950,0.0161,15.52,1
 Lang_59,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,62550,0.0219,14.59,1
 Lang_60,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,2,0,105207,0.0368,47.36,1
 Lang_61,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,62870,0.022,15.03,2
@@ -317,7 +317,7 @@ Math_97,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternativ
 Math_98,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,56926,0.0199,19.2,2
 Math_99,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,202233,0.0708,78.85,2
 Math_100,,20261120_091831,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,50589,0.0177,101.27,1
-Math_101,,20261120_091831,1,20261018_045332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t085)",True,Correct (alternative),True,1,0,16710,0.0058,21.25,2
+Math_101,,20261120_091831,1,20261018_045332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532)",True,Correct (alternative),True,1,0,16710,0.0058,21.25,2
 Math_102,,20261120_091831,1,20261018_045332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,14698,0.0051,20.54,6
 Math_103,,20261120_091831,1,20261018_045332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,6713,0.0023,18.45,1
 Math_104,,20261120_091831,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,65544,0.0229,128.4,1
@@ -334,7 +334,7 @@ Mockito_8,,20261121_115528,1,,False,needs_revision,False,N/A (not plausible),n/a
 Mockito_9,,20261123_171006,1,,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,2,1,9943,0.0035,182.94,3
 Mockito_10,,20261123_171006,1,,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,38248,0.0134,697.24,1
 Mockito_11,,20261121_115528,1,,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,2904,0.001,201.18,2
-Mockito_12,,20261121_115528,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (identical),True,1,0,3373,0.0012,42.52,10
+Mockito_12,,20261121_115528,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532)",True,Correct (identical),True,1,0,3373,0.0012,42.52,10
 Mockito_13,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,36713,0.0128,32.77,1
 Mockito_14,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,76420,0.0267,166.28,1
 Mockito_15,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,22766,0.008,67.2,1
@@ -363,7 +363,7 @@ Mockito_37,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not pla
 Mockito_38,,20261121_115528,1,20261018_045332,True,correct,True,Correct (alternative),"identical labelled patch (binary_only, session 20261018_045332; kind from full, session 20261012_084950)",True,Correct (alternative),True,1,0,2808,0.001,40.76,2
 Time_1,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,2,-1,51324,0.018,77.1,1
 Time_2,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,3,-1,78370,0.0274,117.95,1
-Time_3,,20261121_115528,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (identical),True,1,0,43396,0.0152,28.45,5
+Time_3,,20261121_115528,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532)",True,Correct (identical),True,1,0,43396,0.0152,28.45,5
 Time_4,,20261121_115528,1,20261018_045332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,2,1,83161,0.0291,55.34,1
 Time_5,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,134082,0.0469,60.7,3
 Time_6,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,206206,0.0722,112.13,5

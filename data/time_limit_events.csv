@@ -5,9 +5,6 @@ no_semantic,Math_39,20261015_093532,2026-10-16 01:18:45,test 600 s,yes,no,second
 binary_only,Math_56,20261017_013332,2026-10-18 01:01:32,test 600 s,no (execution made before the correction of the configuration),yes,a later attempt of the same execution passed
 binary_only,Math_78,20261017_013332,2026-10-18 02:25:55,test 600 s,no (execution made before the correction of the configuration),no,one of four test runs
 sample_t045a,Math_84,20261106_001716,2026-11-06 11:23:14,test 600 s,yes,no,single attempt of the control pass
-full,Closure_6,20261110_032346,2026-11-10 05:22:02,test 600 s,no (session discarded in full),no,first of three test runs cut while the machine was loaded with unrelated work
-full,Closure_6,20261110_032346,2026-11-10 05:33:51,test 600 s,no (session discarded in full),no,second of three test runs cut while the machine was loaded with unrelated work
-full,Closure_6,20261110_032346,2026-11-10 05:55:32,test 600 s,no (session discarded in full),no,third of three test runs cut while the machine was loaded with unrelated work
 binary_only,Math_56,20261120_091831,2026-11-21 08:53:44,test 600 s,yes,yes,attempt 1; attempt 2 of the same execution passed
 no_judge,Math_31,20261121_173559,2026-11-22 15:37:27,test 600 s,yes,no,attempt 2
 no_judge,Math_31,20261121_173559,2026-11-22 15:47:56,test 600 s,yes,no,"attempt 4, the same candidate text as attempt 2"

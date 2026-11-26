@@ -2,14 +2,12 @@
 
 rule for repeated executions: **first session**
 
-- `full`: 9 session(s), 507 rows, 388 bugs; verification: `data/verification_full.csv` (373 rows)
+- `full`: 8 session(s), 403 rows, 388 bugs; verification: `data/verification_full.csv` (373 rows)
 - `no_semantic`: 3 session(s), 424 rows, 388 bugs; verification: `data/verification_no_semantic.csv` (373 rows)
 - `binary_only`: executed again in full in session(s) 20261120_091831, 20261121_115528, 20261123_171006; the earlier session(s) 20261017_013332, 20261018_045332 are kept for labels and comparison only
 - `binary_only`: 3 session(s), 399 rows, 388 bugs; verification of the earlier sessions: `data/verification_binary_only.csv` (373 rows)
 - `no_judge`: executed again in full in session(s) 20261121_173559, 20261123_173421; the earlier session(s) 20261013_100040, 20261014_083544 are kept for labels and comparison only
 - `no_judge`: 2 session(s), 403 rows, 388 bugs; verification of the earlier sessions: `data/verification_no_judge.csv` (373 rows)
-
-sessions discarded in full (--discard-session): `full` 20261110_032346 (file not present)
 
 benchmark: 388 bugs
 
@@ -20,70 +18,13 @@ benchmark: 388 bugs
 
 ## 2. Bugs executed more than once (appendix table)
 
-- `full`: 50 bug(s) with >1 valid execution; plausibility differs in 10
-
-  | bug | exec 1 | exec 2 | exec 3 | canonical | reviewed | label applies |
-  |---|---|---|---|---|---|---|
-  | Chart_14 | 140443: P/it1/2 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Chart_15 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Chart_16 | 140443: P/it1/2 | 143326: P/it1/2 | 104737: P/it1/2 | 104737 | 143326 | labelled after the re-execution |
-  | Chart_17 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | verification (identical patch) |
-  | Chart_18 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | verification (identical patch) |
-  | Chart_19 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | verification (identical patch) |
-  | Chart_20 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | verification (identical patch) |
-  | Chart_21 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Chart_22 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Chart_23 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t010) |
-  | Chart_24 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | verification (identical patch) |
-  | Chart_25 | 140443: P/it1/2 | 143326: P/it0/1 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Chart_26 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | verification (identical patch) |
-  | Closure_1 | 140443: np/it-1/4 | 143326: P/it0/1 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_5 | 140443: P/it0/1 | 143326: P/it2/3 | 104737: P/it0/1 | 104737 | 143326 | identical labelled patch (control pass sample_t010) |
-  | Closure_6 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | verification (identical patch) |
-  | Closure_7 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | override (identical patch) |
-  | Closure_8 | 140443: P/it1/2 | 143326: P/it2/3 | 104737: P/it3/4 | 104737 | 143326 | labelled after the re-execution |
-  | Closure_9 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | override (identical patch) |
-  | Closure_10 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_11 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: P/it0/1 | 104737 | 143326 | identical labelled patch (binary_only, session 20261017_013332; kind from control pass sample_t010) |
-  | Closure_12 | 140443: np/it-1/4 | 143326: P/it1/2 | 104737: P/it2/3 | 104737 | 143326 | labelled after the re-execution |
-  | Closure_13 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | verification (identical patch) |
-  | Closure_14 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_15 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_16 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_17 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_18 | 140443: P/it0/1 | 143326: P/it0/1 | 104737: P/it0/1 | 104737 | 143326 | verification (identical patch) |
-  | Closure_19 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_20 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_21 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_22 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_23 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_24 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_25 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_26 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_27 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_28 | 140443: P/it2/3 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_29 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_30 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/3 | 104737 | 143326 | n/a |
-  | Closure_31 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_32 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_33 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: P/it1/2 | 104737 | 143326 | labelled after the re-execution |
-  | Closure_34 | 140443: np/it-1/4 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_35 | 140443: np/it-1/4 | 143326: P/it3/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-  | Closure_36 | 140443: P/it1/2 | 143326: P/it1/2 | 104737: P/it2/3 | 104737 | 143326 | verification (identical patch) |
-  | Closure_37 | 140443: np/it-1/4 | 104737: np/it-1/3 | 104737 | 140443 | n/a |
-  | Closure_38 | 140443: P/it1/2 | 104737: np/it-1/4 | 104737 | 140443 | n/a |
-  | Closure_39 | 143326: np/it-1/4 | 104737: np/it-1/4 | 104737 | 143326 | n/a |
-
+- `full`: none
 - `no_semantic`: none
 - `binary_only`: none
 - `no_judge`: none
 Records that are never canonical:
 
-- `full`: completed with an empty baseline: 4 (Chart_14, Closure_2, Closure_3, Closure_38)
-- `full`: aborted (extraction_failed: Could not extract buggy code): 1 (Chart_15)
-- `full`: aborted (checkout_failed: Checkout failed): 3 (Closure_2, Closure_3, Closure_39)
-- `full`: aborted (build_broken: Baseline does not compile): 17 (Closure_4, Closure_37, Mockito_1, Mockito_2, Mockito_3, Mockito_4, Mockito_5, Mockito_6, Mockito_7, Mockito_8, Mockito_9, Mockito_10, Mockito_11, Mockito_18, Mockito_19, Mockito_20, Mockito_21)
+- `full`: aborted (build_broken: Baseline does not compile): 15 (Mockito_1, Mockito_2, Mockito_3, Mockito_4, Mockito_5, Mockito_6, Mockito_7, Mockito_8, Mockito_9, Mockito_10, Mockito_11, Mockito_18, Mockito_19, Mockito_20, Mockito_21)
 - `no_semantic`: completed but ended on an unparseable Judge verdict (re-queued): 2 (Closure_48, Lang_1)
 - `no_semantic`: aborted (build_broken: Baseline does not compile): 15 (Mockito_1, Mockito_2, Mockito_3, Mockito_4, Mockito_5, Mockito_6, Mockito_7, Mockito_8, Mockito_9, Mockito_10, Mockito_11, Mockito_18, Mockito_19, Mockito_20, Mockito_21)
 - `no_semantic`: aborted (failed: all API keys exhausted for today: #1:480): 19 (Time_8, Time_9, Time_10, Time_11, Time_12, Time_13, Time_14, Time_15, Time_16, Time_17, Time_18, Time_19, Time_20, Time_22, Time_23, Time_24, Time_25, Time_26, Time_27)
@@ -93,43 +34,36 @@ Records that are never canonical:
 
 ## 2b. Executions made after the verification
 
-Sessions set aside (they shared a working directory): `full` 20261010_140443 and 20261010_143326. A set-aside execution is canonical only for a bug without a valid execution in another session.
-
-- `full`: session(s) 20261110_104737 executed after the verification; canonical record changed for 50 bugs
+- `full`: session(s) 20261110_104737 executed after the verification; canonical record of 50 bugs
 
   | bug | record when the labels were given | re-execution | label | source of the label |
   |---|---|---|---|---|
-  | Chart_14 | plausible at attempt 2, Correct (alternative) | not plausible | N/A (not plausible) | n/a |
-  | Chart_16 | plausible at attempt 2, Correct (alternative) | plausible at attempt 2 | Correct (alternative) | labelled after the re-execution |
-  | Chart_17 | plausible at attempt 1, Correct (identical) | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
-  | Chart_19 | plausible at attempt 1, Correct (identical) | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
-  | Chart_20 | plausible at attempt 1, Correct (identical) | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
-  | Chart_21 | plausible at attempt 1, Correct (alternative) | not plausible | N/A (not plausible) | n/a |
-  | Chart_23 | plausible at attempt 1, Correct (equivalent) | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t010) |
-  | Chart_24 | plausible at attempt 1, Correct (identical) | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
-  | Chart_25 | plausible at attempt 2, Correct (identical) | not plausible | N/A (not plausible) | n/a |
-  | Chart_26 | plausible at attempt 1, Correct (identical) | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
-  | Closure_5 | plausible at attempt 1, Correct (identical) | plausible at attempt 1 | Correct (identical) | identical labelled patch (control pass sample_t010) |
-  | Closure_6 | plausible at attempt 1, Correct (identical) | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
-  | Closure_7 | plausible at attempt 1, Overfitting | plausible at attempt 1 | Overfitting | override (identical patch) |
-  | Closure_8 | plausible at attempt 2, Correct (equivalent) | plausible at attempt 4 | Correct (alternative) | labelled after the re-execution |
-  | Closure_9 | plausible at attempt 1, Overfitting | plausible at attempt 1 | Overfitting | override (identical patch) |
-  | Closure_11 | not plausible | plausible at attempt 1 | Correct (identical) | identical labelled patch (binary_only, session 20261017_013332; kind from control pass sample_t010) |
-  | Closure_12 | not plausible | plausible at attempt 3 | Correct (equivalent) | labelled after the re-execution |
-  | Closure_18 | plausible at attempt 1, Correct (identical) | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
-  | Closure_28 | plausible at attempt 3, Correct (equivalent) | not plausible | N/A (not plausible) | n/a |
-  | Closure_33 | not plausible | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
-  | Closure_36 | plausible at attempt 2, Correct (identical) | plausible at attempt 3 | Correct (identical) | verification (identical patch) |
-  | Closure_38 | plausible at attempt 2, Correct (identical) | not plausible | N/A (not plausible) | n/a |
+  | Chart_16 | none in the data | plausible at attempt 2 | Correct (alternative) | labelled after the re-execution |
+  | Chart_17 | none in the data | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
+  | Chart_19 | none in the data | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
+  | Chart_20 | none in the data | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
+  | Chart_23 | none in the data | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t010) |
+  | Chart_24 | none in the data | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
+  | Chart_26 | none in the data | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
+  | Closure_5 | none in the data | plausible at attempt 1 | Correct (identical) | identical labelled patch (control pass sample_t010) |
+  | Closure_6 | none in the data | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
+  | Closure_7 | none in the data | plausible at attempt 1 | Overfitting | identical labelled patch (no_judge, session 20261013_100040) |
+  | Closure_8 | none in the data | plausible at attempt 4 | Correct (alternative) | labelled after the re-execution |
+  | Closure_9 | none in the data | plausible at attempt 1 | Overfitting | override (identical patch) |
+  | Closure_11 | none in the data | plausible at attempt 1 | Correct (identical) | identical labelled patch (binary_only, session 20261017_013332; kind from no_semantic, session 20261015_093532) |
+  | Closure_12 | none in the data | plausible at attempt 3 | Correct (equivalent) | labelled after the re-execution |
+  | Closure_18 | none in the data | plausible at attempt 1 | Correct (identical) | verification (identical patch) |
+  | Closure_33 | none in the data | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
+  | Closure_36 | none in the data | plausible at attempt 3 | Correct (identical) | verification (identical patch) |
 
-  correct -> correct: 12; correct -> not plausible: 5; not correct -> not correct: 2; not plausible -> correct: 3; not plausible -> not plausible: 28
+  none in the data -> correct: 15; none in the data -> not correct: 2; none in the data -> not plausible: 33
 
 - `binary_only`: executed again in full with corrected code (session(s) 20261120_091831, 20261121_115528, 20261123_171006); 388 completed records, listed below when either execution is plausible
 
   | bug | record when the labels were given | re-execution | label | source of the label |
   |---|---|---|---|---|
   | Chart_1 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
-  | Chart_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t010) |
+  | Chart_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
   | Chart_4 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
   | Chart_6 | not plausible | plausible at attempt 1 | Correct (alternative) | identical labelled patch (control pass sample_t045a) |
   | Chart_7 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
@@ -144,19 +78,19 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Chart_19 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Chart_20 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Chart_21 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (control pass sample_t045a) |
-  | Chart_23 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (full, session 20261010_140443) |
+  | Chart_23 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_semantic, session 20261015_093532) |
   | Chart_24 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Chart_25 | plausible at attempt 3, Correct | not plausible | N/A (not plausible) | n/a |
   | Chart_26 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Closure_1 | not plausible | plausible at attempt 1 | Overfitting | labelled after the re-execution |
   | Closure_3 | plausible at attempt 2, Overfitting | not plausible | N/A (not plausible) | n/a |
-  | Closure_5 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a) |
+  | Closure_5 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
   | Closure_6 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Closure_7 | plausible at attempt 1, Correct | plausible at attempt 1 | Overfitting | identical labelled patch (control pass sample_t010) |
   | Closure_8 | plausible at attempt 3, Correct | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Closure_9 | plausible at attempt 1, Overfitting | plausible at attempt 1 | Overfitting | override (identical patch) |
   | Closure_10 | plausible at attempt 1, Correct | not plausible | N/A (not plausible) | n/a |
-  | Closure_11 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (binary_only, session 20261017_013332; kind from control pass sample_t010) |
+  | Closure_11 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (binary_only, session 20261017_013332; kind from no_semantic, session 20261015_093532) |
   | Closure_18 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Closure_20 | plausible at attempt 2, Correct | not plausible | N/A (not plausible) | n/a |
   | Closure_36 | plausible at attempt 2, Correct | plausible at attempt 2 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
@@ -168,7 +102,7 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Closure_53 | plausible at attempt 1, Correct | plausible at attempt 3 | Correct (alternative) | labelled after the re-execution |
   | Closure_56 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
   | Closure_57 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033) |
-  | Closure_58 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a) |
+  | Closure_58 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
   | Closure_61 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033) |
   | Closure_62 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (control pass sample_t010) |
   | Closure_64 | plausible at attempt 3, Correct | not plausible | N/A (not plausible) | n/a |
@@ -227,7 +161,7 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Lang_42 | plausible at attempt 2, Correct | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Lang_43 | plausible at attempt 3, Overfitting | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (full, session 20261011_005033) |
   | Lang_44 | plausible at attempt 1, Correct | not plausible | N/A (not plausible) | n/a |
-  | Lang_45 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010) |
+  | Lang_45 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Lang_46 | plausible at attempt 2, Correct | plausible at attempt 2 | Overfitting | labelled after the re-execution |
   | Lang_47 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Lang_49 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
@@ -237,7 +171,7 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Lang_55 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Lang_56 | plausible at attempt 2, Correct | not plausible | N/A (not plausible) | n/a |
   | Lang_57 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (binary_only, session 20261017_013332; kind from full, session 20261011_005033) |
-  | Lang_58 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010) |
+  | Lang_58 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Lang_59 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Lang_60 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Lang_61 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
@@ -303,22 +237,22 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Math_97 | not plausible | plausible at attempt 1 | Correct (alternative) | labelled after the re-execution |
   | Math_98 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Math_100 | plausible at attempt 3, Overfitting | not plausible | N/A (not plausible) | n/a |
-  | Math_101 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t085) |
+  | Math_101 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Math_102 | plausible at attempt 3, Correct | plausible at attempt 1 | Correct (alternative) | labelled after the re-execution |
   | Math_103 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Math_105 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Math_106 | plausible at attempt 1, Correct | plausible at attempt 3 | Correct (equivalent) | labelled after the re-execution |
-  | Mockito_1 | none | plausible at attempt 1 | Correct (alternative) | labelled after the re-execution |
-  | Mockito_2 | none | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
-  | Mockito_5 | none | plausible at attempt 1 | Correct (identical) | labelled after the re-execution |
-  | Mockito_9 | none | plausible at attempt 2 | Overfitting | labelled after the re-execution |
-  | Mockito_11 | none | plausible at attempt 1 | Correct (alternative) | labelled after the re-execution |
-  | Mockito_12 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010) |
+  | Mockito_1 | none in the data | plausible at attempt 1 | Correct (alternative) | labelled after the re-execution |
+  | Mockito_2 | none in the data | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
+  | Mockito_5 | none in the data | plausible at attempt 1 | Correct (identical) | labelled after the re-execution |
+  | Mockito_9 | none in the data | plausible at attempt 2 | Overfitting | labelled after the re-execution |
+  | Mockito_11 | none in the data | plausible at attempt 1 | Correct (alternative) | labelled after the re-execution |
+  | Mockito_12 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Mockito_13 | plausible at attempt 2, Correct | not plausible | N/A (not plausible) | n/a |
   | Mockito_15 | plausible at attempt 2, Correct | not plausible | N/A (not plausible) | n/a |
   | Mockito_17 | plausible at attempt 2, Correct | not plausible | N/A (not plausible) | n/a |
-  | Mockito_18 | none | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
-  | Mockito_21 | none | plausible at attempt 4 | Correct (equivalent) | labelled after the re-execution |
+  | Mockito_18 | none in the data | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
+  | Mockito_21 | none in the data | plausible at attempt 4 | Correct (equivalent) | labelled after the re-execution |
   | Mockito_22 | not plausible | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Mockito_24 | not plausible | plausible at attempt 2 | Correct (equivalent) | identical labelled patch (full, session 20261011_005033) |
   | Mockito_27 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
@@ -331,7 +265,7 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Mockito_36 | plausible at attempt 2, Correct | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Mockito_38 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (binary_only, session 20261018_045332; kind from full, session 20261012_084950) |
   | Time_1 | plausible at attempt 3, Overfitting | not plausible | N/A (not plausible) | n/a |
-  | Time_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010) |
+  | Time_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Time_4 | plausible at attempt 1, Correct | plausible at attempt 2 | Overfitting | labelled after the re-execution |
   | Time_5 | plausible at attempt 2, Overfitting | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Time_9 | plausible at attempt 1, Overfitting | plausible at attempt 1 | Overfitting | identical labelled patch (binary_only, session 20261018_045332) |
@@ -347,14 +281,14 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Time_20 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (binary_only, session 20261018_045332; kind from control pass sample_t010) |
   | Time_23 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t045a) |
 
-  correct -> correct: 124; correct -> not correct: 7; correct -> not plausible: 29; none -> correct: 6; none -> not correct: 1; none -> not plausible: 8; not correct -> correct: 6; not correct -> not correct: 16; not correct -> not plausible: 7; not plausible -> correct: 17; not plausible -> not correct: 5; not plausible -> not plausible: 162
+  correct -> correct: 124; correct -> not correct: 7; correct -> not plausible: 29; none in the data -> correct: 6; none in the data -> not correct: 1; none in the data -> not plausible: 8; not correct -> correct: 6; not correct -> not correct: 16; not correct -> not plausible: 7; not plausible -> correct: 17; not plausible -> not correct: 5; not plausible -> not plausible: 162
 
 - `no_judge`: executed again in full with corrected code (session(s) 20261121_173559, 20261123_173421); 388 completed records, listed below when either execution is plausible
 
   | bug | record when the labels were given | re-execution | label | source of the label |
   |---|---|---|---|---|
   | Chart_1 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
-  | Chart_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t010) |
+  | Chart_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
   | Chart_4 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
   | Chart_6 | plausible at attempt 2, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (control pass sample_t045a) |
   | Chart_7 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
@@ -373,12 +307,12 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Chart_24 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Chart_26 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Closure_1 | plausible at attempt 4, Overfitting | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
-  | Closure_5 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a) |
+  | Closure_5 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
   | Closure_6 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737) |
   | Closure_7 | plausible at attempt 1, Overfitting | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
   | Closure_8 | plausible at attempt 3, Correct | plausible at attempt 4 | Correct (alternative) | labelled after the re-execution |
   | Closure_9 | plausible at attempt 1, Overfitting | plausible at attempt 1 | Overfitting | override (identical patch) |
-  | Closure_10 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a) |
+  | Closure_10 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
   | Closure_12 | plausible at attempt 4, Correct | not plausible | N/A (not plausible) | n/a |
   | Closure_13 | plausible at attempt 2, Overfitting | plausible at attempt 2 | Overfitting | labelled after the re-execution |
   | Closure_16 | not plausible | plausible at attempt 2 | Overfitting | labelled after the re-execution |
@@ -395,7 +329,7 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Closure_52 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (full, session 20261011_005033) |
   | Closure_56 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
   | Closure_57 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033) |
-  | Closure_58 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a) |
+  | Closure_58 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
   | Closure_61 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033) |
   | Closure_62 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (control pass sample_t010) |
   | Closure_64 | not plausible | plausible at attempt 2 | Overfitting | labelled after the re-execution |
@@ -435,7 +369,7 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Lang_16 | plausible at attempt 1, Overfitting | plausible at attempt 1 | Overfitting | override (identical patch) |
   | Lang_17 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (binary_only, session 20261017_013332; kind from full, session 20261011_005033) |
   | Lang_19 | plausible at attempt 3, Correct | not plausible | N/A (not plausible) | n/a |
-  | Lang_21 | plausible at attempt 2, Correct | plausible at attempt 2 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from binary_only, session 20261120_091831) |
+  | Lang_21 | plausible at attempt 2, Correct | plausible at attempt 2 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Lang_22 | not plausible | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
   | Lang_23 | plausible at attempt 1, Correct | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Lang_24 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
@@ -452,11 +386,11 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Lang_42 | plausible at attempt 3, Correct | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
   | Lang_43 | plausible at attempt 4, Correct | plausible at attempt 4 | Correct (equivalent) | labelled after the re-execution |
   | Lang_44 | not plausible | plausible at attempt 3 | Correct (alternative) | labelled after the re-execution |
-  | Lang_45 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010) |
+  | Lang_45 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Lang_46 | plausible at attempt 2, Correct | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Lang_47 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Lang_49 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
-  | Lang_50 | plausible at attempt 1, Correct | plausible at attempt 2 | Correct (alternative) | identical labelled patch (binary_only, session 20261017_013332; kind from control pass sample_t045a) |
+  | Lang_50 | plausible at attempt 1, Correct | plausible at attempt 2 | Correct (alternative) | identical labelled patch (binary_only, session 20261017_013332; kind from no_semantic, session 20261015_093532) |
   | Lang_51 | plausible at attempt 4, Correct | not plausible | N/A (not plausible) | n/a |
   | Lang_52 | plausible at attempt 1, Correct | not plausible | N/A (not plausible) | n/a |
   | Lang_55 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
@@ -516,7 +450,7 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Math_82 | plausible at attempt 1, Overfitting | plausible at attempt 1 | Overfitting | identical labelled patch (no_judge, session 20261014_083544) |
   | Math_84 | plausible at attempt 2, Correct | plausible at attempt 4 | Correct (alternative) | labelled after the re-execution |
   | Math_85 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
-  | Math_86 | plausible at attempt 1, Correct | plausible at attempt 2 | Correct (alternative) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t085) |
+  | Math_86 | plausible at attempt 1, Correct | plausible at attempt 2 | Correct (alternative) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Math_87 | plausible at attempt 1, Correct | plausible at attempt 3 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Math_88 | not plausible | plausible at attempt 3 | Correct (equivalent) | labelled after the re-execution |
   | Math_89 | not plausible | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
@@ -533,17 +467,17 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Math_103 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033) |
   | Math_105 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (control pass sample_t045b) |
   | Math_106 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (full, session 20261011_005033) |
-  | Mockito_1 | none | plausible at attempt 1 | Correct (alternative) | identical labelled patch (full, session 20261123_064025) |
-  | Mockito_2 | none | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (full, session 20261123_064025) |
-  | Mockito_3 | none | plausible at attempt 2 | Correct (alternative) | labelled after the re-execution |
-  | Mockito_5 | none | plausible at attempt 1 | Correct (identical) | identical labelled patch (full, session 20261123_064025) |
-  | Mockito_9 | none | plausible at attempt 2 | Overfitting | labelled after the re-execution |
-  | Mockito_11 | none | plausible at attempt 1 | Correct (alternative) | labelled after the re-execution |
-  | Mockito_12 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010) |
+  | Mockito_1 | none in the data | plausible at attempt 1 | Correct (alternative) | identical labelled patch (full, session 20261123_064025) |
+  | Mockito_2 | none in the data | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (full, session 20261123_064025) |
+  | Mockito_3 | none in the data | plausible at attempt 2 | Correct (alternative) | labelled after the re-execution |
+  | Mockito_5 | none in the data | plausible at attempt 1 | Correct (identical) | identical labelled patch (full, session 20261123_064025) |
+  | Mockito_9 | none in the data | plausible at attempt 2 | Overfitting | labelled after the re-execution |
+  | Mockito_11 | none in the data | plausible at attempt 1 | Correct (alternative) | labelled after the re-execution |
+  | Mockito_12 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Mockito_13 | plausible at attempt 3, Correct | not plausible | N/A (not plausible) | n/a |
   | Mockito_15 | plausible at attempt 3, Correct | plausible at attempt 4 | Correct (equivalent) | labelled after the re-execution |
   | Mockito_17 | not plausible | plausible at attempt 2 | Overfitting | labelled after the re-execution |
-  | Mockito_18 | none | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (full, session 20261123_100046) |
+  | Mockito_18 | none in the data | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (full, session 20261123_100046) |
   | Mockito_22 | plausible at attempt 1, Correct | not plausible | N/A (not plausible) | n/a |
   | Mockito_24 | plausible at attempt 3, Correct | not plausible | N/A (not plausible) | n/a |
   | Mockito_26 | plausible at attempt 1, Correct | not plausible | N/A (not plausible) | n/a |
@@ -557,7 +491,7 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Mockito_36 | plausible at attempt 1, Correct | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Mockito_37 | plausible at attempt 1, Correct | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Mockito_38 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (binary_only, session 20261018_045332; kind from full, session 20261012_084950) |
-  | Time_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010) |
+  | Time_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261014_083544; kind from no_semantic, session 20261015_093532) |
   | Time_4 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
   | Time_5 | plausible at attempt 2, Correct | plausible at attempt 2 | Correct (alternative) | labelled after the re-execution |
   | Time_7 | not plausible | plausible at attempt 1 | Overfitting | identical labelled patch (no_semantic, session 20261015_093532) |
@@ -573,11 +507,9 @@ Sessions set aside (they shared a working directory): `full` 20261010_140443 and
   | Time_23 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (binary_only, session 20261018_045332; kind from full, session 20261012_084950) |
   | Time_25 | not plausible | plausible at attempt 1 | Correct (identical) | labelled after the re-execution |
 
-  correct -> correct: 133; correct -> not correct: 2; correct -> not plausible: 21; none -> correct: 6; none -> not correct: 1; none -> not plausible: 8; not correct -> correct: 5; not correct -> not correct: 14; not correct -> not plausible: 6; not plausible -> correct: 24; not plausible -> not correct: 7; not plausible -> not plausible: 161
+  correct -> correct: 133; correct -> not correct: 2; correct -> not plausible: 21; none in the data -> correct: 6; none in the data -> not correct: 1; none in the data -> not plausible: 8; not correct -> correct: 5; not correct -> not correct: 14; not correct -> not plausible: 6; not plausible -> correct: 24; not plausible -> not correct: 7; not plausible -> not plausible: 161
 
 labelled texts with conflicting labels: none
-
-labels of a verification file replaced by an override row that names the reviewed session (the execution is not canonical; the row keeps one label per patch text): full Closure_7, session 20261010_143326: Correct (alternative) in the verification file, Overfitting by override
 
 re-executed records that still need a label or the kind of a correct patch: 0 (none); see `figures_out/rerun_labels_todo.csv`
 
@@ -734,46 +666,33 @@ first-plausible-wins correct over all 24 sample orderings: min 156, max 160, mea
 
 Every tested candidate of every completed execution (all sessions of the four configurations and the control passes, the sessions made before the correction of binary_only and no_judge included), compared by its complete text (Java token sequence).
 
-- tested candidates in valid executions: 8061; distinct texts: 4507; texts tested more than once: 1143 (4697 candidates)
-- texts recorded both as passing and as failing: 6, of which 5 within valid executions (Chart_14, Mockito_5, Mockito_22, Mockito_24, Mockito_26)
+- tested candidates in valid executions: 7781; distinct texts: 4376; texts tested more than once: 1108 (4513 candidates)
+- texts recorded both as passing and as failing: 4, of which 4 within valid executions (Mockito_5, Mockito_22, Mockito_24, Mockito_26)
 
 | bug | where it passed | where it failed |
 |---|---|---|
-| Chart_14 | no_semantic (093532) attempt 1; binary_only, before the correction (013332) attempt 1 | full (140443) attempt 1 |
-| Closure_38 | full (140443) attempt 2; no_semantic (093532) attempt 3; binary_only (091831) attempt 3; no_judge (173559) attempt 2; no_judge, before the correction (100040) attempt 4 | full (143326) attempt 2 [invalid execution]; full (143326) attempt 4 [invalid execution] |
 | Mockito_5 | sample_t085 attempt 1 | sample_t045a attempt 1 |
 | Mockito_22 | full (005033) attempt 1; no_semantic (093532) attempt 1; binary_only (115528) attempt 1; no_judge, before the correction (083544) attempt 1; sample_t010 attempt 1; sample_t045a attempt 1; sample_t045b attempt 1; sample_t085 attempt 1 | no_judge (173559) attempt 1; binary_only, before the correction (045332) attempt 1 |
 | Mockito_24 | full (005033) attempt 2; binary_only (115528) attempt 2 | binary_only, before the correction (045332) attempt 2; binary_only, before the correction (045332) attempt 3; binary_only, before the correction (045332) attempt 4 |
 | Mockito_26 | full (005033) attempt 1; no_judge, before the correction (083544) attempt 1 | no_semantic (093532) attempt 1; no_semantic (093532) attempt 3; binary_only (115528) attempt 1; binary_only (115528) attempt 2; binary_only (115528) attempt 3; no_judge (173559) attempt 1; no_judge (173559) attempt 2; no_judge (173559) attempt 4; binary_only, before the correction (045332) attempt 1; binary_only, before the correction (045332) attempt 3; binary_only, before the correction (045332) attempt 4; sample_t010 attempt 1; sample_t045a attempt 1; sample_t045b attempt 1; sample_t085 attempt 1 |
 
-- `full`: sessions 20261010_140443 and 20261010_143326 ran at the same time in one working directory; bugs with a record in both: 52 (Chart_14 to Closure_39); canonical execution taken from one of the two: 0 bugs. Valid executions of the two sessions on these bugs: 94, 280 tested candidates; candidates whose text was also tested in an execution outside the two sessions: 137 (43 bugs), same recorded outcome: 136; different: Chart_14 (140443) attempt 1 (FAIL here; binary_only, before the correction PASS, no_semantic PASS)
-  records of the two sessions on these bugs: {'aborted: build_broken': 2, 'aborted: checkout_failed': 3, 'aborted: extraction_failed': 1, 'empty baseline': 4, 'valid': 94}
 
-## 4e. The re-execution against the earlier executions of the same bugs
+## 4e. The re-execution against the other executions of the same bugs
 
 `full`: 50 bugs whose canonical record is a re-execution (session 20261110_104737).
 
-| pair | bugs with a valid execution in both | plausible in both | plausibility differs | first candidate has the same text | ... with the same recorded outcome | candidate texts tested in both | ... with the same recorded outcome |
-|---|---|---|---|---|---|---|---|
-| re-execution vs full 20261010_140443 | 47 | 14 | 8 (17%; only the first: Closure_11, Closure_12, Closure_33; only the second: Chart_14, Chart_21, Chart_25, Closure_28, Closure_38) | 24 | 24 | 35 | 35 |
-| re-execution vs full 20261010_143326 | 47 | 15 | 6 (13%; only the first: Closure_11, Closure_33; only the second: Chart_21, Chart_25, Closure_1, Closure_35) | 19 | 19 | 29 | 29 |
-| full 20261010_140443 vs full 20261010_143326 | 44 | 16 | 4 (9%; only the first: Closure_28; only the second: Closure_1, Closure_12, Closure_35) | 20 | 20 | 28 | 28 |
-
 - re-execution: valid executions 50, plausible 17, tested candidates 156
-- full 20261010_140443: valid executions 47, plausible 19, tested candidates 139
-- full 20261010_143326: valid executions 47, plausible 19, tested candidates 141
-- bugs with a valid execution in all 3: 44; same plausibility in all: 36; plausibility differs between at least two valid executions: 10 bugs
 
 First candidate with the same text (same Java token sequence), on these bugs:
 
-- re-execution against each other execution: full 20261010_140443 24/47; full 20261010_143326 19/47; no_semantic 15/50; binary_only 22/50; no_judge 18/50; sample_t010 19/50 (range 15 to 24)
-- between two of the other executions: range 13 to 24 of 44 to 50 bugs (full 20261010_140443 vs full 20261010_143326 20/44; full 20261010_140443 vs no_semantic 20/47; full 20261010_140443 vs binary_only 24/47; full 20261010_140443 vs no_judge 20/47; full 20261010_140443 vs sample_t010 16/47; full 20261010_143326 vs no_semantic 21/47; full 20261010_143326 vs binary_only 22/47; full 20261010_143326 vs no_judge 15/47; full 20261010_143326 vs sample_t010 15/47; no_semantic vs binary_only 20/50; no_semantic vs no_judge 16/50; no_semantic vs sample_t010 13/50; binary_only vs no_judge 23/50; binary_only vs sample_t010 21/50; no_judge vs sample_t010 16/50)
-- first candidates that pass: re-execution 12; full 20261010_140443 12; full 20261010_143326 13; no_semantic 16; binary_only 15; no_judge 16; sample_t010 15 (others: 12 to 16)
+- re-execution against each other execution: no_semantic 15/50; binary_only 22/50; no_judge 18/50; sample_t010 19/50 (range 15 to 22)
+- between two of the other executions: range 13 to 23 of 50 to 50 bugs (no_semantic vs binary_only 20/50; no_semantic vs no_judge 16/50; no_semantic vs sample_t010 13/50; binary_only vs no_judge 23/50; binary_only vs sample_t010 21/50; no_judge vs sample_t010 16/50)
+- first candidates that pass: re-execution 12; no_semantic 16; binary_only 15; no_judge 16; sample_t010 15 (others: 15 to 16)
 
 Recorded size of the first Repair Agent prompt (single-file bugs whose first generation was usable in both executions), re-execution against each other execution, equal/compared; and of the first Judge prompt where the first candidate has the same text and passes:
 
-- full 20261010_140443 32/32, Judge 6/6; full 20261010_143326 31/31, Judge 5/5; no_semantic 34/34, Judge 5/5; binary_only 32/32, Judge 6/6; no_judge 31/31; sample_t010 22/22; sample_t045a 30/30; sample_t045b 30/30; sample_t085 30/30
-- bugs compared per execution: 22 to 34; first Repair Agent prompt of equal size in every comparison: yes; first Judge prompt of equal size: 22/22
+- no_semantic 34/34, Judge 5/5; binary_only 32/32, Judge 6/6; no_judge 31/31; sample_t010 22/22; sample_t045a 30/30; sample_t045b 30/30; sample_t085 30/30
+- bugs compared per execution: 22 to 34; first Repair Agent prompt of equal size in every comparison: yes; first Judge prompt of equal size: 11/11
 
 ## 4f. Configurations executed again in full with corrected code
 
@@ -945,8 +864,8 @@ Test-passing candidates that were not accepted on the spot:
 | full | Math_63 | 1 | verdict incorrect | Overfitting | a different patch accepted later | Overfitting |
 | full | Math_79 | 1 | unparseable response | Correct (identical) | the same text accepted later | Correct (identical) |
 | full | Mockito_5 | 1 | empty response | Correct (identical) | a different patch accepted later | Correct (equivalent) |
-| no_semantic | Lang_47 | 2 | verdict needs_revision | Correct | a different patch accepted later | Correct |
-| no_semantic | Math_49 | 4 | verdict incorrect | Correct | no patch accepted |  |
+| no_semantic | Lang_47 | 2 | verdict needs_revision | Correct (equivalent) | a different patch accepted later | Correct |
+| no_semantic | Math_49 | 4 | verdict incorrect | Correct (alternative) | no patch accepted |  |
 | no_semantic | Math_63 | 1 | verdict incorrect | Overfitting | no patch accepted |  |
 | no_semantic | Math_92 | 2 | empty response | Overfitting | no patch accepted |  |
 | binary_only | Closure_107 | 2 | verdict incorrect | Overfitting | no patch accepted |  |
@@ -1096,6 +1015,18 @@ Pairs of reviewers on the matched set (McNemar exact, two-sided, unadjusted; fir
 - deepseek_v4_flash_semantic vs claude_sonnet_5_5_semantic: overfitting vetoed 0/8, p=0.0078; correct vetoed 14/7, p=0.1892; agrees with the label 7/22, p=0.0081
 - gemini_3_5_flash_lite_semantic vs claude_sonnet_5_5_semantic: overfitting vetoed 2/11, p=0.0225; correct vetoed 5/7, p=0.7744; agrees with the label 9/16, p=0.2295
 
+κ against the labels on the matched set, with its 95% bootstrap interval (2,000 resamples, fixed seed):
+
+- deepseek_v4_flash_semantic: 184 patches, κ 0.065 [-0.09, 0.24]
+- gemini_3_5_flash_lite_semantic: 184 patches, κ 0.102 [-0.06, 0.28]
+- claude_sonnet_5_5_semantic: 184 patches, κ 0.454 [0.25, 0.63]
+
+Tokens of each offline review, as its file records them (every row of the file, one per patch text judged):
+
+- deepseek_v4_flash_semantic: 197 rows; no token counts recorded
+- gemini_3_5_flash_lite_semantic: 272 rows; no token counts recorded
+- claude_sonnet_5_5_semantic: 194 rows; 5,244,143 input and 187,177 output tokens
+
 ## 12. Size of the modified files, and the diff section of the no_judge prompt
 
 - single-file bugs: 357; lines in the modified file: median 666, quartiles 296 / 1370; 323 (90.5%) have 150 lines or more, 133 (37.3%) have 1,000 or more
@@ -1142,28 +1073,11 @@ Paired set restricted to the other 373 bugs; McNemar exact against `full`, Holm 
 on the 15 bugs themselves (plausible / correct): full 8 / 7; no_semantic 8 / 7; binary_only 7 / 6; no_judge 7 / 6
 control (best of 4) on the 373 bugs: plausible 180, correct 154; full vs control correct 40/26, p=0.1089; no_judge vs control correct 33/25, p=0.3581; on the 15 bugs: plausible 6, correct 6
 
-## 14b. Sensitivity: without the 52 bugs that two concurrent `full` sessions executed
-
-Paired set restricted to the other 336 bugs; McNemar exact against `full`, Holm over the three correct-fix comparisons.
-
-| arm | plausible | correct | correct: full-only/arm-only | p | p1 | Holm p | plausible: full-only/arm-only | p |
-|---|---|---|---|---|---|---|---|---|
-| full | 185 | 160 | | | | | | |
-| no_semantic | 179 | 147 | 32/19 | 0.0919 | 0.0460 | 0.1838 | 28/22 | 0.4799 |
-| binary_only | 163 | 137 | 34/11 | 0.0008 | 0.0004 | 0.0025 | 37/15 | 0.0032 |
-| no_judge | 168 | 147 | 34/21 | 0.1048 | 0.0524 | 0.1838 | 36/19 | 0.0300 |
-| control (best of 4) | 168 | 145 | 37/22 | 0.0674 | | | 41/24 | 0.0464 |
-
-control vs no_judge on this subset, correct: 27/25, p=0.8899
-
-on the 52 bugs themselves (plausible / correct): full 17 / 15, no_semantic 23 / 21, binary_only 19 / 16, no_judge 24 / 21, control 18 / 15
-
 ## 11. Sensitivity to the choice among repeated executions (full arm)
 
-- as reported (set-aside sessions last, then earliest): plausible=202, correct=175, pending=0; on the 50 re-executed bugs: plausible=17, correct=15; correct fixes against the reduced configurations (full-only/other-only, McNemar): no_semantic 35/28 p=0.450; binary_only 36/14 p=0.003; no_judge 37/30 p=0.464; smallest Holm-adjusted value 0.008
-- records made before the re-execution, earliest valid: plausible=204, correct=177, pending=0; on the 50 re-executed bugs: plausible=19, correct=17; correct fixes against the reduced configurations (full-only/other-only, McNemar): no_semantic 35/26 p=0.306; binary_only 36/12 p=0.001; no_judge 37/28 p=0.321; smallest Holm-adjusted value 0.002
-- records made before the re-execution, latest valid: plausible=206, correct=179, pending=0; on the 50 re-executed bugs: plausible=21, correct=19; correct fixes against the reduced configurations (full-only/other-only, McNemar): no_semantic 36/25 p=0.200; binary_only 38/12 p=0.000; no_judge 38/27 p=0.215; smallest Holm-adjusted value 0.001
-- strict (plausible in every execution): plausible=199
+- rule `first`: plausible=202, correct=175, pending=0; on the 50 re-executed bugs: plausible=17, correct=15; correct fixes against the reduced configurations (full-only/other-only, McNemar): no_semantic 35/28 p=0.450; binary_only 36/14 p=0.003; no_judge 37/30 p=0.464; smallest Holm-adjusted value 0.008
+- rule `last`: plausible=202, correct=175, pending=0; on the 50 re-executed bugs: plausible=17, correct=15; correct fixes against the reduced configurations (full-only/other-only, McNemar): no_semantic 35/28 p=0.450; binary_only 36/14 p=0.003; no_judge 37/30 p=0.464; smallest Holm-adjusted value 0.008
+- strict (plausible in every execution): plausible=202
 
 ## 15. Paired differences, with 95% confidence intervals
 
@@ -1221,20 +1135,23 @@ per pair: full / no_semantic 163/388; full / binary_only 147/388; full / no_judg
 | configuration | plausible | identical | equivalent | alternative | correct, kind not recorded | overfitting | identical or equivalent |
 |---|---|---|---|---|---|---|---|
 | full | 202 | 67 | 68 | 40 | 0 | 27 | 135 |
-| no_semantic | 202 | 0 | 5 | 2 | 161 | 34 | 5 |
+| no_semantic | 202 | 72 | 64 | 32 | 0 | 34 | 136 |
 | binary_only | 182 | 63 | 62 | 28 | 0 | 29 | 125 |
 | no_judge | 192 | 61 | 72 | 35 | 0 | 24 | 133 |
 | control | 186 | 69 | 63 | 28 | 0 | 26 | 132 |
 
-patch texts that carry two kinds of correct label (in a configuration and in a control pass): 5 (Chart_4: equivalent and identical; Chart_7: equivalent and identical; Chart_8: equivalent and identical; Math_50: alternative and equivalent; Math_90: alternative and equivalent)
+patch texts that carry two kinds of correct label (across the configurations and the control passes): 5 (Chart_4: equivalent in full, binary_only, no_judge and identical in no_semantic, control; Chart_7: equivalent in full, binary_only, no_judge and identical in no_semantic, control; Chart_8: equivalent in full, binary_only, no_judge and identical in no_semantic, control; Math_50: alternative in full, binary_only and equivalent in control; Math_90: alternative in full, no_judge and equivalent in control)
 
-Identical or equivalent patches only (alternative fixes not counted as correct), McNemar exact against `full`; configurations whose correct patches all carry a kind (left out: no_semantic, 161 without a kind):
+Identical or equivalent patches only (alternative fixes not counted as correct), McNemar exact against `full`; configurations whose correct patches all carry a kind:
 
 | comparison | full | other | full-only | other-only | p | p, texts with two kinds counted | p, not counted |
 |---|---|---|---|---|---|---|---|
+| full vs no_semantic | 135 | 136 | 23 | 24 | 1.0000 | 1.0000 | 1.0000 |
 | full vs binary_only | 135 | 125 | 27 | 17 | 0.1742 | 0.1352 | 0.1742 |
 | full vs no_judge | 135 | 133 | 30 | 28 | 0.8957 | 0.7914 | 0.8957 |
 | full vs control | 135 | 132 | 29 | 26 | 0.7877 | 0.5831 | 0.6835 |
+
+full minus no_semantic, by kind: identical -5, equivalent +4, alternative +8, all correct +7
 
 full minus binary_only, by kind: identical +4, equivalent +6, alternative +12, all correct +22
 
@@ -1242,8 +1159,11 @@ full minus no_judge, by kind: identical +6, equivalent -4, alternative +5, all c
 
 Attempts 2 to 4 on the bugs whose first attempt is plausible in neither of the two configurations, identical or equivalent only:
 
+- full vs no_semantic: 217 bugs, 24 / 20, only first 14, only second 10, p=0.5413
 - full vs binary_only: 218 bugs, 23 / 16, only first 12, only second 5, p=0.1435
 - full vs no_judge: 221 bugs, 24 / 22, only first 12, only second 10, p=0.8318
+- no_semantic vs binary_only: 219 bugs, 26 / 18, only first 15, only second 7, p=0.1338
+- no_semantic vs no_judge: 222 bugs, 25 / 27, only first 13, only second 15, p=0.8506
 - binary_only vs no_judge: 227 bugs, 18 / 28, only first 6, only second 16, p=0.0525
 
 Plausible patches, which involve no label: McNemar exact against `full`, Holm over the three: no_semantic 31/31, p=1.0000, Holm 1.0000; binary_only 39/19, p=0.0119, Holm 0.0358; no_judge 39/29, p=0.2750, Holm 0.5500
@@ -1367,16 +1287,27 @@ A correct patch whose kind was not recorded takes the kind of the same patch tex
 | configuration | plausible | identical or equivalent | all correct | kind recorded | kind from the same text elsewhere | no kind anywhere |
 |---|---|---|---|---|---|---|
 | full | 202 | 135 to 137 | 175 | 175 | 0 | 0 |
-| no_semantic | 202 | 106 to 150 | 168 | 7 | 117 (identical 65, equivalent 39, alternative 16) | 44 |
+| no_semantic | 202 | 136 | 168 | 168 | 0 | 0 |
 | binary_only | 182 | 125 to 126 | 153 | 153 | 0 | 0 |
 | no_judge | 192 | 133 to 134 | 168 | 168 | 0 | 0 |
 | control | 186 | 131 to 132 | 160 | 160 | 0 | 0 |
 
 Identical or equivalent patches, McNemar exact against `full`, at the lower end of both ranges and at the upper end of both (a text is counted in the same way wherever it occurs):
 
-- full vs no_semantic: 135 against 106, 41/12, p=0.0001; 137 against 150, 21/34, p=0.1048
+- full vs no_semantic: 135 against 136, 23/24, p=1.0000; 137 against 136, 25/24, p=1.0000
 - full vs binary_only: 135 against 125, 27/17, p=0.1742; 137 against 126, 28/17, p=0.1352
 - full vs no_judge: 135 against 133, 30/28, p=0.8957; 137 against 134, 30/27, p=0.7914
 - full vs control: 135 against 131, 29/25, p=0.6835; 137 against 132, 29/24, p=0.5831
+
+## 21. Label sensitivity of the comparisons with `full` (tipping point)
+
+How many correct-label changes would alter the outcome of a comparison on the primary metric? A change moves one bug: a correct patch relabelled overfitting in the configuration ahead removes one of its discordant bugs, and an overfitting patch relabelled correct in the other configuration adds one of its own. Against the leader, the changes are placed to raise the p-value as fast as possible; Holm adjusts over the three comparisons with `full`, the other two kept as they are.
+
+- full vs no_semantic (35/28, not significant): the Holm-adjusted p falls below 0.05 after 11 changes placed in favour of `full`
+- full vs binary_only (36/14, significant after adjustment): Holm-adjusted p reaches 0.05 after 4 changes placed against `full` (6 if only correct labels of `full` change); unadjusted p reaches 0.05 after 7 changes placed against `full` (9 if only correct labels of `full` change)
+- full vs no_judge (37/30, not significant): the Holm-adjusted p falls below 0.05 after 11 changes placed in favour of `full`
+- kinds of the correct patches on the discordant bugs, full vs no_semantic: full-only 35 (identical 5, equivalent 14, alternative 16, no kind 0); no_semantic-only 28 (identical 6, equivalent 13, alternative 9, no kind 0)
+- kinds of the correct patches on the discordant bugs, full vs binary_only: full-only 36 (identical 6, equivalent 16, alternative 14, no kind 0); binary_only-only 14 (identical 5, equivalent 6, alternative 3, no kind 0)
+- kinds of the correct patches on the discordant bugs, full vs no_judge: full-only 37 (identical 8, equivalent 18, alternative 11, no kind 0); no_judge-only 30 (identical 6, equivalent 14, alternative 10, no kind 0)
 
 canonical per-bug tables written to `figures_out/canonical_<arm>.csv`
