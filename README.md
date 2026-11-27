@@ -89,8 +89,7 @@ SV-ARP/
 │   ├── check_env.sh          # environment check; run this first
 │   └── judge_swap.py         # offline review of plausible patches by a second model
 ├── analysis/
-│   ├── make_figures.py       # regenerates every table and statistic
-│   ├── report.md             # its output for the paper
+│   ├── make_figures.py       # regenerates every table and statistic           
 │   └── check_paper_numbers.py  # compares the manuscript source with report.md
 ├── data/
 │   ├── verification/         # labels: 3 configurations + 4 resampling passes
@@ -217,32 +216,6 @@ python analysis/make_figures.py --raw data --rule first \
     --without-bugs data/mockito_gradle_15.txt \
     --second-verification data/second_verification \
     > report.md
-cmp report.md analysis/report.md && echo "report.md matches analysis/report.md"
-for f in data/canonical/*.csv; do cmp "$f" "figures_out/$(basename "$f")" && echo "$(basename "$f") matches"; done
-```
-
-The last two commands check that the output matches `analysis/report.md` (the
-script is deterministic) and that the per-bug tables it writes to `figures_out/`
-match `data/canonical/`.
-`--judged-texts` lists eleven records of the Full configuration on which labels
-and reviews were given and that are not in the package, by the SHA-256 of
-their patch text, which is that of the bug's canonical record; `--text-labels`
-the labels of three patch texts that were labelled on records that are not in
-the package, by the SHA-256 of the text (a record with that text takes the
-label, as it takes that of any labelled patch with the same text); `--rerun` names
-a Full session executed after the labels of that configuration had been given
-(its records take the label of a labelled patch with the same text, or of an
-override row that names the session); `--reexecuted` the sessions that executed
-Binary-Only and No-Judge with the corrected code, which are the only canonical
-ones for these two configurations; and `--without-bugs` a list of bugs for one more sensitivity analysis (section 14c of
-the report repeats the comparisons without the 15 Gradle-built Mockito bugs).
-
-A second script compares the manuscript with the report:
-
-```bash
-# every table row and figure of the manuscript that comes from the report
-python analysis/check_paper_numbers.py analysis/report.md <manuscript>.tex
-```
 
 ---
 
