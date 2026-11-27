@@ -1,7 +1,5 @@
 configuration,bug_id,session,logged_at,limit,execution_canonical,execution_plausible,note
 full,Math_78,20261011_005033,2026-10-11 23:46:15,test 600 s,yes,no,one of four test runs
-no_semantic,Math_39,20261015_093532,2026-10-16 01:08:24,test 600 s,yes,no,first of two consecutive test runs
-no_semantic,Math_39,20261015_093532,2026-10-16 01:18:45,test 600 s,yes,no,second of two consecutive test runs
 binary_only,Math_56,20261017_013332,2026-10-18 01:01:32,test 600 s,no (execution made before the correction of the configuration),yes,a later attempt of the same execution passed
 binary_only,Math_78,20261017_013332,2026-10-18 02:25:55,test 600 s,no (execution made before the correction of the configuration),no,one of four test runs
 sample_t045a,Math_84,20261106_001716,2026-11-06 11:23:14,test 600 s,yes,no,single attempt of the control pass

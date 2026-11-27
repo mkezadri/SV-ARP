@@ -1,0 +1,389 @@
+bug_id,excluded,session,executions,verified_session,plausible,judge_verdict,accepted,semantic_label,label_source,correct,delivered_label,delivered_correct,iterations,plausible_iteration,total_tokens,estimated_usd,time_seconds,baseline_failing
+Chart_1,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443)",True,Correct (identical),True,1,0,57140,0.02,22.23,1
+Chart_2,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,493446,0.1727,278.58,2
+Chart_3,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t010)",True,Correct (equivalent),True,1,0,36810,0.0129,14.52,1
+Chart_4,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443)",True,Correct (identical),True,1,0,160946,0.0563,51.46,22
+Chart_5,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,139281,0.0487,198.52,1
+Chart_6,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),identical labelled patch (control pass sample_t045a),True,Correct (alternative),True,1,0,8726,0.0031,51.41,2
+Chart_7,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443)",True,Correct (identical),True,1,0,16245,0.0057,16.88,1
+Chart_8,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443)",True,Correct (identical),True,1,0,19157,0.0067,21.36,1
+Chart_9,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,29708,0.0104,18.21,1
+Chart_10,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,25758,0.009,122.42,1
+Chart_11,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443)",True,Correct (identical),True,1,0,19637,0.0069,75.09,1
+Chart_12,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443)",True,Correct (alternative),True,1,0,18155,0.0064,23.27,1
+Chart_13,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,106415,0.0372,252.93,1
+Chart_14,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,160942,0.0563,39.38,4
+Chart_15,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,587033,0.2055,245.44,1
+Chart_16,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,2,1,74601,0.0261,64.71,8
+Chart_17,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,29614,0.0104,43.49,1
+Chart_18,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,123080,0.0431,264.03,4
+Chart_19,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,104366,0.0365,30.96,2
+Chart_20,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,5746,0.002,26.82,1
+Chart_21,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),identical labelled patch (control pass sample_t045a),True,Correct (alternative),True,1,0,23054,0.0081,33.64,1
+Chart_22,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,76297,0.0267,88.28,6
+Chart_23,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),identical labelled patch (labelled on a record not in the data; --text-labels),True,Correct (equivalent),True,1,0,17524,0.0061,13.49,1
+Chart_24,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,6084,0.0021,12.81,1
+Chart_25,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,210851,0.0738,98.3,4
+Chart_26,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,40534,0.0142,29.33,22
+Closure_1,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,1,0,29323,0.0103,41.77,8
+Closure_2,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,403847,0.1413,622.18,1
+Closure_3,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,90652,0.0317,61.75,3
+Closure_4,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,70112,0.0245,464.0,3
+Closure_5,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a)",True,Correct (identical),True,1,0,14435,0.0051,35.19,1
+Closure_6,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,28784,0.0101,122.02,3
+Closure_7,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,identical labelled patch (control pass sample_t010),False,Overfitting,False,1,0,19628,0.0069,124.18,2
+Closure_8,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,18548,0.0065,36.09,1
+Closure_9,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,override (identical patch),False,Overfitting,False,1,0,8984,0.0031,28.11,1
+Closure_10,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,415501,0.1454,483.34,1
+Closure_11,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (binary_only, session 20261017_013332; kind from control pass sample_t010)",True,Correct (identical),True,1,0,56625,0.0198,122.7,2
+Closure_12,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,53248,0.0186,56.36,1
+Closure_13,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,33090,0.0116,152.39,1
+Closure_14,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,201812,0.0706,233.33,3
+Closure_15,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,79560,0.0278,110.3,1
+Closure_16,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,83974,0.0294,146.99,2
+Closure_17,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,304889,0.1067,434.18,1
+Closure_18,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,1,0,61602,0.0216,111.25,1
+Closure_19,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,99953,0.035,429.99,1
+Closure_20,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,241010,0.0844,124.44,1
+Closure_21,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,54067,0.0189,431.71,1
+Closure_22,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,60580,0.0212,435.12,1
+Closure_23,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,198626,0.0695,126.45,1
+Closure_24,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,73573,0.0258,97.49,1
+Closure_25,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,210047,0.0735,202.89,1
+Closure_26,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,60155,0.0211,422.76,7
+Closure_27,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,88053,0.0308,410.85,3
+Closure_28,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,30217,0.0106,125.79,2
+Closure_29,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,120102,0.042,138.37,5
+Closure_30,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,3,-1,78996,0.0276,78.61,3
+Closure_31,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,306163,0.1072,334.24,1
+Closure_32,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,315340,0.1104,102.63,4
+Closure_33,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,96777,0.0339,431.04,1
+Closure_34,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,320548,0.1122,364.97,1
+Closure_35,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,214109,0.0749,199.74,1
+Closure_36,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261110_104737)",True,Correct (identical),True,2,1,49602,0.0174,36.73,1
+Closure_37,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,304224,0.1065,443.65,1
+Closure_38,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),labelled after the re-execution,True,Correct (identical),True,3,2,35666,0.0125,256.53,1
+Closure_39,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,82859,0.029,426.73,2
+Closure_40,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,300084,0.105,147.73,2
+Closure_41,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,137476,0.0481,410.77,3
+Closure_42,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (binary_only, session 20261017_013332; kind from full, session 20261011_005033)",True,Correct (alternative),True,1,0,39660,0.0139,104.87,1
+Closure_43,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,402694,0.1409,423.61,2
+Closure_44,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,8151,0.0029,113.73,1
+Closure_45,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,150738,0.0528,107.8,1
+Closure_46,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,61195,0.0214,129.78,3
+Closure_47,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,164206,0.0575,322.26,16
+Closure_48,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,311707,0.1091,398.22,1
+Closure_49,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,93494,0.0327,186.97,66
+Closure_50,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,138053,0.0483,102.26,2
+Closure_51,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,7704,0.0027,82.88,1
+Closure_52,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (full, session 20261011_005033)",True,Correct (alternative),True,1,0,33074,0.0116,84.59,1
+Closure_53,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,3,2,76067,0.0266,131.93,1
+Closure_54,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,484098,0.1694,417.66,3
+Closure_55,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,86971,0.0304,39.59,1
+Closure_56,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,13730,0.0048,109.02,3
+Closure_57,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,11742,0.0041,95.15,1
+Closure_58,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t045a)",True,Correct (identical),True,1,0,9632,0.0034,26.33,1
+Closure_59,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,253064,0.0886,391.43,1
+Closure_60,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,396884,0.1389,381.16,2
+Closure_61,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,77844,0.0272,99.59,3
+Closure_62,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),identical labelled patch (control pass sample_t010),True,Correct (alternative),True,1,0,6265,0.0022,96.83,2
+Closure_64,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,248135,0.0868,354.06,1
+Closure_65,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (full, session 20261011_005033)",True,Correct (identical),True,1,0,32685,0.0114,107.66,1
+Closure_66,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,323641,0.1133,347.43,2
+Closure_67,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,102383,0.0358,68.48,1
+Closure_68,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,288644,0.101,208.7,1
+Closure_69,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,287219,0.1005,31.2,3
+Closure_70,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,54818,0.0192,88.68,5
+Closure_71,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,118958,0.0416,333.23,2
+Closure_72,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,3,-1,67111,0.0235,77.61,1
+Closure_73,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,32408,0.0113,67.15,1
+Closure_74,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,243792,0.0853,74.82,3
+Closure_75,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,179026,0.0627,160.43,1
+Closure_76,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,89898,0.0315,66.45,4
+Closure_77,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,1,0,31861,0.0112,65.52,1
+Closure_78,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,42256,0.0148,18.5,1
+Closure_79,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,225347,0.0789,310.86,5
+Closure_80,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,488368,0.1709,322.28,2
+Closure_81,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,278265,0.0974,241.1,1
+Closure_82,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,164806,0.0577,171.77,2
+Closure_83,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,108150,0.0379,58.81,1
+Closure_84,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,238491,0.0835,216.62,1
+Closure_85,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,64537,0.0226,78.97,2
+Closure_86,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,66097,0.0231,67.56,7
+Closure_87,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,159083,0.0557,62.42,1
+Closure_88,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,69239,0.0242,53.44,7
+Closure_89,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,2,-1,93266,0.0326,39.48,8
+Closure_90,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,209981,0.0735,208.39,2
+Closure_91,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,2,1,16864,0.0059,22.13,1
+Closure_92,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,27415,0.0096,17.82,1
+Closure_94,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,"identical labelled patch (no_judge, session 20261013_100040)",False,Overfitting,False,1,0,60975,0.0213,64.69,3
+Closure_95,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,45584,0.016,29.76,2
+Closure_96,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from control pass sample_t010)",True,Correct (identical),True,1,0,49923,0.0175,61.79,1
+Closure_97,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,4,3,157371,0.0551,44.74,1
+Closure_98,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,85482,0.0299,55.82,1
+Closure_99,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,37881,0.0133,38.06,3
+Closure_100,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,61790,0.0216,36.58,9
+Closure_101,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (identical),True,2,1,38531,0.0135,14.76,1
+Closure_102,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,15710,0.0055,16.94,1
+Closure_103,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,220588,0.0772,30.51,3
+Closure_104,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,77439,0.0271,156.65,1
+Closure_105,,20261120_091831,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,242472,0.0849,75.64,1
+Closure_106,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,276608,0.0968,111.66,4
+Closure_107,,20261120_091831,1,20261017_013332,True,needs_revision,False,Overfitting,labelled after the re-execution,False,,False,4,1,161105,0.0564,64.69,1
+Closure_108,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,108436,0.038,117.66,1
+Closure_109,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261011_005033)",True,Correct (alternative),True,1,0,64048,0.0224,83.26,2
+Closure_110,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,3,-1,208784,0.0731,271.5,2
+Closure_111,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,50958,0.0178,155.85,1
+Closure_112,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,242150,0.0848,177.57,2
+Closure_113,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,178095,0.0623,174.71,1
+Closure_114,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,333316,0.1167,121.58,1
+Closure_115,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,148791,0.0521,126.81,5
+Closure_116,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,212970,0.0745,219.89,8
+Closure_117,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,146249,0.0512,273.37,1
+Closure_118,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),labelled after the re-execution,True,Correct (identical),True,1,0,58467,0.0205,130.06,2
+Closure_119,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,37864,0.0133,44.11,1
+Closure_120,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,97886,0.0343,400.92,1
+Closure_121,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,119763,0.0419,95.15,1
+Closure_122,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,2,1,109962,0.0385,253.32,3
+Closure_123,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,35034,0.0123,105.75,1
+Closure_124,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,45024,0.0158,131.73,1
+Closure_125,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,343877,0.1204,391.51,1
+Closure_126,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),labelled after the re-execution,True,Correct (identical),True,2,0,30425,0.0106,53.48,2
+Closure_127,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (alternative),True,1,0,10398,0.0036,27.74,6
+Closure_128,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,176414,0.0617,305.96,1
+Closure_129,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,"identical labelled patch (no_judge, session 20261014_083544)",False,Overfitting,False,1,0,6788,0.0024,115.03,1
+Closure_130,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,"identical labelled patch (no_judge, session 20261014_083544)",False,Overfitting,False,1,0,30194,0.0106,30.99,1
+Closure_131,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,67699,0.0237,452.67,2
+Closure_132,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,254804,0.0892,162.55,1
+Closure_133,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,348327,0.1219,314.45,1
+Lang_1,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,219745,0.0769,45.98,1
+Lang_3,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,230991,0.0808,134.92,1
+Lang_4,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,"identical labelled patch (no_judge, session 20261014_083544)",False,Overfitting,False,1,0,3847,0.0013,9.6,1
+Lang_5,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,3,2,56910,0.0199,34.6,1
+Lang_6,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,39734,0.0139,88.01,1
+Lang_7,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,211873,0.0742,76.6,1
+Lang_8,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,32347,0.0113,53.05,2
+Lang_9,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,127003,0.0445,141.08,2
+Lang_10,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,128182,0.0449,232.07,2
+Lang_11,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,11554,0.004,10.81,1
+Lang_12,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,1,0,11774,0.0041,9.64,2
+Lang_13,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,53654,0.0188,166.14,1
+Lang_14,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,2,0,379047,0.1327,1549.25,1
+Lang_15,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,168625,0.059,334.82,2
+Lang_16,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,override (identical patch),False,Overfitting,False,1,0,41045,0.0144,11.35,1
+Lang_17,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (binary_only, session 20261017_013332; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,5668,0.002,11.06,1
+Lang_19,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,34987,0.0122,40.67,2
+Lang_20,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,76489,0.0268,7129.07,2
+Lang_21,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,158733,0.0556,21.89,1
+Lang_22,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,165600,0.058,39.93,2
+Lang_23,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,38169,0.0134,48.44,1
+Lang_24,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,42305,0.0148,11.37,1
+Lang_26,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,225855,0.079,49.77,1
+Lang_27,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (alternative),True,1,0,40970,0.0143,9.53,1
+Lang_28,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,3428,0.0012,30.4,1
+Lang_29,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,276842,0.0969,117.54,1
+Lang_30,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,72156,0.0253,6796.49,10
+Lang_31,,20261120_091831,1,20261017_013332,True,needs_revision,False,Overfitting,labelled after the re-execution,False,,False,4,0,70829,0.0248,6523.51,2
+Lang_32,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,171404,0.06,107.72,1
+Lang_33,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,33397,0.0117,46.11,1
+Lang_34,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,341210,0.1194,173.79,27
+Lang_35,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,763273,0.2671,276.27,1
+Lang_36,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,246723,0.0864,111.12,2
+Lang_37,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (equivalent),True,1,0,250402,0.0876,32.76,1
+Lang_38,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,223563,0.0782,78.9,1
+Lang_39,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,587850,0.2057,4548.88,1
+Lang_40,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,193413,0.0677,26.81,1
+Lang_41,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (alternative),True,1,0,33770,0.0118,15.27,2
+Lang_42,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,114468,0.0401,102.08,1
+Lang_43,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (full, session 20261011_005033)",True,Correct (equivalent),True,1,0,14797,0.0052,46.51,1
+Lang_44,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,110759,0.0388,62.34,1
+Lang_45,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (identical),True,1,0,22037,0.0077,13.12,1
+Lang_46,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,2,1,67307,0.0236,92.01,1
+Lang_47,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,72159,0.0253,12.38,2
+Lang_49,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,49053,0.0172,15.41,1
+Lang_50,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,45833,0.016,20.91,2
+Lang_51,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,4,3,169732,0.0594,77.23,1
+Lang_52,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,138170,0.0484,50.32,1
+Lang_53,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,190342,0.0666,69.01,1
+Lang_54,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,"identical labelled patch (binary_only, session 20261017_013332)",False,Overfitting,False,1,0,11358,0.004,13.71,1
+Lang_55,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,8872,0.0031,17.35,1
+Lang_56,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,253686,0.0888,105.26,1
+Lang_57,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (binary_only, session 20261017_013332; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,11480,0.004,12.91,11
+Lang_58,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (equivalent),True,1,0,45950,0.0161,15.52,1
+Lang_59,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,62550,0.0219,14.59,1
+Lang_60,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,2,0,105207,0.0368,47.36,1
+Lang_61,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,62870,0.022,15.03,2
+Lang_62,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,89334,0.0313,52.74,1
+Lang_63,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,4,0,109854,0.0384,107.66,1
+Lang_64,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,21685,0.0076,19.02,1
+Lang_65,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,179608,0.0629,111.04,1
+Math_1,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,263222,0.0921,137.37,2
+Math_2,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,80802,0.0283,51.6,1
+Math_3,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,48515,0.017,142.54,1
+Math_4,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,13797,0.0048,55.23,2
+Math_5,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,37553,0.0131,24.88,1
+Math_6,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,531601,0.1861,164.39,28
+Math_7,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,69610,0.0244,172.16,1
+Math_8,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,48395,0.0169,153.56,1
+Math_9,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,8279,0.0029,46.52,1
+Math_10,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,1,0,85282,0.0298,152.61,1
+Math_11,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,8237,0.0029,25.09,1
+Math_12,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,36816,0.0129,445.09,3
+Math_13,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,19159,0.0067,39.2,1
+Math_14,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,12849,0.0045,27.2,1
+Math_15,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,692241,0.2423,359.17,1
+Math_16,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,822425,0.2878,334.81,2
+Math_17,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,538592,0.1885,157.1,1
+Math_18,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,346891,0.1214,171.01,1
+Math_19,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,60918,0.0213,57.19,1
+Math_20,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,identical labelled patch (labelled on a record not in the data; --text-labels),False,Overfitting,False,1,0,43319,0.0152,24.13,1
+Math_21,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,48543,0.017,80.16,2
+Math_22,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,129311,0.0453,115.7,2
+Math_23,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,10741,0.0038,35.04,1
+Math_24,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,"identical labelled patch (no_judge, session 20261014_083544)",False,Overfitting,False,1,0,9261,0.0032,14.18,1
+Math_25,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),identical labelled patch (control pass sample_t045a),True,Correct (equivalent),True,1,0,14805,0.0052,13.21,1
+Math_26,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,132009,0.0462,65.79,1
+Math_27,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,19737,0.0069,40.9,1
+Math_28,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,32261,0.0113,27.89,1
+Math_29,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,134571,0.0471,95.45,3
+Math_30,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (alternative),True,1,0,9034,0.0032,24.51,1
+Math_31,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,1,0,11907,0.0042,19.91,2
+Math_32,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),identical labelled patch (control pass sample_t045b),True,Correct (identical),True,4,3,101701,0.0356,116.68,1
+Math_33,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,18756,0.0066,23.76,1
+Math_34,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,7371,0.0026,18.72,1
+Math_35,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,6023,0.0021,25.99,4
+Math_36,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,169913,0.0595,100.49,2
+Math_37,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,204012,0.0714,115.42,4
+Math_38,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,518759,0.1816,251.15,1
+Math_39,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,91057,0.0319,98.33,1
+Math_40,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,71442,0.025,67.41,1
+Math_41,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,20935,0.0073,20.17,1
+Math_42,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,101608,0.0356,88.78,1
+Math_43,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,39283,0.0137,28.99,6
+Math_44,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,76959,0.0269,428.28,1
+Math_45,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,8675,0.003,37.56,1
+Math_46,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,4,3,202818,0.071,85.36,2
+Math_47,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,251299,0.088,602.53,2
+Math_48,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (binary_only, session 20261017_013332; kind from full, session 20261011_005033)",True,Correct (identical),True,4,3,49715,0.0174,146.94,1
+Math_49,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,137014,0.048,83.53,1
+Math_50,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),"identical labelled patch (full, session 20261011_005033)",True,Correct (alternative),True,1,0,14728,0.0052,48.0,1
+Math_51,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,69134,0.0242,79.56,1
+Math_52,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,257242,0.09,68.9,1
+Math_53,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,33097,0.0116,16.92,1
+Math_54,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,330218,0.1156,143.69,1
+Math_55,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,105672,0.037,129.12,1
+Math_56,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),labelled after the re-execution,True,Correct (identical),True,2,1,21458,0.0075,624.26,1
+Math_57,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,10717,0.0038,14.9,1
+Math_58,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,66796,0.0234,95.18,1
+Math_59,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,2,1,344221,0.1205,258.34,1
+Math_60,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,8838,0.0031,16.66,1
+Math_61,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,7908,0.0028,15.03,1
+Math_62,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,45205,0.0158,76.75,1
+Math_63,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,"identical labelled patch (full, session 20261011_005033, accepted patch)",False,Overfitting,False,1,0,60960,0.0213,64.56,1
+Math_64,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,158343,0.0554,137.26,2
+Math_65,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,78727,0.0276,125.97,1
+Math_66,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,55334,0.0194,66.8,4
+Math_67,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,62081,0.0217,107.26,1
+Math_68,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,187868,0.0658,48.86,2
+Math_69,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,11101,0.0039,16.56,2
+Math_70,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,4282,0.0015,31.34,1
+Math_71,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,4,3,128992,0.0451,116.13,2
+Math_72,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,70812,0.0248,77.34,1
+Math_73,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,58727,0.0206,91.18,1
+Math_74,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,89960,0.0315,93.21,1
+Math_75,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,16222,0.0057,14.2,1
+Math_76,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,79500,0.0278,82.79,2
+Math_77,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,41719,0.0146,18.92,2
+Math_78,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,3,2,46591,0.0163,53.8,1
+Math_79,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,51274,0.0179,20.36,1
+Math_80,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,347261,0.1215,87.71,1
+Math_81,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,350671,0.1227,79.75,1
+Math_82,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (binary_only, session 20261017_013332; kind from full, session 20261011_005033)",True,Correct (identical),True,2,1,23129,0.0081,31.46,1
+Math_83,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,129904,0.0455,67.15,1
+Math_84,,20261120_091831,1,20261017_013332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,38483,0.0135,120.51,2
+Math_85,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),identical labelled patch (control pass sample_t045b),True,Correct (equivalent),True,1,0,9447,0.0033,14.16,1
+Math_86,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,70190,0.0246,67.47,2
+Math_87,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),identical labelled patch (control pass sample_t085),True,Correct (identical),True,1,0,16464,0.0058,14.95,1
+Math_88,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,100619,0.0352,148.5,1
+Math_89,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,80452,0.0282,148.69,1
+Math_90,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,105564,0.0369,87.1,1
+Math_91,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,17103,0.006,14.56,1
+Math_92,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,197139,0.069,71.07,1
+Math_93,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,180188,0.0631,98.72,1
+Math_94,,20261120_091831,1,20261017_013332,True,correct,True,Overfitting,override (identical patch),False,Overfitting,False,1,0,33692,0.0118,24.16,1
+Math_95,,20261120_091831,1,20261017_013332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,6733,0.0024,13.18,1
+Math_96,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,176545,0.0618,89.84,1
+Math_97,,20261120_091831,1,20261017_013332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,10138,0.0035,15.37,1
+Math_98,,20261120_091831,1,20261017_013332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,56926,0.0199,19.2,2
+Math_99,,20261120_091831,1,20261017_013332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,202233,0.0708,78.85,2
+Math_100,,20261120_091831,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,50589,0.0177,101.27,1
+Math_101,,20261120_091831,1,20261018_045332,True,correct,True,Correct (alternative),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t085)",True,Correct (alternative),True,1,0,16710,0.0058,21.25,2
+Math_102,,20261120_091831,1,20261018_045332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,1,0,14698,0.0051,20.54,6
+Math_103,,20261120_091831,1,20261018_045332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,6713,0.0023,18.45,1
+Math_104,,20261120_091831,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,65544,0.0229,128.4,1
+Math_105,,20261120_091831,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,16600,0.0058,17.74,1
+Math_106,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,3,2,30290,0.0106,47.93,1
+Mockito_1,,20261121_115528,1,,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,8724,0.0031,226.86,26
+Mockito_2,,20261121_115528,1,,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,2589,0.0009,140.84,3
+Mockito_3,,20261121_115528,1,,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,48318,0.0169,74.34,9
+Mockito_4,,20261121_115528,1,,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,165948,0.0581,836.76,4
+Mockito_5,,20261121_115528,1,,True,correct,True,Correct (identical),labelled after the re-execution,True,Correct (identical),True,1,0,5276,0.0018,136.04,1
+Mockito_6,,20261121_115528,1,,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,220330,0.0771,872.02,7
+Mockito_7,,20261121_115528,1,,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,100221,0.0351,568.28,1
+Mockito_8,,20261121_115528,1,,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,100509,0.0352,468.14,1
+Mockito_9,,20261123_171006,1,,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,2,1,9943,0.0035,182.94,3
+Mockito_10,,20261123_171006,1,,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,38248,0.0134,697.24,1
+Mockito_11,,20261121_115528,1,,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,1,0,2904,0.001,201.18,2
+Mockito_12,,20261121_115528,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (identical),True,1,0,3373,0.0012,42.52,10
+Mockito_13,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,36713,0.0128,32.77,1
+Mockito_14,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,76420,0.0267,166.28,1
+Mockito_15,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,22766,0.008,67.2,1
+Mockito_16,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,170249,0.0596,150.26,1
+Mockito_17,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,51792,0.0181,268.6,1
+Mockito_18,,20261121_115528,1,,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,5114,0.0018,291.01,1
+Mockito_19,,20261121_115528,1,,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,97337,0.0341,120.02,1
+Mockito_20,,20261121_115528,1,,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,33686,0.0118,929.7,8
+Mockito_21,,20261121_115528,1,,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,4,3,17450,0.0061,565.28,1
+Mockito_22,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261011_005033)",True,Correct (equivalent),True,1,0,2832,0.001,96.0,1
+Mockito_23,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,41035,0.0144,435.06,1
+Mockito_24,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),"identical labelled patch (full, session 20261011_005033)",True,Correct (equivalent),True,2,1,14931,0.0052,806.41,2
+Mockito_25,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,39282,0.0137,159.29,7
+Mockito_26,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,33843,0.0118,401.3,5
+Mockito_27,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,4530,0.0016,81.58,1
+Mockito_28,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,36100,0.0126,185.38,1
+Mockito_29,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,10992,0.0038,87.36,1
+Mockito_30,,20261121_115528,1,20261018_045332,True,correct,True,Correct (alternative),labelled after the re-execution,True,Correct (alternative),True,3,2,81753,0.0286,98.16,1
+Mockito_31,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),identical labelled patch (control pass sample_t045a),True,Correct (equivalent),True,1,0,3793,0.0013,70.67,1
+Mockito_32,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,30897,0.0108,35.0,1
+Mockito_33,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,13924,0.0049,75.69,2
+Mockito_34,,20261121_115528,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (binary_only, session 20261018_045332; kind from full, session 20261011_005033)",True,Correct (identical),True,1,0,4363,0.0015,64.36,2
+Mockito_35,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,108235,0.0379,218.92,4
+Mockito_36,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,17891,0.0063,93.58,2
+Mockito_37,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,27165,0.0095,78.52,2
+Mockito_38,,20261121_115528,1,20261018_045332,True,correct,True,Correct (alternative),"identical labelled patch (binary_only, session 20261018_045332; kind from full, session 20261012_084950)",True,Correct (alternative),True,1,0,2808,0.001,40.76,2
+Time_1,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,2,-1,51324,0.018,77.1,1
+Time_2,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,3,-1,78370,0.0274,117.95,1
+Time_3,,20261121_115528,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t010)",True,Correct (identical),True,1,0,43396,0.0152,28.45,5
+Time_4,,20261121_115528,1,20261018_045332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,2,1,83161,0.0291,55.34,1
+Time_5,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,134082,0.0469,60.7,3
+Time_6,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,206206,0.0722,112.13,5
+Time_7,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,161906,0.0567,125.52,2
+Time_8,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,211540,0.074,157.87,1
+Time_9,,20261121_115528,1,20261018_045332,True,correct,True,Overfitting,"identical labelled patch (binary_only, session 20261018_045332)",False,Overfitting,False,1,0,39736,0.0139,37.96,1
+Time_10,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,66795,0.0234,79.89,2
+Time_11,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,1,0,22977,0.008,21.87,1
+Time_12,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,482265,0.1688,138.17,8
+Time_13,,20261121_115528,1,20261018_045332,True,correct,True,Overfitting,"identical labelled patch (binary_only, session 20261018_045332)",False,Overfitting,False,1,0,50595,0.0177,25.27,1
+Time_14,,20261121_115528,1,20261018_045332,True,correct,True,Overfitting,labelled after the re-execution,False,Overfitting,False,3,2,53441,0.0187,111.06,8
+Time_15,,20261121_115528,1,20261018_045332,True,correct,True,Correct (identical),"identical labelled patch (no_judge, session 20261014_083544; kind from full, session 20261012_084950)",True,Correct (identical),True,1,0,11083,0.0039,36.16,1
+Time_16,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,169063,0.0592,104.73,7
+Time_17,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,260039,0.091,131.12,1
+Time_18,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),labelled after the re-execution,True,Correct (equivalent),True,2,1,94456,0.0331,69.45,1
+Time_19,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,232957,0.0815,156.51,1
+Time_20,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),"identical labelled patch (binary_only, session 20261018_045332; kind from control pass sample_t010)",True,Correct (equivalent),True,2,0,176238,0.0617,62.91,1
+Time_22,,20261121_115528,1,20261018_045332,False,incorrect,False,N/A (not plausible),n/a,False,,False,4,-1,105716,0.037,90.82,2
+Time_23,,20261121_115528,1,20261018_045332,True,correct,True,Correct (equivalent),"identical labelled patch (no_judge, session 20261014_083544; kind from control pass sample_t045a)",True,Correct (equivalent),True,1,0,39924,0.014,36.42,1
+Time_24,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,94962,0.0332,103.32,7
+Time_25,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,238320,0.0834,152.01,3
+Time_26,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,359846,0.1259,128.39,8
+Time_27,,20261121_115528,1,20261018_045332,False,needs_revision,False,N/A (not plausible),n/a,False,,False,4,-1,292593,0.1024,110.03,1

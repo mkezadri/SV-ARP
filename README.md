@@ -22,17 +22,16 @@ configuration, `gemini-3.5-flash-lite`, at most four tested candidates per bug.
 
 | Configuration | Plausible | Verified correct | Precision | McNemar p vs Full (Holm) |
 |---|---|---|---|---|
-| Full | 202 | 175 | 86.6% | |
-| No-Semantic (Judge reasoning withheld) | 202 | 168 | 83.2% | 0.45 (0.90) |
-| Binary-Only (test output replaced by FAIL) | 182 | 153 | 84.1% | 0.003 (0.008) |
-| No-Judge | 192 | 168 | 87.5% | 0.46 (0.90) |
-| Resample-4 (four independent single attempts) | 186 | 160 | 86.0% | 0.086 |
+| Full | 202 | 173 | 85.6% | |
+| Binary-Only (test output replaced by FAIL) | 182 | 151 | 83.0% | 0.003 (0.005) |
+| No-Judge | 192 | 167 | 87.0% | 0.54 (0.54) |
+| Resample-4 (four independent single attempts) | 186 | 159 | 85.5% | 0.11 |
 
 Per project, Full configuration (correct / plausible):
 
 | Chart | Closure | Lang | Math | Mockito | Time | Total |
 |---|---|---|---|---|---|---|
-| 18/19 | 39/46 | 32/37 | 54/63 | 21/24 | 11/13 | **175/202** |
+| 18/19 | 39/46 | 32/37 | 52/63 | 21/24 | 11/13 | **173/202** |
 
 What the measurements say:
 
@@ -40,21 +39,21 @@ What the measurements say:
 - One difference survives correction for multiple comparisons: when the Repair
   Agent receives the Judge's review but not the test output (Binary-Only), the
   loop loses 22 correct fixes. The 22 include a surplus of 12 alternative fixes
-  (40 against 28): counting only patches identical or equivalent to the
+  (38 against 26): counting only patches identical or equivalent to the
   developer fix (135 against 125), the difference is not significant, while
   the plausible count, which involves no label, shows it as well (202 against
   182).
-- Removing the Judge costs 7 correct fixes (95% confidence interval -9 to
-  +23), a difference the experiment does not establish (the identical first
-  attempts of the four configurations differ by up to 13), at 53% of the cost.
+- Removing the Judge costs 6 correct fixes (95% confidence interval -10 to
+  +22), a difference the experiment does not establish (the identical first
+  attempts of the three configurations differ by up to 11), at 53% of the cost.
   Its acceptance gate is nominal: it declined one test-passing candidate in
   202.
 - Four independent single attempts come within 8 correct fixes of the loop
-  without the Judge and within 15 of the full system, with half the tokens of
+  without the Judge and within 14 of the full system, with half the tokens of
   the latter; neither difference is significant. At two, three and four
   candidates the loop without the Judge is ahead of the same number of
-  independent attempts (151, 161 and 168 correct fixes against 142, 149 and
-  160) at nearly the same cost.
+  independent attempts (150, 160 and 167 correct fixes against 141, 148 and
+  159) at nearly the same cost.
 - `gemini-3.5-flash-lite` ignores the temperature, top-p and top-k of a
   request (provider documentation), and the records agree: two runs give the
   same first candidate for about 40% of the bugs whatever temperatures they
@@ -63,8 +62,8 @@ What the measurements say:
   thinking level, minimal.
 - Without the developer fix, on the 194 patches that both judged, agreement
   with the labels beyond chance is not established for Gemini 3.5 Flash Lite
-  reviewing offline (kappa 0.11); Claude Sonnet 5.5 catches 13 of 26
-  overfitting patches while vetoing 9 of 168 correct ones (kappa 0.48).
+  reviewing offline (kappa 0.16); Claude Sonnet 5.5 catches 14 of 28
+  overfitting patches while vetoing 8 of 166 correct ones (kappa 0.50).
   Gemini judged all 202 plausible patches, Claude Sonnet 5.5 194 of them.
 
 Cost, from the logged token counts at the provider's list prices ($0.30 per
@@ -94,23 +93,24 @@ SV-ARP/
 │   ├── report.md             # its output for the paper
 │   └── check_paper_numbers.py  # compares the manuscript source with report.md
 ├── data/
-│   ├── verification/         # labels: 4 configurations + 4 resampling passes
-│   ├── second_verification/  # second verification of the 4 configurations
+│   ├── verification/         # labels: 3 configurations + 4 resampling passes
+│   ├── second_verification/  # second verification of the 3 configurations
 │   ├── overrides_all.csv     # label overrides and later labels, with their reasons
 │   ├── judged_texts.csv      # records judged but not in the package, by the SHA-256 of their patch text
+│   ├── text_labels.csv       # labels of patch texts labelled on records not in the package, by the SHA-256 of the text
 │   ├── harness_false_negatives.csv   # candidates logged as failing that pass (sensitivity only)
 │   ├── time_limit_events.csv # test runs and baseline builds cut by their time limit, from the run logs
 │   ├── lost_requests.csv     # requests to the model that failed after all retries, from the run logs
 │   ├── offline_review/       # verdicts of the offline reviewers
 │   ├── canonical/            # one row per bug and configuration
-│   └── results/              # raw result files, zipped (8 archives)
+│   └── results/              # raw result files, zipped (7 archives)
 ├── replication/replication_guide.txt
 ├── .env.example
 └── requirements.txt
 ```
 
 The raw result files (one record per bug and execution, with every candidate
-patch, verdict, requested temperature and token count; about 520 MB unpacked)
+patch, verdict, requested temperature and token count; about 460 MB unpacked)
 are in `data/results/`, one zip per configuration and per resampling pass.
 
 ---
@@ -165,7 +165,7 @@ python src/run_benchmark.py --bug Lang_33
 # the benchmark, resumable
 python src/run_benchmark.py --bug-list benchmark/versions.txt --resume
 
-# all four configurations, unattended (survives network drops and restarts)
+# all three configurations, unattended (survives network drops and restarts)
 nohup ./run_all.sh > supervisor.log 2>&1 &
 ./run_all.sh --status
 touch STOP                  # the supervisor exits when the current pass over the bug list ends
@@ -181,7 +181,7 @@ Configuration is by environment variable:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `APR_ABLATION` | `full` | `full`, `no_semantic`, `binary_only`, `no_judge` |
+| `APR_ABLATION` | `full` | `full`, `binary_only`, `no_judge` |
 | `APR_REPAIR_MODEL`, `APR_JUDGE_MODEL` | `gemini-3.5-flash-lite` | model identifiers |
 | `APR_TEMPERATURE` | `0.1` | initial temperature requested (`gemini-3.5-flash-lite` ignores it) |
 | `APR_MAX_ITERATIONS` | `4` | tested candidates per bug |
@@ -210,25 +210,31 @@ python analysis/make_figures.py --raw data --rule first \
     --judge-swap data/offline_review/judge_swap_claude_sonnet_5_5_semantic.csv \
     --false-negatives data/harness_false_negatives.csv \
     --judged-texts data/judged_texts.csv \
+    --text-labels data/text_labels.csv \
     --rerun full=20261110_104737 \
     --reexecuted binary_only=20261120_091831+20261121_115528+20261123_171006 \
     --reexecuted no_judge=20261121_173559+20261123_173421 \
     --without-bugs data/mockito_gradle_15.txt \
     --second-verification data/second_verification \
     > report.md
+cmp report.md analysis/report.md && echo "report.md matches analysis/report.md"
+for f in data/canonical/*.csv; do cmp "$f" "figures_out/$(basename "$f")" && echo "$(basename "$f") matches"; done
 ```
 
-The output should match `analysis/report.md` (the script is deterministic), and
-the per-bug tables it writes to `figures_out/` should match `data/canonical/`.
+The last two commands check that the output matches `analysis/report.md` (the
+script is deterministic) and that the per-bug tables it writes to `figures_out/`
+match `data/canonical/`.
 `--judged-texts` lists eleven records of the Full configuration on which labels
 and reviews were given and that are not in the package, by the SHA-256 of
-their patch text, which is that of the bug's canonical record; `--rerun` names
+their patch text, which is that of the bug's canonical record; `--text-labels`
+the labels of three patch texts that were labelled on records that are not in
+the package, by the SHA-256 of the text (a record with that text takes the
+label, as it takes that of any labelled patch with the same text); `--rerun` names
 a Full session executed after the labels of that configuration had been given
 (its records take the label of a labelled patch with the same text, or of an
 override row that names the session); `--reexecuted` the sessions that executed
 Binary-Only and No-Judge with the corrected code, which are the only canonical
-ones for these two configurations; and
-`--without-bugs` a list of bugs for one more sensitivity analysis (section 14c of
+ones for these two configurations; and `--without-bugs` a list of bugs for one more sensitivity analysis (section 14c of
 the report repeats the comparisons without the 15 Gradle-built Mockito bugs).
 
 A second script compares the manuscript with the report:

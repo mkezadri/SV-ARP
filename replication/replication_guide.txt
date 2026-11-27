@@ -111,7 +111,7 @@ For unattended runs use the supervisor, which restarts after network drops,
 hung API calls and reboots:
 
 ```bash
-nohup ./run_all.sh > supervisor.log 2>&1 &     # all four configurations
+nohup ./run_all.sh > supervisor.log 2>&1 &     # all three configurations
 ./run_all.sh --status
 touch STOP                                     # the supervisor exits when the current pass ends
 pkill -9 -f run_all.sh; pkill -f run_benchmark.py   # stop at once; --resume runs the interrupted bug again
@@ -131,7 +131,6 @@ Use a separate results directory per configuration: `--resume` matches on the
 bug id alone. `run_all.sh` does this for you (`results_arm_<name>`).
 
 ```bash
-./run_all.sh no_semantic      # Judge runs, its rationale and suggestions withheld
 ./run_all.sh binary_only      # test output replaced by "TEST RESULT: FAIL"
 ./run_all.sh no_judge         # no Judge; acceptance by the tests alone
 
@@ -158,29 +157,35 @@ python analysis/make_figures.py --raw data --rule first \
     --judge-swap data/offline_review/judge_swap_claude_sonnet_5_5_semantic.csv \
     --false-negatives data/harness_false_negatives.csv \
     --judged-texts data/judged_texts.csv \
+    --text-labels data/text_labels.csv \
     --rerun full=20261110_104737 \
     --reexecuted binary_only=20261120_091831+20261121_115528+20261123_171006 \
     --reexecuted no_judge=20261121_173559+20261123_173421 \
     --without-bugs data/mockito_gradle_15.txt \
     --second-verification data/second_verification \
     > report.md
+# with the published results, compare with the published outputs:
+cmp report.md analysis/report.md && echo "report.md matches analysis/report.md"
+for f in data/canonical/*.csv; do cmp "$f" "figures_out/$(basename "$f")" && echo "$(basename "$f") matches"; done
 ```
 
 The options from `--false-negatives` on add the sensitivity analyses and the
-tallies of the second verification. Four of them describe the published runs
+tallies of the second verification. Five of them describe the published runs
 and are to be omitted for your own: `--judged-texts` lists eleven records of
 the Full configuration on which labels and reviews were given and that are not
 in the package, by the SHA-256 of their patch text, which is that of the bug's
-canonical record; `--rerun` names a Full session executed after the labels of
+canonical record; `--text-labels` gives the labels of three patch texts that
+were labelled on records that are not in the package, by the SHA-256 of the
+text; `--rerun` names a Full session executed after the labels of
 that configuration had been given; `--reexecuted` the sessions that executed
 Binary-Only and No-Judge with the corrected code (the only canonical ones for
 these two configurations; the earlier sessions are kept for their labels and
-for the comparison of section 4f), and `--without-bugs` the 15 Gradle-built
-Mockito bugs, for the sensitivity analysis of section 14c.
+for the comparison of section 4f), and `--without-bugs` the 15
+Gradle-built Mockito bugs, for the sensitivity analysis of section 14c.
 
 With the published result files the output matches `analysis/report.md`:
-202 plausible and 175 verified-correct fixes for the Full configuration,
-202/168, 182/153 and 192/168 for the three reduced configurations, and 186/160
+202 plausible and 173 verified-correct fixes for the Full configuration,
+182/151 and 192/167 for the two reduced configurations, and 186/159
 for the resampling control. The per-bug tables written to `figures_out/` match
 `data/canonical/`. With your own result files the correctness labels
 apply only to patches whose text is identical to a labelled one; new patches

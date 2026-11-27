@@ -45,8 +45,9 @@ import argparse, csv, glob, hashlib, json, math, os, random, re, sys
 from collections import Counter, defaultdict, OrderedDict
 
 csv.field_size_limit(10**9)
-ARMS = ["full", "no_semantic", "binary_only", "no_judge"]
-RICHNESS = {"full": 3, "no_semantic": 2, "binary_only": 1, "no_judge": 0}
+ARMS = ["full", "binary_only", "no_judge"]
+NUMW = {1: "one", 2: "two", 3: "three", 4: "four"}
+RICHNESS = {"full": 2, "binary_only": 1, "no_judge": 0}
 PROJECTS = ["Chart", "Closure", "Lang", "Math", "Mockito", "Time"]
 
 
@@ -396,6 +397,13 @@ def _sha(t):
     return hashlib.sha256((t or "").encode("utf-8")).hexdigest()
 
 
+# --text-labels: labels given to a patch text on records that are not in the data, by the
+# SHA-256 of that text (as _patch_text normalises it); a record with that text takes the label
+_TEXT_LABELS = {}       # (bug, SHA-256) -> label
+_TEXT_LABELS_SEEN = set()
+TEXT_LABEL_SRC = "labelled on a record not in the data; --text-labels"
+
+
 def same_patch(entry, other_session):
     """True if the canonical execution's patch is textually identical to the
     patch of the execution in other_session (whitespace-normalised). A record of
@@ -454,6 +462,10 @@ def cochran_q(sets, items):
     df = k - 1
     if df == 3:
         p = math.erfc(math.sqrt(Q / 2)) + math.sqrt(2 * Q / math.pi) * math.exp(-Q / 2)
+    elif df == 2:
+        p = math.exp(-Q / 2)
+    elif df == 1:
+        p = math.erfc(math.sqrt(Q / 2))
     else:
         z = ((Q / df) ** (1 / 3) - (1 - 2 / (9 * df))) / math.sqrt(2 / (9 * df))
         p = 0.5 * math.erfc(z / math.sqrt(2))
@@ -540,6 +552,10 @@ def main():
                     help="CSV arm,bug_id,session,patch_sha256: records on which the verification file and its blind "
                          "passes, the second verification or an offline review judged and that are not in the data; "
                          "their judgments apply to a canonical record of the bug whose patch text has that SHA-256")
+    ap.add_argument("--text-labels", default=None, metavar="FILE",
+                    help="CSV bug_id,patch_sha256,semantic_verdict,note: labels given to a patch text on records "
+                         "that are not in the data, by the SHA-256 of the text; a record whose patch has that text "
+                         "takes the label, as it takes that of a labelled patch with the same text")
     ap.add_argument("--without-bugs", action="append", default=[], metavar="FILE",
                     help="a list of bugs (one per line): section 14c repeats the paired comparisons without them")
     ap.add_argument("--second-verification", default=None, metavar="DIR",
@@ -574,6 +590,9 @@ def main():
             b_, s_ = r["bug_id"].strip(), r["session"].strip()
             _JUDGED[(b_, s_)] = r["patch_sha256"].strip().lower()
             _JUDGED_SESSION[(r["arm"].strip(), b_)] = s_
+    if args.text_labels:
+        for r in csv.DictReader(open(args.text_labels, encoding="utf-8")):
+            _TEXT_LABELS[(r["bug_id"].strip(), r["patch_sha256"].strip().lower())] = r["semantic_verdict"].strip()
     conc = {}
     for spec in args.concurrent:
         a_, ss = spec.split("=", 1); conc[a_.strip()] = tuple(x.strip() for x in ss.split("+"))
@@ -773,6 +792,17 @@ def main():
                 learn(b, x["first_txt"], x["label"], "%s, session %s" % (arm, x["session"]))
                 if x["delivered_differs"]:
                     learn(b, x["final_txt"], x["delivered_label"], "%s, session %s, accepted patch" % (arm, x["session"]))
+    # patch texts labelled on records that are not in the data (--text-labels)
+    for arm in ARMS:
+        for b in bugs:
+            x = rec[arm][b]
+            if x["excluded"]:
+                continue
+            for t_ in (x["first_txt"], x["final_txt"]):
+                lab_ = _TEXT_LABELS.get((b, _sha(t_))) if t_ else None
+                if lab_:
+                    learn(b, t_, lab_, TEXT_LABEL_SRC)
+                    _TEXT_LABELS_SEEN.add((b, _sha(t_)))
     for d in (args.samples or sorted(glob.glob(os.path.join(args.raw, "results_arm_sample_*")))):
         name = os.path.basename(d.rstrip("/")).replace("results_arm_", "")
         per_s = defaultdict(list)
@@ -869,7 +899,7 @@ def main():
     P(f"- excluded per arm: " + ", ".join(f"{a}={len(excl[a])}" for a in ARMS)
       + ("  (identical set in every arm)" if same else "  **(sets differ between arms!)**"))
     evaluable = [b for b in bugs if all(not rec[a][b]["excluded"] for a in ARMS)]
-    P(f"- evaluable in all four arms (the paired set): **{len(evaluable)}**")
+    P(f"- evaluable in all {NUMW[len(ARMS)]} arms (the paired set): **{len(evaluable)}**")
     for arm in ARMS:
         if excl[arm]:
             byreason = defaultdict(list)
@@ -972,6 +1002,12 @@ def main():
             w = csv.writer(fh); w.writerow(["arm", "bug_id", "session", "attempt", "needed", "patch"]); w.writerows(todo_rows)
         P(f"re-executed records that still need a label or the kind of a correct patch: {len(todo_rows)} "
           f"({', '.join('%s %s' % (t[1], '[' + t[4] + ']') for t in todo_rows) or 'none'}); see `{args.outdir}/rerun_labels_todo.csv`\n")
+        if _TEXT_LABELS:
+            tl_used = [f"{a} {b}" for a in ARMS for b in bugs if not rec[a][b]["excluded"] and TEXT_LABEL_SRC in rec[a][b]["label_src"]]
+            tl_unused = sorted(b for b, h in _TEXT_LABELS if (b, h) not in _TEXT_LABELS_SEEN)
+            P(f"patch texts labelled on records that are not in the data (--text-labels): {len(_TEXT_LABELS)}; records that take "
+              f"such a label: {len(tl_used)} ({', '.join(tl_used) or 'none'})"
+              + (f"; **rows that match no record: {', '.join(tl_unused)}**" if tl_unused else "") + "\n")
 
     # ── 2c. attempts that received no model output ─────────────────────────
     P("## 2c. Repair attempts that received no model output\n")
@@ -1063,12 +1099,12 @@ def main():
     conflicts = sorted({k[0] for k, v in recurring.items() if len({is_correct_label(l) for _, l in v}) > 1})
     P(f"- plausible records: {sum(len(v) for v in groups.values())}; distinct patch texts: {len(groups)}; "
       f"texts recurring in two or more configurations: {len(recurring)} ({sum(len(v) for v in recurring.values())} records); "
-      f"texts produced by all four: {sum(1 for v in recurring.values() if len(v) == 4)}")
+      f"texts produced by all {NUMW[len(ARMS)]}: {sum(1 for v in recurring.values() if len(v) == len(ARMS))}")
     P(f"- recurring texts whose final labels differ between configurations: {', '.join(conflicts) or 'none'}\n")
 
     # ── 4. tests ───────────────────────────────────────────────────────────
     P("## 4. Statistical comparison (paired on bug identity)\n")
-    P("McNemar exact test against `full`; p two-sided, p1 one-sided (full > arm), Holm over the three correct-fix comparisons:\n")
+    P(f"McNemar exact test against `full`; p two-sided, p1 one-sided (full > arm), Holm over the {NUMW[len(ARMS) - 1]} correct-fix comparisons:\n")
     P("| arm | correct: full-only | arm-only | discordant | p | p1 | Holm p | plausible: full-only | arm-only | discordant | p | delivered correct: full-only | arm-only | p |")
     P("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     rows4 = []
@@ -1081,26 +1117,24 @@ def main():
     for (arm, x, y, n, p, x2, y2, n2, p2, x3, y3, p3), h in zip(rows4, hp):
         P(f"| {arm} | {x} | {y} | {n} | {p:.4f} | {p/2:.4f} | {h:.4f} | {x2} | {y2} | {n2} | {p2:.4f} | {x3} | {y3} | {p3:.4f} |")
     P("\nPairwise among ablations (correct):\n")
-    for a, b in (("no_semantic", "binary_only"), ("binary_only", "no_judge"), ("no_semantic", "no_judge")):
+    for a, b in [("binary_only", "no_judge")]:
         x, y, n, p = mcnemar_exact(S_co[a], S_co[b])
         P(f"- {a} vs {b}: {a}-only={x}, {b}-only={y}, p={p:.4f}")
     Q, pq = cochran_q([S_co[a] for a in ARMS], evaluable)
-    P(f"\nCochran's Q across the four arms (correct): Q={Q:.2f}, df=3, p={pq:.4f}")
-    P("(no ordered-trend test: with three nested arms the Page statistic reduces to the one-sided "
-      "full-vs-no_judge comparison, and the four-arm orderings are not implied by prompt-content inclusion)")
+    P(f"\nCochran's Q across the {NUMW[len(ARMS)]} arms (correct): Q={Q:.2f}, df={len(ARMS) - 1}, p={pq:.4f}")
     n_nj = mcnemar_exact(S_co["full"], S_co["no_judge"])[2]
     d_obs = abs(len(S_co["full"]) - len(S_co["no_judge"]))
     P(f"\nPower of the exact McNemar test (two-sided, alpha 0.05), conditional on the {n_nj} discordant pairs of "
       f"full vs no_judge: {mcnemar_power(n_nj, 20):.2f} for a true difference of 20 correct fixes, "
       f"{mcnemar_power(n_nj, d_obs):.2f} for a difference of {d_obs}, the one observed")
     L = Counter(sum(1 for a in ARMS if b in S_co[a]) for b in evaluable)
-    P(f"\nBugs fixed by k of 4 arms: " + ", ".join(f"k={k}: {L[k]}" for k in range(5))
-      + f" → outcome depends on the arm for {sum(L[k] for k in (1,2,3))} bugs\n")
+    P(f"\nBugs fixed by k of {len(ARMS)} arms: " + ", ".join(f"k={k}: {L[k]}" for k in range(len(ARMS) + 1))
+      + f" → outcome depends on the arm for {sum(L[k] for k in range(1, len(ARMS)))} bugs\n")
 
     # ── 4b. iteration-1 replication ────────────────────────────────────────
-    P("## 4b. First attempts are four replications of the same procedure\n")
+    P(f"## 4b. First attempts are {NUMW[len(ARMS)]} replications of the same procedure\n")
     P("The first-attempt prompt is identical in every arm (feedback exists only after a failure), "
-      "so iteration-1 outcomes replicate one stochastic procedure four times.\n")
+      f"so iteration-1 outcomes replicate one stochastic procedure {NUMW[len(ARMS)]} times.\n")
     P("| arm | iter-1 plausible | iter-1 correct | gained at iterations 2-4: plausible | correct | bugs without a first-attempt plausible | later plausible among them |")
     P("|---|---|---|---|---|---|---|")
     I_pl = {}; I_co = {}
@@ -1124,7 +1158,7 @@ def main():
                 proxy_pl.add(b)
                 if b in I_co[arm]: proxy_co.add(b)
                 break
-    P(f"\nFour first attempts combined (proxy for best-of-4 resampling at the first-attempt temperature): "
+    P(f"\n{NUMW[len(ARMS)].capitalize()} first attempts combined (proxy for best-of-{len(ARMS)} resampling at the first-attempt temperature): "
       f"union plausible={len(U_pl)}, union correct={len(U_co)}; first-plausible-wins plausible={len(proxy_pl)}, correct={len(proxy_co)}\n")
     P("| arm (full loop) | vs first-plausible-wins proxy: plausible full-only/proxy-only, p | correct, p | vs union correct, p |")
     P("|---|---|---|---|")
@@ -1228,7 +1262,7 @@ def main():
         if pending_rows:
             with open(os.path.join(args.outdir, "pending_sample_labels.csv"), "w", newline="", encoding="utf-8") as fh:
                 w = csv.writer(fh); w.writerow(["sample", "bug_id", "patch"]); w.writerows(pending_rows)
-            P(f"\n{len(pending_rows)} sample patches have no label yet (no textually identical labelled patch in the four arms): "
+            P(f"\n{len(pending_rows)} sample patches have no label yet (no textually identical labelled patch in the configurations): "
               f"see `{args.outdir}/pending_sample_labels.csv`; add rows with arm=<sample name> to --overrides.")
         P("\nBest-of-k in temperature order (first plausible sample wins):\n")
         P("| k | samples | plausible | correct | pending | vs full: plausible full-only/ctrl-only, p | correct, p | vs no_judge: plausible, p | correct, p |")
@@ -1303,7 +1337,7 @@ def main():
 
     # ── 4d. identical candidate texts, recorded outcomes ───────────────────
     P("## 4d. Candidates with the same text: are the recorded test outcomes the same?\n")
-    P("Every tested candidate of every completed execution (all sessions of the four configurations and the control passes"
+    P(f"Every tested candidate of every completed execution (all sessions of the {NUMW[len(ARMS)]} configurations and the control passes"
       + (", the sessions made before the correction of " + " and ".join(a_ for a_ in ARMS if a_ in reexec) + " included" if reexec else "")
       + "), compared by its complete text (Java token sequence).\n")
     conc = {}
@@ -1836,7 +1870,7 @@ def main():
         P(f"| {arm} | {gen_stats[arm]['steps']} | {gen_stats[arm]['calls']} | {tk:,} | ${us:.2f} | ${us/len(xs):.4f} | "
           f"${_st.median(x['usd'] for x in xs):.4f} | ${max(x['usd'] for x in xs):.4f} | ${us/max(len(S_co[arm]),1):.4f} | {sc/len(xs):.0f} | {sc/3600:.1f} | "
           f"{sum(acc)/len(acc) if acc else 0:.0f} | {sum(npl)/len(npl) if npl else 0:.0f} |")
-    P(f"\nfour configurations together: ${g_us:.2f}, {g_h:.1f} machine-hours")
+    P(f"\n{NUMW[len(ARMS)]} configurations together: ${g_us:.2f}, {g_h:.1f} machine-hours")
     for nm, sel in (("found at the first attempt", lambda x: x["plausible_iteration"] == 0), ("found after iteration", lambda x: x["plausible_iteration"] > 0)):
         xs = [rec["full"][b] for b in S_pl["full"] if sel(rec["full"][b])]
         P(f"full arm, plausible patches {nm}: n={len(xs)}, median tokens {_st.median(x['tokens'] for x in xs):,.0f}, "
@@ -2003,7 +2037,7 @@ def main():
             notpl = [b for b in evaluable if b in v2 and b not in lp and (v2[b].get("Verified plausible") or "").strip().lower().startswith("yes")]
             if notpl:
                 P(f"  - logged as failing, passing when re-executed: {', '.join(sorted(notpl, key=order_key))}")
-        P(f"\ncanonical plausible patches of the four configurations whose text the second verification reviewed: {tot_cov} of {sum(len(S_pl[a]) for a in ARMS)}\n")
+        P(f"\ncanonical plausible patches of the {NUMW[len(ARMS)]} configurations whose text the second verification reviewed: {tot_cov} of {sum(len(S_pl[a]) for a in ARMS)}\n")
 
     # ── 10. judge pilot ────────────────────────────────────────────────────
     if args.judge_swap:
@@ -2051,7 +2085,7 @@ def main():
             missing = sorted(set(gt) - set(by_bug), key=order_key)
             kp = [(m, h) for _, m, h in scored]; lo, hi = bootstrap_kappa(kp)
             P(f"| {model} | {len(scored)} | {vet} | {caught}/{len(bad)} | {fv}/{len(good)} | "
-              f"{caught}/{vet if vet else 1} | {kappa(kp):.3f} [{lo:.2f}, {hi:.2f}] | "
+              f"{caught}/{vet if vet else 1} | {kappa(kp):.3f} [{lo:.3f}, {hi:.3f}] | "
               f"{len(notcanon)} ({', '.join(notcanon)}) | {len(missing)} ({', '.join(missing)}) |")
             pilot10.append((model, scored))
             vset = {b for b, m, _h in scored if m == "bad"}; cset = {b for b, m, h in scored if m == "bad" and h == "bad"}
@@ -2126,7 +2160,7 @@ def main():
             for model, sc in pilot10:
                 kp10 = [(m, h) for b, m, h in sc if b in common10]
                 lo10, hi10 = bootstrap_kappa(kp10)
-                P(f"- {model}: {len(kp10)} patches, κ {kappa(kp10):.3f} [{lo10:.2f}, {hi10:.2f}]")
+                P(f"- {model}: {len(kp10)} patches, κ {kappa(kp10):.3f} [{lo10:.3f}, {hi10:.3f}]")
             P("\nTokens of each offline review, as its file records them (every row of the file, one per patch text judged):\n")
             for path in args.judge_swap:
                 rows10 = list(csv.DictReader(open(path, encoding="utf-8", errors="replace")))
@@ -2214,14 +2248,12 @@ def main():
         drop_ = {l.strip() for l in open(path_) if l.strip()}
         keep_ = [b for b in evaluable if b not in drop_]
         P(f"## 14c. Sensitivity: without the {len(drop_ & set(evaluable))} bugs of `{os.path.basename(path_)}`\n")
-        P(f"Paired set restricted to the other {len(keep_)} bugs; McNemar exact against `full`, Holm over the three correct-fix comparisons.\n")
+        P(f"Paired set restricted to the other {len(keep_)} bugs; McNemar exact against `full`, Holm over the {NUMW[len(ARMS) - 1]} correct-fix comparisons.\n")
         P("| arm | plausible | correct | correct: full-only/arm-only | p | Holm p | plausible: full-only/arm-only | p |")
         P("|---|---|---|---|---|---|---|---|")
         ks = set(keep_)
         tests_ = {a: mcnemar_exact(S_co["full"] & ks, S_co[a] & ks) for a in ARMS if a != "full"}
-        order_ = sorted(tests_, key=lambda a: tests_[a][3]); run_ = 0.0; holm_ = {}
-        for rank_, a in enumerate(order_):
-            run_ = max(run_, min(1.0, (len(order_) - rank_) * tests_[a][3])); holm_[a] = run_
+        holm_ = dict(zip(tests_, holm([tests_[a][3] for a in tests_])))
         P(f"| full | {len(S_pl['full'] & ks)} | {len(S_co['full'] & ks)} | | | | | |")
         for a in ARMS:
             if a == "full":
@@ -2242,7 +2274,7 @@ def main():
     for a_, both in conc_bugs.items():
         P(f"## 14b. Sensitivity: without the {len(both)} bugs that two concurrent `{a_}` sessions executed\n")
         sub = [b for b in evaluable if b not in set(both)]
-        P(f"Paired set restricted to the other {len(sub)} bugs; McNemar exact against `full`, Holm over the three correct-fix comparisons.\n")
+        P(f"Paired set restricted to the other {len(sub)} bugs; McNemar exact against `full`, Holm over the {NUMW[len(ARMS) - 1]} correct-fix comparisons.\n")
         P("| arm | plausible | correct | correct: full-only/arm-only | p | p1 | Holm p | plausible: full-only/arm-only | p |")
         P("|---|---|---|---|---|---|---|---|---|")
         subs = set(sub); rows_s = []
@@ -2461,7 +2493,7 @@ def main():
         P(f"- {a} vs {b_}: {len(sub)} bugs, {len(sa)} / {len(sb)}, only first {x}, only second {y}, p={p:.4f}")
     tests17 = [(a,) + mcnemar_exact(S_pl["full"], S_pl[a]) for a in ARMS[1:]]
     h17 = holm([t[4] for t in tests17])
-    P("\nPlausible patches, which involve no label: McNemar exact against `full`, Holm over the three: "
+    P(f"\nPlausible patches, which involve no label: McNemar exact against `full`, Holm over the {NUMW[len(ARMS) - 1]}: "
       + "; ".join(f"{a} {x}/{y}, p={p:.4f}, Holm {h:.4f}" for (a, x, y, n, p), h in zip(tests17, h17)) + "\n")
 
     # ── 18. cost at the provider's list prices ─────────────────────────────
@@ -2529,9 +2561,9 @@ def main():
         pl_, co_ = out18[nm]
         P(f"| {nm} | {rp + jp:,} | {ro + jo:,} | {100*(ro + jo)/max(rp + ro + jp + jo, 1):.1f}% | ${us:.2f} | ${_usd18(rp, ro):.2f} | ${_usd18(jp, jo):.2f} | "
           f"{100*_usd18(jp, jo)/max(us, 1e-12):.1f}% | ${us/len(evaluable):.4f} | ${us/max(pl_, 1):.4f} | ${us/max(co_, 1):.4f} | ${flat18[nm]:.2f} |")
-    P(f"\nsteps with a token record (the four configurations and the control passes): {steps18:,}; "
+    P(f"\nsteps with a token record (the {NUMW[len(ARMS)]} configurations and the control passes): {steps18:,}; "
       f"steps whose logged total is not the sum of prompt and output tokens: {odd18}")
-    P(f"four configurations together: ${sum(usd18[a] for a in ARMS):.2f}")
+    P(f"{NUMW[len(ARMS)]} configurations together: ${sum(usd18[a] for a in ARMS):.2f}")
     bug18 = {a: {b: _usd18(*(lambda s: (s[0] + s[2], s[1] + s[3]))(_split18(rec[a][b]["row"]))) for b in evaluable} for a in ARMS}
     for a in ARMS:
         v = list(bug18[a].values())
@@ -2701,8 +2733,8 @@ def main():
     P("How many correct-label changes would alter the outcome of a comparison on the primary metric? A change moves one "
       "bug: a correct patch relabelled overfitting in the configuration ahead removes one of its discordant bugs, and an "
       "overfitting patch relabelled correct in the other configuration adds one of its own. Against the leader, the "
-      "changes are placed to raise the p-value as fast as possible; Holm adjusts over the three comparisons with `full`, "
-      "the other two kept as they are.\n")
+      "changes are placed to raise the p-value as fast as possible; Holm adjusts over the two comparisons with `full`, "
+      "the other kept as it is.\n")
     tests21 = {a: mcnemar_exact(S_co["full"], S_co[a]) for a in ARMS[1:]}
 
     def _holm21(a, x, y):

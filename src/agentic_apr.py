@@ -221,8 +221,6 @@ REQUIRE_TESTS_PASS_TO_ACCEPT = True
 #
 #   APR_ABLATION=full            all components active (default)
 #   APR_ABLATION=no_judge        no Judge: accept on the tests alone
-#   APR_ABLATION=no_semantic     the Judge runs and gates, but its rationale and
-#                                suggestions are withheld from the repair prompt
 #   APR_ABLATION=binary_only     the test output shown to the Repair Agent is
 #                                replaced by the line "TEST RESULT: FAIL"
 #   APR_ABLATION=no_test_fb      test output withheld from the repair prompt
@@ -234,7 +232,7 @@ REQUIRE_TESTS_PASS_TO_ACCEPT = True
 ABLATION = os.environ.get("APR_ABLATION", "full").strip().lower()
 
 _VALID_ABLATIONS = {
-    "full", "no_judge", "no_semantic", "no_test_fb",
+    "full", "no_judge", "no_test_fb",
     "whole_file", "no_baseline", "single_iter",
     "binary_only",
 }
@@ -245,7 +243,6 @@ if ABLATION not in _VALID_ABLATIONS:
 
 ABL_SKIP_JUDGE       = ABLATION == "no_judge"
 ABL_BINARY_ONLY      = ABLATION == "binary_only"
-ABL_NO_SEMANTIC_FB   = ABLATION == "no_semantic"
 ABL_NO_TEST_FB       = ABLATION == "no_test_fb"
 ABL_NO_BASELINE_SUB  = ABLATION == "no_baseline"
 ABL_SINGLE_ITER      = ABLATION == "single_iter"
@@ -962,10 +959,6 @@ class RepairAgent(GeminiAgent):
             )
 
         history_block = ""
-        if ABL_NO_SEMANTIC_FB:
-            conversation_log = [
-                e for e in (conversation_log or []) if e.get("role") != "judge"
-            ]
         if conversation_log:
             lines = ["**Previous iteration attempts and judge feedback:**"]
             for entry in conversation_log:
@@ -993,11 +986,6 @@ class RepairAgent(GeminiAgent):
             test_output   = feedback.get("test_output", "")[:6000]
             diff_text     = feedback.get("diff", "")
 
-            # no_semantic: the Judge still gates acceptance, but its reasoning
-            # is withheld; the Repair Agent sees only the verdict label.
-            if ABL_NO_SEMANTIC_FB:
-                judge_reason = "(withheld: no_semantic ablation)"
-                suggestions  = []
             if ABL_BINARY_ONLY:
                 # binary_only: the Repair Agent learns only that the tests
                 # still fail, with no detail. The diff of its own previous

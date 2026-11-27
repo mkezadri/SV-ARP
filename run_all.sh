@@ -2,7 +2,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Supervisor for long unattended SV-ARP runs.
 #
-#   ./run_all.sh                 # all four configurations, in order
+#   ./run_all.sh                 # all three configurations, in order
 #   ./run_all.sh full            # one configuration
 #   ./run_all.sh full no_judge   # a subset
 #   ./run_all.sh sample_t045a    # a single-attempt resampling pass at temperature
@@ -24,7 +24,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
 
-ALL_ARMS=(full no_semantic binary_only no_judge)
+ALL_ARMS=(full binary_only no_judge)
 
 STATUS_ONLY=0
 if [ "${1:-}" = "--status" ]; then
