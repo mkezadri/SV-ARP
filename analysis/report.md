@@ -64,10 +64,10 @@ Records that are never canonical:
   |---|---|---|---|---|
   | Chart_1 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
   | Chart_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
-  | Chart_4 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
+  | Chart_4 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
   | Chart_6 | not plausible | plausible at attempt 1 | Correct (alternative) | identical labelled patch (control pass sample_t045a) |
-  | Chart_7 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
-  | Chart_8 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
+  | Chart_7 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
+  | Chart_8 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
   | Chart_9 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | labelled after the re-execution |
   | Chart_10 | plausible at attempt 3, Correct | not plausible | N/A (not plausible) | n/a |
   | Chart_11 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
@@ -289,10 +289,10 @@ Records that are never canonical:
   |---|---|---|---|---|
   | Chart_1 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
   | Chart_3 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from no_semantic, session 20261015_093532) |
-  | Chart_4 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
+  | Chart_4 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
   | Chart_6 | plausible at attempt 2, Correct | plausible at attempt 1 | Correct (alternative) | identical labelled patch (control pass sample_t045a) |
-  | Chart_7 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
-  | Chart_8 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (equivalent) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
+  | Chart_7 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
+  | Chart_8 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
   | Chart_9 | plausible at attempt 1, Correct | plausible at attempt 2 | Correct (equivalent) | labelled after the re-execution |
   | Chart_10 | plausible at attempt 1, Correct | not plausible | N/A (not plausible) | n/a |
   | Chart_11 | plausible at attempt 1, Correct | plausible at attempt 1 | Correct (identical) | identical labelled patch (no_judge, session 20261013_100040; kind from full, session 20261010_140443) |
@@ -553,7 +553,7 @@ plausible = a test-passing candidate was found; accepted = the loop ended with a
 - `no_semantic`: Judge withheld the first plausible candidate and the loop delivered a different patch: Lang_47; plausible candidate found but no patch accepted: Math_49, Math_63, Math_92
 - `binary_only`: Judge withheld the first plausible candidate and the loop delivered a different patch: Closure_126, Lang_14, Lang_63, Time_20; plausible candidate found but no patch accepted: Closure_107, Lang_31
 
-full arm label split: {'Correct (alternative)': 40, 'Correct (equivalent)': 68, 'Correct (identical)': 67, 'Overfitting': 27}
+full arm label split: {'Correct (alternative)': 40, 'Correct (equivalent)': 65, 'Correct (identical)': 70, 'Overfitting': 27}
 
 ## 3b. Identical patch texts across configurations (same Java token sequence; complete multi-file patches)
 
@@ -957,74 +957,62 @@ Scored only on patches whose judged text is the canonical, labelled text; bugs j
 
 | model | judged on canonical text | vetoed | overfitting caught | correct wrongly vetoed | veto precision | κ vs labels [95% bootstrap CI] | excluded: other execution's text | not judged |
 |---|---|---|---|---|---|---|---|---|
-| deepseek_v4_flash_semantic | 184 | 20 | 4/25 | 16/159 | 4/20 | 0.065 [-0.09, 0.24] | 6 (Chart_16, Chart_23, Closure_5, Closure_7, Closure_8, Closure_12) | 12 (Closure_11, Closure_33, Lang_45, Mockito_1, Mockito_2, Mockito_4, Mockito_5, Mockito_9, Mockito_11, Mockito_17, Mockito_18, Mockito_21) |
-  - vetoed, overfitting: Closure_131, Lang_31, Math_8, Mockito_35
-  - vetoed, correct: Closure_6 [Correct (identical)], Closure_62 [Correct (alternative)], Closure_73 [Correct (identical)], Closure_78 [Correct (identical)], Closure_126 [Correct (equivalent)], Lang_49 [Correct (identical)], Lang_54 [Correct (identical)], Lang_58 [Correct (identical)], Math_31 [Correct (equivalent)], Math_45 [Correct (equivalent)], Math_46 [Correct (identical)], Math_50 [Correct (alternative)], Math_87 [Correct (equivalent)], Mockito_36 [Correct (equivalent)], Time_1 [Correct (alternative)], Time_3 [Correct (equivalent)]
-| gemini_3_5_flash_lite_semantic | 186 | 10 | 3/25 | 7/161 | 3/10 | 0.102 [-0.06, 0.28] | 6 (Chart_16, Chart_23, Closure_5, Closure_7, Closure_8, Closure_12) | 10 (Closure_11, Closure_33, Mockito_1, Mockito_2, Mockito_4, Mockito_5, Mockito_9, Mockito_11, Mockito_18, Mockito_21) |
-  - vetoed, overfitting: Closure_122, Lang_31, Math_63
-  - vetoed, correct: Closure_6 [Correct (identical)], Closure_62 [Correct (alternative)], Lang_49 [Correct (identical)], Math_19 [Correct (equivalent)], Math_90 [Correct (alternative)], Mockito_13 [Correct (equivalent)], Time_17 [Correct (alternative)]
+| gemini_3_5_flash_lite_semantic | 202 | 9 | 3/27 | 6/175 | 3/9 | 0.107 [-0.04, 0.28] | 0 () | 0 () |
+  - vetoed, overfitting: Lang_16, Lang_31, Math_63
+  - vetoed, correct: Closure_6 [Correct (identical)], Closure_62 [Correct (alternative)], Lang_49 [Correct (identical)], Math_19 [Correct (equivalent)], Math_90 [Correct (alternative)], Mockito_13 [Correct (equivalent)]
 | claude_sonnet_5_5_semantic | 194 | 22 | 13/26 | 9/168 | 13/22 | 0.477 [0.28, 0.66] | 0 () | 8 (Mockito_1, Mockito_2, Mockito_4, Mockito_5, Mockito_9, Mockito_11, Mockito_18, Mockito_21) |
   - vetoed, overfitting: Chart_13, Closure_7, Closure_59, Closure_131, Lang_12, Lang_16, Lang_31, Math_8, Math_10, Math_24, Math_29, Math_44, Mockito_35
   - vetoed, correct: Closure_62 [Correct (alternative)], Closure_64 [Correct (equivalent)], Math_36 [Correct (alternative)], Math_50 [Correct (alternative)], Math_84 [Correct (alternative)], Math_103 [Correct (equivalent)], Time_4 [Correct (alternative)], Time_16 [Correct (equivalent)], Time_17 [Correct (alternative)]
 
-vetoed by every reviewer: Closure_62, Lang_31; overfitting caught by every reviewer: Lang_31
+vetoed by every reviewer: Closure_62, Lang_16, Lang_31; overfitting caught by every reviewer: Lang_16, Lang_31
 
 Each reviewer as a filter on the patches it was scored on (a veto removes the patch):
 
 | model | patches | precision before | overfitting removed | correct removed | patches kept | overfitting among them | precision after |
 |---|---|---|---|---|---|---|---|
-| deepseek_v4_flash_semantic | 184 | 86.4% | 4/25 | 16/159 | 164 | 21 (12.8%) | 87.2% |
-| gemini_3_5_flash_lite_semantic | 186 | 86.6% | 3/25 | 7/161 | 176 | 22 (12.5%) | 87.5% |
+| gemini_3_5_flash_lite_semantic | 202 | 86.6% | 3/27 | 6/175 | 193 | 24 (12.4%) | 87.6% |
 | claude_sonnet_5_5_semantic | 194 | 86.6% | 13/26 | 9/168 | 172 | 13 (7.6%) | 92.4% |
 
-Matched set, the patches scored for every reviewer: 184 patches (25 overfitting, 159 correct)
+Matched set, the patches scored for every reviewer: 194 patches (26 overfitting, 168 correct)
 
 | model | overfitting caught | correct wrongly vetoed | κ vs labels | precision before | precision after |
 |---|---|---|---|---|---|
-| deepseek_v4_flash_semantic | 4/25 | 16/159 | 0.065 | 86.4% | 87.2% |
-| gemini_3_5_flash_lite_semantic | 3/25 | 7/159 | 0.102 | 86.4% | 87.4% |
-| claude_sonnet_5_5_semantic | 12/25 | 9/159 | 0.454 | 86.4% | 92.0% |
+| gemini_3_5_flash_lite_semantic | 3/26 | 6/168 | 0.110 | 86.6% | 87.6% |
+| claude_sonnet_5_5_semantic | 13/26 | 9/168 | 0.477 | 86.6% | 92.4% |
 
-Matched set, the same without the multi-file patches: 178 patches (25 overfitting, 153 correct)
+Matched set, the same without the multi-file patches: 187 patches (26 overfitting, 161 correct)
 
 | model | overfitting caught | correct wrongly vetoed | κ vs labels | precision before | precision after |
 |---|---|---|---|---|---|
-| deepseek_v4_flash_semantic | 4/25 | 15/153 | 0.069 | 86.0% | 86.8% |
-| gemini_3_5_flash_lite_semantic | 3/25 | 7/153 | 0.099 | 86.0% | 86.9% |
-| claude_sonnet_5_5_semantic | 12/25 | 9/153 | 0.451 | 86.0% | 91.7% |
+| gemini_3_5_flash_lite_semantic | 3/26 | 6/161 | 0.108 | 86.1% | 87.1% |
+| claude_sonnet_5_5_semantic | 13/26 | 9/161 | 0.475 | 86.1% | 92.1% |
 
 Confusion matrix of each reviewer against the labels, on the patches it was scored on (a veto is a positive), with sensitivity, specificity and veto precision and their 95% Wilson intervals:
 
 | model | patches | overfitting vetoed | correct vetoed | overfitting kept | correct kept | sensitivity | specificity | veto precision |
 |---|---|---|---|---|---|---|---|---|
-| deepseek_v4_flash_semantic | 184 | 4 | 16 | 21 | 143 | 4/25, 16.0% [6.4, 34.7] | 143/159, 89.9% [84.3, 93.7] | 4/20, 20.0% [8.1, 41.6] |
-| gemini_3_5_flash_lite_semantic | 186 | 3 | 7 | 22 | 154 | 3/25, 12.0% [4.2, 30.0] | 154/161, 95.7% [91.3, 97.9] | 3/10, 30.0% [10.8, 60.3] |
+| gemini_3_5_flash_lite_semantic | 202 | 3 | 6 | 24 | 169 | 3/27, 11.1% [3.9, 28.1] | 169/175, 96.6% [92.7, 98.4] | 3/9, 33.3% [12.1, 64.6] |
 | claude_sonnet_5_5_semantic | 194 | 13 | 9 | 13 | 159 | 13/26, 50.0% [32.1, 67.9] | 159/168, 94.6% [90.1, 97.2] | 13/22, 59.1% [38.7, 76.7] |
 
 Confusion matrix of each reviewer against the labels, on the matched set (a veto is a positive), with sensitivity, specificity and veto precision and their 95% Wilson intervals:
 
 | model | patches | overfitting vetoed | correct vetoed | overfitting kept | correct kept | sensitivity | specificity | veto precision |
 |---|---|---|---|---|---|---|---|---|
-| deepseek_v4_flash_semantic | 184 | 4 | 16 | 21 | 143 | 4/25, 16.0% [6.4, 34.7] | 143/159, 89.9% [84.3, 93.7] | 4/20, 20.0% [8.1, 41.6] |
-| gemini_3_5_flash_lite_semantic | 184 | 3 | 7 | 22 | 152 | 3/25, 12.0% [4.2, 30.0] | 152/159, 95.6% [91.2, 97.9] | 3/10, 30.0% [10.8, 60.3] |
-| claude_sonnet_5_5_semantic | 184 | 12 | 9 | 13 | 150 | 12/25, 48.0% [30.0, 66.5] | 150/159, 94.3% [89.6, 97.0] | 12/21, 57.1% [36.5, 75.5] |
+| gemini_3_5_flash_lite_semantic | 194 | 3 | 6 | 23 | 162 | 3/26, 11.5% [4.0, 29.0] | 162/168, 96.4% [92.4, 98.4] | 3/9, 33.3% [12.1, 64.6] |
+| claude_sonnet_5_5_semantic | 194 | 13 | 9 | 13 | 159 | 13/26, 50.0% [32.1, 67.9] | 159/168, 94.6% [90.1, 97.2] | 13/22, 59.1% [38.7, 76.7] |
 
 Pairs of reviewers on the matched set (McNemar exact, two-sided, unadjusted; first-only/second-only): overfitting patches that only one of the two vetoes, correct patches that only one of the two vetoes, and patches on which only one of the two agrees with the label:
 
-- deepseek_v4_flash_semantic vs gemini_3_5_flash_lite_semantic: overfitting vetoed 3/2, p=1.0000; correct vetoed 13/4, p=0.0490; agrees with the label 7/15, p=0.1338
-- deepseek_v4_flash_semantic vs claude_sonnet_5_5_semantic: overfitting vetoed 0/8, p=0.0078; correct vetoed 14/7, p=0.1892; agrees with the label 7/22, p=0.0081
-- gemini_3_5_flash_lite_semantic vs claude_sonnet_5_5_semantic: overfitting vetoed 2/11, p=0.0225; correct vetoed 5/7, p=0.7744; agrees with the label 9/16, p=0.2295
+- gemini_3_5_flash_lite_semantic vs claude_sonnet_5_5_semantic: overfitting vetoed 1/11, p=0.0063; correct vetoed 5/8, p=0.5811; agrees with the label 9/16, p=0.2295
 
 κ against the labels on the matched set, with its 95% bootstrap interval (2,000 resamples, fixed seed):
 
-- deepseek_v4_flash_semantic: 184 patches, κ 0.065 [-0.09, 0.24]
-- gemini_3_5_flash_lite_semantic: 184 patches, κ 0.102 [-0.06, 0.28]
-- claude_sonnet_5_5_semantic: 184 patches, κ 0.454 [0.25, 0.63]
+- gemini_3_5_flash_lite_semantic: 194 patches, κ 0.110 [-0.04, 0.29]
+- claude_sonnet_5_5_semantic: 194 patches, κ 0.477 [0.28, 0.66]
 
 Tokens of each offline review, as its file records them (every row of the file, one per patch text judged):
 
-- deepseek_v4_flash_semantic: 197 rows; no token counts recorded
-- gemini_3_5_flash_lite_semantic: 272 rows; no token counts recorded
+- gemini_3_5_flash_lite_semantic: 208 rows; 3,792,776 input and 31,404 output tokens
 - claude_sonnet_5_5_semantic: 194 rows; 5,244,143 input and 187,177 output tokens
 
 ## 12. Size of the modified files, and the diff section of the no_judge prompt
@@ -1134,13 +1122,13 @@ per pair: full / no_semantic 163/388; full / binary_only 147/388; full / no_judg
 
 | configuration | plausible | identical | equivalent | alternative | correct, kind not recorded | overfitting | identical or equivalent |
 |---|---|---|---|---|---|---|---|
-| full | 202 | 67 | 68 | 40 | 0 | 27 | 135 |
+| full | 202 | 70 | 65 | 40 | 0 | 27 | 135 |
 | no_semantic | 202 | 72 | 64 | 32 | 0 | 34 | 136 |
-| binary_only | 182 | 63 | 62 | 28 | 0 | 29 | 125 |
-| no_judge | 192 | 61 | 72 | 35 | 0 | 24 | 133 |
+| binary_only | 182 | 66 | 59 | 28 | 0 | 29 | 125 |
+| no_judge | 192 | 64 | 69 | 35 | 0 | 24 | 133 |
 | control | 186 | 69 | 63 | 28 | 0 | 26 | 132 |
 
-patch texts that carry two kinds of correct label (across the configurations and the control passes): 5 (Chart_4: equivalent in full, binary_only, no_judge and identical in no_semantic, control; Chart_7: equivalent in full, binary_only, no_judge and identical in no_semantic, control; Chart_8: equivalent in full, binary_only, no_judge and identical in no_semantic, control; Math_50: alternative in full, binary_only and equivalent in control; Math_90: alternative in full, no_judge and equivalent in control)
+patch texts that carry two kinds of correct label (across the configurations and the control passes): 2 (Math_50: alternative in full, binary_only and equivalent in control; Math_90: alternative in full, no_judge and equivalent in control)
 
 Identical or equivalent patches only (alternative fixes not counted as correct), McNemar exact against `full`; configurations whose correct patches all carry a kind:
 
@@ -1151,7 +1139,7 @@ Identical or equivalent patches only (alternative fixes not counted as correct),
 | full vs no_judge | 135 | 133 | 30 | 28 | 0.8957 | 0.7914 | 0.8957 |
 | full vs control | 135 | 132 | 29 | 26 | 0.7877 | 0.5831 | 0.6835 |
 
-full minus no_semantic, by kind: identical -5, equivalent +4, alternative +8, all correct +7
+full minus no_semantic, by kind: identical -2, equivalent +1, alternative +8, all correct +7
 
 full minus binary_only, by kind: identical +4, equivalent +6, alternative +12, all correct +22
 

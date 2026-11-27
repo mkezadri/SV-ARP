@@ -10,11 +10,7 @@ cached; for a bug that modifies several files the reviewer is shown the first
 modified file only, as the in-loop Judge is.
 
     CAN=data/canonical/canonical_full.csv     # written by analysis/make_figures.py
-
-    # DeepSeek V4 Flash, through an OpenAI-compatible provider
-    export JUDGE_API_KEY=...                  # keys are read from the environment only
-    python3 scripts/judge_swap.py results_arm_full --canonical $CAN \
-        --model deepseek-v4-flash --base-url https://<provider>/v1
+    # keys are read from the environment only: --api-key-env names the variable
 
     # Gemini 3.5 Flash Lite (the in-loop model, run offline)
     python3 scripts/judge_swap.py results_arm_full --canonical $CAN \
@@ -44,10 +40,9 @@ modified file only, as the in-loop Judge is.
 --canonical
     The canonical per-bug table of the configuration. The patch judged for each
     bug is the one of its canonical execution. Without the table the newest
-    record of each bug is judged; the two files first published with the paper
-    were made that way, before the option existed. The session of the judged
-    record is written to the output in both cases, and the analysis scores a
-    verdict only if that record's patch is the canonical one.
+    record of each bug is judged. The session of the judged record is written to
+    the output in both cases, and the analysis scores a verdict only if that
+    record's patch is the canonical one.
 
 --ground-truth
     A verification CSV to score against, for a first look. The figures of the
@@ -329,7 +324,7 @@ def score_against_humans(rows, gt, model):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("results_dir")
-    ap.add_argument("--model", default="deepseek-v4-flash")
+    ap.add_argument("--model", default="gemini-3.5-flash-lite")
     ap.add_argument("--base-url", default=os.environ.get("JUDGE_BASE_URL", ""),
                     help="OpenAI-compatible endpoint (default: $JUDGE_BASE_URL)")
     ap.add_argument("--canonical", default=None,

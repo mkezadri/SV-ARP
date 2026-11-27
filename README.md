@@ -11,8 +11,7 @@ is accepted when the relevant tests pass and the Judge's verdict is `correct`.
 
 This repository contains the framework, the benchmark runner, the supervisor
 script, the analysis script that regenerates every number in the paper, the
-raw result files, the correctness labels of every plausible patch, and tests
-that inject the failures the harness must not read as a repair.
+raw result files, and the correctness labels of every plausible patch.
 
 ---
 
@@ -62,11 +61,11 @@ What the measurements say:
   requested. The temperatures in the code, in the logs and in the names of the
   control passes are requests that had no effect. The model ran at its default
   thinking level, minimal.
-- Without the developer fix, agreement with the labels beyond chance is not
-  established for two offline LLM reviewers (DeepSeek V4 Flash and Gemini 3.5
-  Flash Lite, kappa 0.07 and 0.10); Claude Sonnet 5.5 catches 13 of 26
-  overfitting patches while vetoing 9 of 168 correct ones (kappa 0.48). The
-  review covers 194 of the 202 plausible patches.
+- Without the developer fix, on the 194 patches that both judged, agreement
+  with the labels beyond chance is not established for Gemini 3.5 Flash Lite
+  reviewing offline (kappa 0.11); Claude Sonnet 5.5 catches 13 of 26
+  overfitting patches while vetoing 9 of 168 correct ones (kappa 0.48).
+  Gemini judged all 202 plausible patches, Claude Sonnet 5.5 194 of them.
 
 Cost, from the logged token counts at the provider's list prices ($0.30 per
 million input tokens, $2.50 per million output tokens): $16.08 for the Full
@@ -85,10 +84,8 @@ SV-ARP/
 │   └── run_benchmark.py      # Defects4J benchmark driver
 ├── run_all.sh                # supervisor for long unattended runs
 ├── benchmark/
-│   ├── versions.txt                  # the 388 active Defects4J v1.2 bugs
-│   ├── full_concurrent_52.txt        # the 52 bugs two Full sessions executed concurrently
-│   ├── rerun_full_50.txt             # the 50 of them that were executed again on 10 November 2026
-│   └── mapping.csv                   # bug -> modified-class source path
+│   ├── versions.txt          # the 388 active Defects4J v1.2 bugs
+│   └── mapping.csv           # bug -> modified-class source path
 ├── scripts/
 │   ├── check_env.sh          # environment check; run this first
 │   └── judge_swap.py         # offline review of plausible patches by a second model
@@ -96,13 +93,11 @@ SV-ARP/
 │   ├── make_figures.py       # regenerates every table and statistic
 │   ├── report.md             # its output for the paper
 │   └── check_paper_numbers.py  # compares the manuscript source with report.md
-├── tests/
-│   ├── test_safeguards.py    # failure-injection tests of the harness (no model, no Defects4J)
-│   └── remove_each_safeguard.py  # removes each safeguard in a copy; a test must fail each time
 ├── data/
 │   ├── verification/         # labels: 4 configurations + 4 resampling passes
 │   ├── second_verification/  # second verification of the 4 configurations
 │   ├── overrides_all.csv     # label overrides and later labels, with their reasons
+│   ├── judged_texts.csv      # records judged but not in the package, by the SHA-256 of their patch text
 │   ├── harness_false_negatives.csv   # candidates logged as failing that pass (sensitivity only)
 │   ├── time_limit_events.csv # test runs and baseline builds cut by their time limit, from the run logs
 │   ├── lost_requests.csv     # requests to the model that failed after all retries, from the run logs
@@ -115,10 +110,8 @@ SV-ARP/
 ```
 
 The raw result files (one record per bug and execution, with every candidate
-patch, verdict, requested temperature and token count; about 540 MB unpacked)
-are in `data/results/`, one zip per configuration and per resampling pass. Each zip
-holds the sessions of its configuration; one session of the Full configuration
-that was discarded in full (`20261110_032346`) is not included.
+patch, verdict, requested temperature and token count; about 520 MB unpacked)
+are in `data/results/`, one zip per configuration and per resampling pass.
 
 ---
 
@@ -145,7 +138,7 @@ export D4J_HOME=/path/to/defects4j
 export PATH="$D4J_HOME/framework/bin:$PATH"
 export GEMINI_API_KEY=<your-key>
 
-./scripts/check_env.sh      # must report: Failing tests: 1
+./scripts/check_env.sh      # must end with: Environment correct.
 ```
 
 API keys are read from the environment only. Never commit one.
@@ -157,7 +150,9 @@ The JVM takes its default locale from operating-system settings, not from
 compiler diagnostics fail on pristine, unpatched checkouts (18 of 25 Closure
 bugs in our measurement), and a candidate is plausible only if no relevant
 test fails, so those bugs become unrepairable. The `_JAVA_OPTIONS` line above
-is required; `check_env.sh` verifies it on Closure 2b.
+is required; `check_env.sh` verifies it on Closure 2b (one failing test,
+named), and checks that a Gradle-built bug (Mockito 1b) builds and reports its
+26 failing tests. The two smoke tests take a few minutes.
 
 ---
 
@@ -211,13 +206,11 @@ printf 'Mockito_%s\n' 1 2 3 4 5 6 7 8 9 10 11 18 19 20 21 > data/mockito_gradle_
 python analysis/make_figures.py --raw data --rule first \
     --bug-list benchmark/versions.txt \
     --overrides data/overrides_all.csv \
-    --judge-swap data/offline_review/judge_swap_deepseek_v4_flash_semantic.csv \
     --judge-swap data/offline_review/judge_swap_gemini_3_5_flash_lite_semantic.csv \
     --judge-swap data/offline_review/judge_swap_claude_sonnet_5_5_semantic.csv \
     --false-negatives data/harness_false_negatives.csv \
-    --concurrent full=20261010_140443+20261010_143326 \
+    --judged-texts data/judged_texts.csv \
     --rerun full=20261110_104737 \
-    --discard-session full=20261110_032346 \
     --reexecuted binary_only=20261120_091831+20261121_115528+20261123_171006 \
     --reexecuted no_judge=20261121_173559+20261123_173421 \
     --without-bugs data/mockito_gradle_15.txt \
@@ -227,11 +220,14 @@ python analysis/make_figures.py --raw data --rule first \
 
 The output should match `analysis/report.md` (the script is deterministic), and
 the per-bug tables it writes to `figures_out/` should match `data/canonical/`.
-`--concurrent` names the two sessions that shared a working directory,
-`--rerun` the session that executed their bugs again after the labels had been
-given, `--discard-session` a session that was discarded in full, `--reexecuted`
-the sessions that executed Binary-Only and No-Judge with the corrected code,
-which are the only canonical ones for these two configurations, and
+`--judged-texts` lists eleven records of the Full configuration on which labels
+and reviews were given and that are not in the package, by the SHA-256 of
+their patch text, which is that of the bug's canonical record; `--rerun` names
+a Full session executed after the labels of that configuration had been given
+(its records take the label of a labelled patch with the same text, or of an
+override row that names the session); `--reexecuted` the sessions that executed
+Binary-Only and No-Judge with the corrected code, which are the only canonical
+ones for these two configurations; and
 `--without-bugs` a list of bugs for one more sensitivity analysis (section 14c of
 the report repeats the comparisons without the 15 Gradle-built Mockito bugs).
 
@@ -241,27 +237,6 @@ A second script compares the manuscript with the report:
 # every table row and figure of the manuscript that comes from the report
 python analysis/check_paper_numbers.py analysis/report.md <manuscript>.tex
 ```
-
----
-
-## Testing the safeguards of the harness
-
-The harness must not read a failed build, a test run without its summary line,
-an empty baseline, a lost response of the model or a second session on the
-same working directory as a repair. `tests/test_safeguards.py` injects each of
-these failures (42 tests): the `defects4j` command is replaced by a stub whose
-output and exit status the test sets, and the model client by an object that
-fails or answers as scripted. No API key, no call to the model and no
-Defects4J installation are needed; only the packages of `requirements.txt`.
-
-```bash
-python -m unittest discover -s tests -v      # a few seconds
-python tests/remove_each_safeguard.py        # about a minute
-```
-
-The second script is a check on the tests themselves: it removes each of 24
-safeguards in turn from a temporary copy of the code and reports which tests
-fail; a removal that no test notices makes it exit with an error.
 
 ---
 
