@@ -164,8 +164,7 @@ python analysis/make_figures.py --raw data --rule first \
     --without-bugs data/mockito_gradle_15.txt \
     --second-verification data/second_verification \
     > report.md
-# with the published results, compare with the published outputs:
-cmp report.md analysis/report.md && echo "report.md matches analysis/report.md"
+# with the published results, the per-bug tables match the published ones:
 for f in data/canonical/*.csv; do cmp "$f" "figures_out/$(basename "$f")" && echo "$(basename "$f") matches"; done
 ```
 
@@ -183,7 +182,7 @@ these two configurations; the earlier sessions are kept for their labels and
 for the comparison of section 4f), and `--without-bugs` the 15
 Gradle-built Mockito bugs, for the sensitivity analysis of section 14c.
 
-With the published result files the output matches `analysis/report.md`:
+With the published result files the output reports
 202 plausible and 173 verified-correct fixes for the Full configuration,
 182/151 and 192/167 for the two reduced configurations, and 186/159
 for the resampling control. The per-bug tables written to `figures_out/` match

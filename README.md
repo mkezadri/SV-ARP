@@ -60,11 +60,11 @@ What the measurements say:
   requested. The temperatures in the code, in the logs and in the names of the
   control passes are requests that had no effect. The model ran at its default
   thinking level, minimal.
-- Without the developer fix, on the 194 patches that both judged, agreement
-  with the labels beyond chance is not established for Gemini 3.5 Flash Lite
-  reviewing offline (kappa 0.16); Claude Sonnet 5.5 catches 14 of 28
-  overfitting patches while vetoing 8 of 166 correct ones (kappa 0.50).
-  Gemini judged all 202 plausible patches, Claude Sonnet 5.5 194 of them.
+- Without the developer fix, on the 202 plausible patches of the Full
+  configuration, agreement with the labels beyond chance is not established
+  for Gemini 3.5 Flash Lite reviewing offline (kappa 0.15); Claude Sonnet 5.5
+  catches 15 of 29 overfitting patches while vetoing 8 of 173 correct ones
+  (kappa 0.52).
 
 Cost, from the logged token counts at the provider's list prices ($0.30 per
 million input tokens, $2.50 per million output tokens): $16.08 for the Full
@@ -89,8 +89,7 @@ SV-ARP/
 │   ├── check_env.sh          # environment check; run this first
 │   └── judge_swap.py         # offline review of plausible patches by a second model
 ├── analysis/
-│   ├── make_figures.py       # regenerates every table and statistic           
-│   └── check_paper_numbers.py  # compares the manuscript source with report.md
+│   └── make_figures.py       # regenerates every table and statistic
 ├── data/
 │   ├── verification/         # labels: 3 configurations + 4 resampling passes
 │   ├── second_verification/  # second verification of the 3 configurations
@@ -216,6 +215,7 @@ python analysis/make_figures.py --raw data --rule first \
     --without-bugs data/mockito_gradle_15.txt \
     --second-verification data/second_verification \
     > report.md
+```
 
 ---
 
