@@ -613,8 +613,9 @@ for model, name in (("gemini_3_5_flash_lite_semantic", r"\model{}"), ("claude_so
     C(f"offline review, {model}: the vetoes are the overfitting and the correct patches vetoed", int(g[1]) == int(g[2]) + int(g[4]) == int(g[7]) and g[6] == g[2])
 C("offline review: two reviewers in the report", set(re.findall(r"\| (\w+_semantic) \| \d+ \| \d+ \| \d+/\d+", rep.split("## 10.")[1].split("\n## ")[0])) == set(rev))
 gm, cl = (rev[m_] for m_ in ("gemini_3_5_flash_lite_semantic", "claude_sonnet_5_5_semantic"))
-C("offline review: Gemini judged every plausible patch, Claude Sonnet 5.5 those before the Mockito bugs", int(gm[0]) == F["pl"] and int(cl[0]) == int(m15f[0]))
-T("offline review: who judged what", rf"\model{{}} judged all {gm[0]} plausible patches, and Claude Sonnet~5.5 the {cl[0]} that the configuration had before the 15 Gradle-built Mockito bugs were executed (Section~\ref{{sec:benchmark}})")
+C("offline review: both reviewers judged every plausible patch of Full", int(gm[0]) == int(cl[0]) == F["pl"] and (gm[3], gm[5]) == (cl[3], cl[5]))
+T("offline review: who judged what", rf"Both reviewers judged all {gm[0]} plausible patches, {gm[3]} overfitting and {gm[5]} correct, and their verdicts are scored against the verified labels (Table~\ref{{tab:pilot}})")
+T("offline review: the patches judged later", rf"Claude Sonnet~5.5 judged the {WORDS[F['pl'] - int(m15f[0])]} patches of the Mockito bugs executed last (Section~\ref{{sec:benchmark}}) in a later session than the others")
 GEM_, SON_ = "gemini_3_5_flash_lite_semantic", "claude_sonnet_5_5_semantic"
 def _vlist(model, kind):
     line = [l_ for l_ in rep.split(f"| {model} |")[1].split("\n")[1:3] if l_.strip().startswith(f"- vetoed, {kind}:")]
@@ -626,7 +627,11 @@ g_ident = [b_ for b_ in g_corr if f"{b_} [Correct (identical)]" in gline]
 C("Sonnet vetoes no token-identical patch", "[Correct (identical)]" not in rep.split("| claude_sonnet_5_5_semantic |")[1].split("\n")[2])
 left, left_ok = int(cl[0]) - int(cl[1]), int(cl[5]) - int(cl[4])
 T("offline review: as a filter", rf"Used as a filter on these {cl[0]} patches, its vetoes would raise precision from {pct(cl[5], cl[0])}\% to {pct(left_ok, left)}\% ({left_ok} of {left}) at the cost of {cl[4]} of their {cl[5]} correct fixes")
-C("Sonnet catches 'half' of the overfitting patches, at 'about one correct fix in twenty'", 2 * int(cl[2]) == int(cl[3]) and 17 <= int(cl[5]) / int(cl[4]) <= 23)
+C("Sonnet catches 'about half' of the overfitting patches, at 'about one correct fix in twenty'", abs(2 * int(cl[2]) - int(cl[3])) <= 1 and 17 <= int(cl[5]) / int(cl[4]) <= 23)
+T("offline review: what Sonnet misses", rf"It misses the other {int(cl[3]) - int(cl[2])} overfitting patches, among them Closure-9 and Math-90")
+_sr = {r_["bug_id"]: r_ for r_ in csv.DictReader(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "offline_review", "judge_swap_claude_sonnet_5_5_semantic.csv"), newline="", encoding="utf-8"))}
+C("Claude Sonnet 5.5 vetoes Mockito-9, and its rationale calls the core change right", "Mockito_9" in s_over and _sr["Mockito_9"]["second_verdict"] != "correct" and _sr["Mockito_9"]["second_reason"].startswith("The core change is right."))
+C("every row of the Claude Sonnet 5.5 file names the model requested", {r_["model_reported"] for r_ in _sr.values()} == {"claude-sonnet-5-5"} and len(_sr) == int(cl[0]))
 pass                                  # caption: matched set, checked below
 
 # ── paired differences with confidence intervals (report section 15) ─────
@@ -761,8 +766,7 @@ rowA = {m_: R(rf"\| {m_} \| (\d+)/(\d+) \| (\d+)/(\d+) \| ([\d.-]+) \| ([\d.]+)%
 rowB = {m_: R(rf"\| {m_} \| (\d+)/(\d+) \| (\d+)/(\d+) \| ([\d.-]+) \| ([\d.]+)% \| ([\d.]+)% \|", blkB) for m_ in rev}
 ga, ca = (rowA[m_] for m_ in (GEM_, SON_))
 gb_, cb_ = (rowB[m_] for m_ in (GEM_, SON_))
-T("offline review: the matched set", rf"The two reviewers are compared on these {mA[0]} patches, {mA[1]} overfitting and {mA[2]} correct")
-C("the matched set is the set Claude Sonnet 5.5 judged", int(mA[0]) == int(cl[0]) and (mA[1], mA[2]) == (cl[3], cl[5]))
+C("the patches scored for both reviewers are all the plausible patches of Full", int(mA[0]) == int(cl[0]) == int(gm[0]) == F["pl"] and (mA[1], mA[2]) == (cl[3], cl[5]))
 T("offline review: without the multi-file patches", rf"Without the {WORDS[int(mA[0]) - int(mB[0])]} multi-file patches of the set, of which the reviewers saw one file, the counts are the same.")
 C("... the counts are the same", (gb_[0], cb_[0], gb_[2], cb_[2]) == (ga[0], ca[0], ga[2], ca[2]))
 C("the ranking of the reviewers is the same on the matched set", float(ca[4]) > float(ga[4]) and float(cl[8]) > float(gm[8]))
@@ -881,7 +885,7 @@ def kap(k_):
     return rf"{fmt(k_[1])} [{lo_}, {hi_}]"
 
 
-T("offline review table: caption", rf"Offline LLM review of the {mA[0]} plausible patches of the \cfull{{}} configuration that both reviewers judged ({mA[1]} overfitting, {mA[2]} correct)")
+T("offline review table: caption", rf"Offline LLM review of the {mA[0]} plausible patches of the \cfull{{}} configuration ({mA[1]} overfitting, {mA[2]} correct)")
 T("offline review table: overfitting patches", rf"Overfitting: vetoed, kept & {cg['tp']}, {cg['fn']} & {cs['tp']}, {cs['fn']} \\")
 T("offline review table: correct patches", rf"Correct: vetoed, kept & {cg['fp']}, {cg['tn']} & {cs['fp']}, {cs['tn']} \\")
 for label, key in (("Sensitivity", "sens"), ("Specificity", "spec"), ("Veto precision", "prec")):
@@ -893,10 +897,8 @@ T("offline review: sensitivity of the in-loop reviewer", rf"its sensitivity, {fm
 T("offline review: the in-loop reviewer as a filter", rf"As a filter it would move precision from {ga[5]}\% to {ga[6]}\%, by {fmt(Decimal(ga[6]) - Decimal(ga[5]), 1)} points, while keeping {cg['fn']} of the {mA[1]} overfitting patches and discarding {cg['fp']} correct fixes, {WORDS[len(g_ident)]} of them token-identical to the developer fix ({_names(g_ident)})")
 C("... the vetoed correct patches are the same on all patches and on the matched set", int(cg["fp"]) == int(gm[4]))
 T("RQ5 answer: the in-loop model", rf"For the in-loop model reviewing offline, agreement with the labels beyond chance is not established, and as a filter it would change precision by {fmt(Decimal(ga[6]) - Decimal(ga[5]), 1)} points while discarding {fg[4]} correct fixes")
-C("the in-loop reviewer vetoes none of the patches outside the matched set", int(gm[1]) == cg["tp"] + cg["fp"] and int(gm[0]) - int(mA[0]) == 8)
-T("offline review: the in-loop reviewer on all patches", rf"It vetoes none of the eight patches of the Mockito bugs executed last, so on all {gm[0]} patches it catches {gm[2]} of {gm[3]} overfitting patches and vetoes {gm[4]} of {gm[5]} correct ones ($\kappa={fmt(gm[8])}$).")
 T("offline review: Sonnet on the matched set", rf"On the same patches it vetoes {cs['tp'] + cs['fp']} (Table~\ref{{tab:pilot}}), none of them among the")
-T("offline review: contribution", rf"on the {mA[0]} patches that both judged, without the developer fix, \model{{}} and Claude Sonnet~5.5 detect {cg['tp']} and {cs['tp']} of {mA[1]} overfitting patches while wrongly vetoing {cg['fp']} and {cs['fp']} of {mA[2]} correct ones ($\kappa={fmt(kM[order[0]][1])}$ and ${fmt(kM[order[1]][1])}$")
+T("offline review: contribution", rf"on the {mA[0]} plausible patches, without the developer fix, \model{{}} and Claude Sonnet~5.5 detect {cg['tp']} and {cs['tp']} of {mA[1]} overfitting patches while wrongly vetoing {cg['fp']} and {cs['fp']} of {mA[2]} correct ones ($\kappa={fmt(kM[order[0]][1])}$ and ${fmt(kM[order[1]][1])}$")
 T("offline review: abstract", rf"Of two offline LLM reviewers given no developer fix, agreement beyond chance is not established for the in-loop model (Cohen's kappa {fmt(kM[order[0]][1])}), and Claude Sonnet 5.5 catches {cs['tp']} of {mA[1]} overfitting patches (kappa {fmt(kM[order[1]][1])})")
 prs = {(a1, a2): tuple(int(v) for v in vals) for a1, a2, *vals in
        re.findall(r"- (\w+) vs (\w+): overfitting vetoed (\d+)/(\d+), p=[\d.]+; correct vetoed (\d+)/(\d+), p=[\d.]+; agrees with the label (\d+)/(\d+), p=[\d.]+", rep)}
@@ -925,8 +927,8 @@ T("5.1: calls per bug", rf"in \cfull{{}} they took {fmt(Fraction(calls_full, N_B
 sev = R(r"- claude_sonnet_5_5_semantic: (\d+) rows; ([\d,]+) input and ([\d,]+) output tokens")
 pin_, pout_ = int(sev[1].replace(",", "")), int(sev[2].replace(",", ""))
 rev_usd = Fraction(pin_ * 2 + pout_ * 10, 10 ** 6)                    # Claude Sonnet 5.5: 2 and 10 USD per million tokens
-C("offline review cost: 'about 12 USD'", round(float(rev_usd)) == 12 and int(sev[0]) == int(cl[0]))
-T("offline review cost", rf"the review cost about 12~USD for the {cl[0]} patches ({fmt(Fraction(pin_, 10 ** 6), 1)}~M input and {fmt(Fraction(pout_, 10 ** 6), 2)}~M output tokens), {fmt(rev_usd / int(cl[0]), 3)}~USD per reviewed patch, against {CF['mean']}~USD per bug and {CF['pl']}~USD per plausible patch for the repair in \cfull{{}}")
+C("offline review cost: 'about 12.5 USD'", fmt(rev_usd, 1) == "12.5" and int(sev[0]) == int(cl[0]))
+T("offline review cost", rf"the review cost about {fmt(rev_usd, 1)}~USD for the {cl[0]} patches ({fmt(Fraction(pin_, 10 ** 6), 1)}~M input and {fmt(Fraction(pout_, 10 ** 6), 2)}~M output tokens), {fmt(rev_usd / int(cl[0]), 3)}~USD per reviewed patch, against {CF['mean']}~USD per bug and {CF['pl']}~USD per plausible patch for the repair in \cfull{{}}")
 sec21 = rep.split("## 21.")[1].split("\ncanonical per-bug tables")[0]
 tp21 = R(r"- full vs binary_only \((\d+)/(\d+), significant after adjustment\): Holm-adjusted p reaches 0.05 after (\d+) changes placed against `full` \((\d+) if only correct labels of `full` change\); unadjusted p reaches 0.05 after (\d+) changes placed against `full` \((\d+) if only correct labels of `full` change\)", sec21)
 up21 = re.findall(r"- full vs (\w+) \(\d+/\d+, not significant\): the Holm-adjusted p falls below 0.05 after (\d+) changes placed in favour of `full`", sec21)
